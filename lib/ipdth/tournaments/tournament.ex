@@ -3,6 +3,7 @@ defmodule Ipdth.Tournaments.Tournament do
   import Ecto.Changeset
 
   alias Ipdth.Tournaments.Participation
+  alias Ipdth.Matches.Match
 
   schema "tournaments" do
     field :name, :string
@@ -14,6 +15,7 @@ defmodule Ipdth.Tournaments.Tournament do
     field :random_seed, :string
     field :random_trace, :string
     has_many :participations, Participation
+    has_many :matches, Match
 
     timestamps([type: :utc_datetime_usec])
   end

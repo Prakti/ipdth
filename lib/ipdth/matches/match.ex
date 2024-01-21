@@ -3,6 +3,8 @@ defmodule Ipdth.Matches.Match do
   import Ecto.Changeset
 
   alias Ipdth.Matches.Round
+  alias Ipdth.Agents.Agent
+  alias Ipdth.Tournaments.Tournament
 
   schema "matches" do
     field :start_date, :utc_datetime_usec
@@ -10,6 +12,9 @@ defmodule Ipdth.Matches.Match do
     field :score_a, :integer
     field :score_b, :integer
     embeds_many :rounds, Round
+    belongs_to :agent_a, Agent
+    belongs_to :agent_b, Agent
+    belongs_to :tournament, Tournament
 
     timestamps()
   end
