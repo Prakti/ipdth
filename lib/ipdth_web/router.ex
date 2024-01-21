@@ -68,6 +68,16 @@ defmodule IpdthWeb.Router do
       on_mount: [{IpdthWeb.UserAuth, :ensure_authenticated}] do
       live "/users/settings", UserSettingsLive, :edit
       live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
+
+      # Agent Managemet - Global View
+      live "/agents", AgentLive.Index, :index
+      live "/agents/new", AgentLive.Index, :new
+      live "/agents/:id/edit", AgentLive.Index, :edit
+
+      live "/agents/:id", AgentLive.Show, :show
+      live "/agents/:id/show/edit", AgentLive.Show, :edit
+
+      # TODO: 2024-01-21 - Create User-Specific "MyAgent View"
     end
   end
 
