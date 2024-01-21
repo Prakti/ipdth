@@ -77,6 +77,14 @@ defmodule IpdthWeb.Router do
       live "/agents/:id", AgentLive.Show, :show
       live "/agents/:id/show/edit", AgentLive.Show, :edit
 
+      # Tournament Management - Global View
+      live "/tournaments", TournamentLive.Index, :index
+      live "/tournaments/new", TournamentLive.Index, :new
+      live "/tournaments/:id/edit", TournamentLive.Index, :edit
+
+      live "/tournaments/:id", TournamentLive.Show, :show
+      live "/tournaments/:id/show/edit", TournamentLive.Show, :edit
+
       # TODO: 2024-01-21 - Create User-Specific "MyAgent View"
     end
   end

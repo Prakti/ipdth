@@ -1,0 +1,33 @@
+<.header>
+  Tournament <%= @tournament.id %>
+  <:subtitle>This is a tournament record from your database.</:subtitle>
+  <:actions>
+    <.link patch={~p"/tournaments/#{@tournament}/show/edit"} phx-click={JS.push_focus()}>
+      <.button>Edit tournament</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.list>
+  <:item title="Name"><%= @tournament.name %></:item>
+  <:item title="Description"><%= @tournament.description %></:item>
+  <:item title="Start date"><%= @tournament.start_date %></:item>
+  <:item title="End date"><%= @tournament.end_date %></:item>
+  <:item title="Round number"><%= @tournament.round_number %></:item>
+  <:item title="Random seed"><%= @tournament.random_seed %></:item>
+  <:item title="Random trace"><%= @tournament.random_trace %></:item>
+  <:item title="Status"><%= @tournament.status %></:item>
+</.list>
+
+<.back navigate={~p"/tournaments"}>Back to tournaments</.back>
+
+<.modal :if={@live_action == :edit} id="tournament-modal" show on_cancel={JS.patch(~p"/tournaments/#{@tournament}")}>
+  <.live_component
+    module={IpdthWeb.TournamentLive.FormComponent}
+    id={@tournament.id}
+    title={@page_title}
+    action={@live_action}
+    tournament={@tournament}
+    patch={~p"/tournaments/#{@tournament}"}
+  />
+</.modal>
