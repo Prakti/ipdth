@@ -2,11 +2,14 @@ defmodule Ipdth.Accounts.User do
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias Ipdth.Agents.Agent
+
   schema "users" do
     field :email, :string
     field :password, :string, virtual: true, redact: true
     field :hashed_password, :string, redact: true
     field :confirmed_at, :utc_datetime_usec
+    has_many :agents, Agent, foreign_key: :owner_id
 
     timestamps([type: :utc_datetime_usec])
   end

@@ -3,6 +3,7 @@ defmodule Ipdth.Agents.Agent do
   import Ecto.Changeset
 
   alias Ipdth.Tournaments.Participation
+  alias Ipdth.Accounts.User
 
   schema "agents" do
     field :name, :string
@@ -11,6 +12,7 @@ defmodule Ipdth.Agents.Agent do
     field :url, :string
     field :bearer_token, :string
     has_many :participations, Participation
+    belongs_to :owner, User
 
     timestamps([type: :utc_datetime_usec])
   end
