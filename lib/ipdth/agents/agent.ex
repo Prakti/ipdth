@@ -9,7 +9,7 @@ defmodule Ipdth.Agents.Agent do
     field :url, :string
     field :bearer_token, :string
 
-    timestamps()
+    timestamps([type: :utc_datetime_usec])
   end
 
   # TODO: 2024-01-21 - Introduce Status-Model

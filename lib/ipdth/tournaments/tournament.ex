@@ -6,13 +6,13 @@ defmodule Ipdth.Tournaments.Tournament do
     field :name, :string
     field :status, :string
     field :description, :string
-    field :start_date, :utc_datetime
-    field :end_date, :utc_datetime
+    field :start_date, :utc_datetime_usec
+    field :end_date, :utc_datetime_usec
     field :round_number, :integer
     field :random_seed, :string
     field :random_trace, :string
 
-    timestamps()
+    timestamps([type: :utc_datetime_usec])
   end
 
   # TODO: 2024-01-21 - Introduce Status model
