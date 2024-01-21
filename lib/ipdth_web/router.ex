@@ -97,6 +97,14 @@ defmodule IpdthWeb.Router do
       live "/participations/:id", ParticipationLive.Show, :show
       live "/participations/:id/show/edit", ParticipationLive.Show, :edit
 
+      # Match Management - Global View
+      live "/matches", MatchLive.Index, :index
+      live "/matches/new", MatchLive.Index, :new
+      live "/matches/:id/edit", MatchLive.Index, :edit
+
+      live "/matches/:id", MatchLive.Show, :show
+      live "/matches/:id/show/edit", MatchLive.Show, :edit
+
     end
   end
 
