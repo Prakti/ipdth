@@ -2,17 +2,20 @@ defmodule Ipdth.Agents.Agent do
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias Ipdth.Tournaments.Participation
+
   schema "agents" do
     field :name, :string
     field :status, :string
     field :description, :string
     field :url, :string
     field :bearer_token, :string
+    has_many :participations, Participation
 
     timestamps([type: :utc_datetime_usec])
   end
 
-  # TODO: 2024-01-21 - Introduce Status-Model
+  # TODO: 2024-01-21 - Introduce Status-Model using an Enum
   # TODO: 2024-01-21 - Set some new status on creation
   # TODO: 2024-01-21 - Introduce Validation for url
 
