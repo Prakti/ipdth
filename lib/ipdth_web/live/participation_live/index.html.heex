@@ -1,0 +1,45 @@
+<.header>
+  Listing Participations
+  <:actions>
+    <.link patch={~p"/participations/new"}>
+      <.button>New Participation</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.table
+  id="participations"
+  rows={@streams.participations}
+  row_click={fn {_id, participation} -> JS.navigate(~p"/participations/#{participation}") end}
+>
+  <:col :let={{_id, participation}} label="Score"><%= participation.score %></:col>
+  <:col :let={{_id, participation}} label="Ranking"><%= participation.ranking %></:col>
+  <:col :let={{_id, participation}} label="Sign up"><%= participation.sign_up %></:col>
+  <:col :let={{_id, participation}} label="Status"><%= participation.status %></:col>
+  <:col :let={{_id, participation}} label="Details"><%= participation.details %></:col>
+  <:action :let={{_id, participation}}>
+    <div class="sr-only">
+      <.link navigate={~p"/participations/#{participation}"}>Show</.link>
+    </div>
+    <.link patch={~p"/participations/#{participation}/edit"}>Edit</.link>
+  </:action>
+  <:action :let={{id, participation}}>
+    <.link
+      phx-click={JS.push("delete", value: %{id: participation.id}) |> hide("##{id}")}
+      data-confirm="Are you sure?"
+    >
+      Delete
+    </.link>
+  </:action>
+</.table>
+
+<.modal :if={@live_action in [:new, :edit]} id="participation-modal" show on_cancel={JS.patch(~p"/participations")}>
+  <.live_component
+    module={IpdthWeb.ParticipationLive.FormComponent}
+    id={@participation.id || :new}
+    title={@page_title}
+    action={@live_action}
+    participation={@participation}
+    patch={~p"/participations"}
+  />
+</.modal>

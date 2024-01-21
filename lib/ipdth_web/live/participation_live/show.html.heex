@@ -1,0 +1,30 @@
+<.header>
+  Participation <%= @participation.id %>
+  <:subtitle>This is a participation record from your database.</:subtitle>
+  <:actions>
+    <.link patch={~p"/participations/#{@participation}/show/edit"} phx-click={JS.push_focus()}>
+      <.button>Edit participation</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.list>
+  <:item title="Score"><%= @participation.score %></:item>
+  <:item title="Ranking"><%= @participation.ranking %></:item>
+  <:item title="Sign up"><%= @participation.sign_up %></:item>
+  <:item title="Status"><%= @participation.status %></:item>
+  <:item title="Details"><%= @participation.details %></:item>
+</.list>
+
+<.back navigate={~p"/participations"}>Back to participations</.back>
+
+<.modal :if={@live_action == :edit} id="participation-modal" show on_cancel={JS.patch(~p"/participations/#{@participation}")}>
+  <.live_component
+    module={IpdthWeb.ParticipationLive.FormComponent}
+    id={@participation.id}
+    title={@page_title}
+    action={@live_action}
+    participation={@participation}
+    patch={~p"/participations/#{@participation}"}
+  />
+</.modal>

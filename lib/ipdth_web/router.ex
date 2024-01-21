@@ -70,6 +70,7 @@ defmodule IpdthWeb.Router do
       live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
 
       # Agent Managemet - Global View
+      # TODO: 2024-01-21 - Create User-Specific "MyAgent View"
       live "/agents", AgentLive.Index, :index
       live "/agents/new", AgentLive.Index, :new
       live "/agents/:id/edit", AgentLive.Index, :edit
@@ -85,7 +86,17 @@ defmodule IpdthWeb.Router do
       live "/tournaments/:id", TournamentLive.Show, :show
       live "/tournaments/:id/show/edit", TournamentLive.Show, :edit
 
-      # TODO: 2024-01-21 - Create User-Specific "MyAgent View"
+      # Tourmanent Participation Management - Global View
+      # TODO: 2024-01-21 - Remove this in favour of Embedded views in Agent
+      # TODO: 2024-01-21 - Remove this in favour of Embedded views in Tournament
+
+      live "/participations", ParticipationLive.Index, :index
+      live "/participations/new", ParticipationLive.Index, :new
+      live "/participations/:id/edit", ParticipationLive.Index, :edit
+
+      live "/participations/:id", ParticipationLive.Show, :show
+      live "/participations/:id/show/edit", ParticipationLive.Show, :edit
+
     end
   end
 

@@ -24,4 +24,22 @@ defmodule Ipdth.TournamentsFixtures do
 
     tournament
   end
+
+  @doc """
+  Generate a participation.
+  """
+  def participation_fixture(attrs \\ %{}) do
+    {:ok, participation} =
+      attrs
+      |> Enum.into(%{
+        details: "some details",
+        ranking: 42,
+        score: 42,
+        sign_up: ~U[2024-01-20 18:04:00.000000Z],
+        status: :signed_up
+      })
+      |> Ipdth.Tournaments.create_participation()
+
+    participation
+  end
 end
