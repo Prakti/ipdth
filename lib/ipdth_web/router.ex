@@ -69,8 +69,15 @@ defmodule IpdthWeb.Router do
       live "/users/settings", UserSettingsLive, :edit
       live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
 
-      # Agent Managemet - Global View
-      # TODO: 2024-01-21 - Create User-Specific "MyAgent View"
+      # TODO: 2024-01-21 - Create User Dashboard
+
+      # Agent Managemet for Users
+      live "/my/agents/", MyAgentLive.Index, :index
+      live "/my/agents/new", MyAgentLive.Index, :new
+      live "/my/agents/:id/edit", MyAgentLive.Index, :edit
+
+      # Global Agent Management
+      # TODO: 2021-01-21 - Create permission to globally edit agents
       live "/agents", AgentLive.Index, :index
       live "/agents/new", AgentLive.Index, :new
       live "/agents/:id/edit", AgentLive.Index, :edit
@@ -79,6 +86,7 @@ defmodule IpdthWeb.Router do
       live "/agents/:id/show/edit", AgentLive.Show, :edit
 
       # Tournament Management - Global View
+      # TODO: 2024-01-21 - Create permission for managing tournaments
       live "/tournaments", TournamentLive.Index, :index
       live "/tournaments/new", TournamentLive.Index, :new
       live "/tournaments/:id/edit", TournamentLive.Index, :edit
