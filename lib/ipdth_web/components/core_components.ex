@@ -23,7 +23,7 @@ defmodule IpdthWeb.CoreComponents do
   Renders a dropdown menu.
 
   ## Examples
-      
+
       <.dropdown_menu id="menu_a">
         Menu Title
         <:menu_items>Item 1</:menu_items>
@@ -38,18 +38,18 @@ defmodule IpdthWeb.CoreComponents do
 
   def dropdown_menu(assigns) do
     ~H"""
-      <div 
+      <div
         id={@id}
         phx-remove={hide("#{@id}-container")}
         class="relative mt-2"
       >
-        <button 
-          class="relative w-full py-2" 
+        <button
+          class="relative w-full py-2"
           phx-click={toggle_visibility("##{@id}-container")}
         >
           <%= render_slot(@inner_block) %>
         </button>
-        <.focus_wrap 
+        <.focus_wrap
           id={"#{@id}-container"}
           phx-click-away={hide("##{@id}-container")}
           class="absolute mt2 w-40 rounded bg-white shadow-xl hidden border border-color-zinc-400"
@@ -65,14 +65,14 @@ defmodule IpdthWeb.CoreComponents do
   end
 
   @doc """
-  Renders a navbar. 
+  Renders a navbar.
 
   ## Examples
     <.navbar>
-      <:nav_item id={:agents} route={~p"/agents"}> 
+      <:nav_item id={:agents} route={~p"/agents"}>
         Agents
       </:nav_item>
-      <:nav_item id={:tournaments} route={~p"/tournaments"}> 
+      <:nav_item id={:tournaments} route={~p"/tournaments"}>
         Tournaments
       </:nav_item>
     </.navbar>
@@ -192,20 +192,26 @@ defmodule IpdthWeb.CoreComponents do
       phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
       role="alert"
       class={[
-        "fixed top-2 right-2 w-80 sm:w-96 z-50 rounded-lg p-3 ring-1",
-        @kind == :info && "bg-emerald-50 text-emerald-800 ring-emerald-500 fill-cyan-900",
-        @kind == :error && "bg-rose-50 text-rose-900 shadow-md ring-rose-500 fill-rose-900"
+        "fixed bottom-10 right-10 w-80 sm:w-96 z-50 rounded-lg p-3 shadow-md text-white border-b-4",
+        @kind == :info && "bg-green-500 border-b-green-600",
+        @kind == :error && "bg-red-500 border-b-red-600"
       ]}
       {@rest}
     >
-      <p :if={@title} class="flex items-center gap-1.5 text-sm font-semibold leading-6">
-        <.icon :if={@kind == :info} name="hero-information-circle-mini" class="h-4 w-4" />
-        <.icon :if={@kind == :error} name="hero-exclamation-circle-mini" class="h-4 w-4" />
-        <%= @title %>
-      </p>
-      <p class="mt-2 text-sm leading-5"><%= msg %></p>
-      <button type="button" class="group absolute top-1 right-1 p-2" aria-label={gettext("close")}>
-        <.icon name="hero-x-mark-solid" class="h-5 w-5 opacity-40 group-hover:opacity-70" />
+      <div class="flex flex-row flex-nowrap item-center gap-2">
+        <div class="flex-none h-10 w-10">
+          <.icon :if={@kind == :info} name="hero-information-circle-mini" class="h-10 w-10" />
+          <.icon :if={@kind == :error} name="hero-exclamation-circle-mini" class="h-10 w-10" />
+        </div>
+        <div class="flex-grow flex-shrink">
+          <p :if={@title} class="text-sm font-semibold leading-6">
+            <%= @title %>
+          </p>
+          <p class="mt-2 text-sm leading-5"><%= msg %></p>
+        </div>
+      </div>
+      <button type="button" class="group absolute top-1 right-1 p-1" aria-label={gettext("close")}>
+        <.icon name="hero-x-mark-solid" class="h-5 w-5 opacity-60 group-hover:opacity-100" />
       </button>
     </div>
     """
@@ -232,7 +238,8 @@ defmodule IpdthWeb.CoreComponents do
       phx-connected={hide("#client-error")}
       hidden
     >
-      Attempting to reconnect <.icon name="hero-arrow-path" class="ml-1 h-3 w-3 animate-spin" />
+      Attempting to reconnect
+      <.icon name="hero-arrow-path" class="ml-1 h-3 w-3 animate-spin" />
     </.flash>
 
     <.flash
