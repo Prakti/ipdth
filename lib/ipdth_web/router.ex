@@ -17,12 +17,6 @@ defmodule IpdthWeb.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/", IpdthWeb do
-    pipe_through :browser
-
-    get "/", PageController, :home
-  end
-
   # Other scopes may use custom stacks.
   # scope "/api", IpdthWeb do
   #   pipe_through :api
@@ -66,10 +60,9 @@ defmodule IpdthWeb.Router do
 
     live_session :require_authenticated_user,
       on_mount: [{IpdthWeb.UserAuth, :ensure_authenticated}] do
+
       live "/users/settings", UserSettingsLive, :edit
       live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
-
-      # TODO: 2024-01-21 - Create User Dashboard
 
       # Agent Managemet for Users
       live "/my/agents/", MyAgentLive.Index, :index
@@ -123,6 +116,8 @@ defmodule IpdthWeb.Router do
 
     live_session :current_user,
       on_mount: [{IpdthWeb.UserAuth, :mount_current_user}] do
+
+      live "/", DashboardLive
       live "/users/confirm/:token", UserConfirmationLive, :edit
       live "/users/confirm", UserConfirmationInstructionsLive, :new
     end

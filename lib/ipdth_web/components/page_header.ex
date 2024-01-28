@@ -6,7 +6,8 @@ defmodule IpdthWeb.Components.PageHeader do
   Instructs the navbar to highlight the active page.
 
   TODO: 2024-01-28 - Think about moving this into layouts/app.html.heex
-  TODO: 2024-01-28 - Think about making navbar and user profile menu responsive
+  TODO: 2024-01-28 - Think about making navbar and user profile menu
+  responsive
   ## Examples
       <.live_component module={IpdthWeb.Components.PageHeader} id="page_header" active_page="tournaments" />
   """
@@ -21,7 +22,7 @@ defmodule IpdthWeb.Components.PageHeader do
 
         <!-- navigation -->
         <.navbar active_page={@active_page}>
-          <:nav_item id="dashboard" route="">Dashboard</:nav_item>
+          <:nav_item id="dashboard" route={~p"/"}>Dashboard</:nav_item>
           <:nav_item id="tournaments" route={~p"/tournaments"}>Tournaments</:nav_item>
           <:nav_item id="agents" route={~p"/agents"}>Agents</:nav_item>
           <:nav_item id="members" route={""}>Members</:nav_item>
@@ -55,7 +56,7 @@ defmodule IpdthWeb.Components.PageHeader do
             </.dropdown_menu>
           <% else %>
             <ul class="relative flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
-              <li>
+              <li :if={@active_page != "register"}>
                 <.link
                   href={~p"/users/register"}
                   class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
@@ -63,7 +64,7 @@ defmodule IpdthWeb.Components.PageHeader do
                   Register
                 </.link>
               </li>
-              <li>
+              <li :if={@active_page != "log_in"}>
                 <.link
                   href={~p"/users/log_in"}
                   class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"

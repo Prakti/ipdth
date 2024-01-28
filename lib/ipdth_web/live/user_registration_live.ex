@@ -48,6 +48,7 @@ defmodule IpdthWeb.UserRegistrationLive do
     socket =
       socket
       |> assign(trigger_submit: false, check_errors: false)
+      |> assign(active_page: "register")
       |> assign_form(changeset)
 
     {:ok, socket, temporary_assigns: [form: nil]}
