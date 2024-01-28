@@ -29,7 +29,9 @@ defmodule IpdthWeb.UserConfirmationInstructionsLive do
   end
 
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, form: to_form(%{}, as: "user"))}
+    {:ok, socket
+          |> assign(form: to_form(%{}, as: "user"))
+          |> assign(active_page: "user_confirmation")}
   end
 
   def handle_event("send_instructions", %{"user" => %{"email" => email}}, socket) do

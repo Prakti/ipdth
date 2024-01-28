@@ -81,7 +81,7 @@ defmodule IpdthWeb.UserRegistrationLiveTest do
         |> render_click()
         |> follow_redirect(conn, ~p"/users/log_in")
 
-      assert login_html =~ "Log in"
+      assert login_html =~ "Sign in to account"
     end
   end
 end

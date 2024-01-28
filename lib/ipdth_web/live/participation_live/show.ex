@@ -5,7 +5,7 @@ defmodule IpdthWeb.ParticipationLive.Show do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket}
+    {:ok, assign(socket, active_page: "participations")}
   end
 
   @impl true

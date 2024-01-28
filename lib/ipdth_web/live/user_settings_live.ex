@@ -93,6 +93,7 @@ defmodule IpdthWeb.UserSettingsLive do
 
     socket =
       socket
+      |> assign(:active_page, "user_settings")
       |> assign(:current_password, nil)
       |> assign(:email_form_current_password, nil)
       |> assign(:current_email, user.email)

@@ -6,7 +6,11 @@ defmodule IpdthWeb.ParticipationLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, stream(socket, :participations, Tournaments.list_participations())}
+    socket = socket
+             |> assign(:active_page, "participations")
+             |> stream(:participations, Tournaments.list_participations())
+
+    {:ok, socket}
   end
 
   @impl true

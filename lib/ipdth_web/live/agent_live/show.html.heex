@@ -1,30 +1,15 @@
 <.header>
-  Agent <%= @agent.id %>
-  <:subtitle>This is a agent record from your database.</:subtitle>
-  <:actions>
-    <.link patch={~p"/agents/#{@agent}/show/edit"} phx-click={JS.push_focus()}>
-      <.button>Edit agent</.button>
-    </.link>
-  </:actions>
+  <%= @agent.name %>
+  <:subtitle>Agent #<%= @agent.id %></:subtitle>
 </.header>
 
+<%!-- TODO: 2024-01-28 - Better display of attributes w.r.t layout --%>
 <.list>
-  <:item title="Name"><%= @agent.name %></:item>
   <:item title="Description"><%= @agent.description %></:item>
-  <:item title="Url"><%= @agent.url %></:item>
-  <:item title="Bearer token"><%= @agent.bearer_token %></:item>
   <:item title="Status"><%= @agent.status %></:item>
 </.list>
 
+<%!-- TODO: 2024-01-28 - show stats of agent, list of participated tournaments, user profile --%>
+
 <.back navigate={~p"/agents"}>Back to agents</.back>
 
-<.modal :if={@live_action == :edit} id="agent-modal" show on_cancel={JS.patch(~p"/agents/#{@agent}")}>
-  <.live_component
-    module={IpdthWeb.AgentLive.FormComponent}
-    id={@agent.id}
-    title={@page_title}
-    action={@live_action}
-    agent={@agent}
-    patch={~p"/agents/#{@agent}"}
-  />
-</.modal>

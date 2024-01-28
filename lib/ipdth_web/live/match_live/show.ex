@@ -5,7 +5,7 @@ defmodule IpdthWeb.MatchLive.Show do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket}
+    {:ok, assign(socket, active_page: "matches")}
   end
 
   @impl true
