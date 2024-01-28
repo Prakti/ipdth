@@ -6,7 +6,10 @@ defmodule IpdthWeb.AgentLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, stream(socket, :agents, Agents.list_agents())}
+    {:ok,
+      socket
+      |> assign(:active_page, "agents")
+      |> stream(:agents, Agents.list_agents())}
   end
 
   @impl true

@@ -65,6 +65,40 @@ defmodule IpdthWeb.CoreComponents do
   end
 
   @doc """
+  Renders a navbar. 
+
+  ## Examples
+    <.navbar>
+      <:nav_item id={:agents} route={~p"/agents"}> 
+        Agents
+      </:nav_item>
+      <:nav_item id={:tournaments} route={~p"/tournaments"}> 
+        Tournaments
+      </:nav_item>
+    </.navbar>
+  """
+  attr :active_page, :string, default: ""
+  slot :nav_item do
+    attr :id, :string, required: true
+    attr :route, :string, required: true
+  end
+
+  def navbar(assigns) do
+    ~H"""
+    <nav class="nav text-lg font-semibold">
+      <ul :if={@nav_item != []} class="flex items-center">
+        <li :for={item <- @nav_item} class={"#{if @active_page == item[:id],
+            do: "cursor-pointer border-b-2 border-amber-500 border-opacity-100 p-4 text-amber-500",
+            else: "cursor-pointer border-b-2 border-amber-500 border-opacity-0 p-4 duration-200 hover:border-opacity-100 hover:text-amber-500"}"}
+        >
+          <a href={item[:route]}><%= render_slot(item) %></a>
+        </li>
+      </ul>
+    </nav>
+    """
+  end
+
+  @doc """
   Renders a modal.
 
   ## Examples
