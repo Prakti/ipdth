@@ -20,6 +20,51 @@ defmodule IpdthWeb.CoreComponents do
   import IpdthWeb.Gettext
 
   @doc """
+  Renders a dropdown menu.
+
+  ## Examples
+      
+      <.dropdown_menu id="menu_a">
+        Menu Title
+        <:menu_items>Item 1</:menu_items>
+        <:menu_items>Item 2</:menu_items>
+        <:menu_items>Item 3</:menu_items>
+        <:menu_items>Item 4</:menu_items>
+      </.dropdown_menu>
+  """
+  attr :id, :string, required: true
+  slot :menu_items, required: true
+  slot :inner_block, required: true
+
+  def dropdown_menu(assigns) do
+    ~H"""
+      <div 
+        id={@id}
+        phx-remove={hide("#{@id}-container")}
+        class="relative mt-2"
+      >
+        <button 
+          class="relative w-full py-2" 
+          phx-click={toggle_visibility("##{@id}-container")}
+        >
+          <%= render_slot(@inner_block) %>
+        </button>
+        <.focus_wrap 
+          id={"#{@id}-container"}
+          phx-click-away={hide("##{@id}-container")}
+          class="absolute mt2 w-40 rounded bg-white shadow-xl hidden border border-color-zinc-400"
+        >
+          <ul class="flex flex-col gap-2 py-2 sm:px-6 lg:px-8 justify-end">
+            <li :for={item <- @menu_items}>
+              <%= render_slot(item) %>
+            </li>
+          </ul>
+        </.focus_wrap>
+      </div>
+    """
+  end
+
+  @doc """
   Renders a modal.
 
   ## Examples
@@ -608,6 +653,14 @@ defmodule IpdthWeb.CoreComponents do
         {"transition-all transform ease-in duration-200",
          "opacity-100 translate-y-0 sm:scale-100",
          "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"}
+    )
+  end
+
+  def toggle_visibility(js \\ %JS{}, selector) do
+    JS.toggle(js,
+      to: selector,
+      in: {"ease-out duration-100", "opacity-0 scale-95", "opacity-100 scale-100"},
+      out: {"ease-out duration-75", "opacity-100 scale-100", "opacity-0 scale-95"}
     )
   end
 
