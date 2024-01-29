@@ -54,8 +54,8 @@ defmodule IpdthWeb.CoreComponents do
           phx-click-away={hide("##{@id}-container")}
           class="absolute mt2 w-40 rounded bg-white shadow-xl hidden border border-color-zinc-400"
         >
-          <ul class="flex flex-col gap-2 py-2 sm:px-6 lg:px-8 justify-end">
-            <li :for={item <- @menu_items}>
+          <ul class="flex flex-col gap-2 py-2 justify-end items-stretch">
+            <li :for={item <- @menu_items} class="sm:px-6 lg:px-8 hover:bg-amber-300">
               <%= render_slot(item) %>
             </li>
           </ul>
