@@ -1,4 +1,4 @@
-<.header>
+<.header class="">
   Listing Tournaments
   <:actions>
     <.link patch={~p"/tournaments/new"}>
@@ -7,6 +7,9 @@
   </:actions>
 </.header>
 
+<%!-- TODO: 2024-02-03 - Think on how to format dates according to  user's timezone --%>
+<%!-- TODO: 2024-02-03 - Think on how to format dates according to  user's locale --%>
+
 <.table
   id="tournaments"
   rows={@streams.tournaments}
@@ -14,12 +17,12 @@
 >
   <:col :let={{_id, tournament}} label="Name"><%= tournament.name %></:col>
   <:col :let={{_id, tournament}} label="Description"><%= tournament.description %></:col>
-  <:col :let={{_id, tournament}} label="Start date"><%= tournament.start_date %></:col>
-  <:col :let={{_id, tournament}} label="End date"><%= tournament.end_date %></:col>
+  <:col :let={{_id, tournament}} label="Status"><.badge color="green"><%= tournament.status %></.badge></:col>
+  <:col :let={{_id, tournament}} label="Start date"><%= Calendar.strftime(tournament.start_date, "%Y-%m-%d %H:%M:%S") %></:col>
+  <:col :let={{_id, tournament}} label="End date"><%= Calendar.strftime(tournament.end_date, "%Y-%m-%d %H:%M:%S") %></:col>
   <:col :let={{_id, tournament}} label="Round number"><%= tournament.round_number %></:col>
   <:col :let={{_id, tournament}} label="Random seed"><%= tournament.random_seed %></:col>
   <:col :let={{_id, tournament}} label="Random trace"><%= tournament.random_trace %></:col>
-  <:col :let={{_id, tournament}} label="Status"><%= tournament.status %></:col>
   <:action :let={{_id, tournament}}>
     <div class="sr-only">
       <.link navigate={~p"/tournaments/#{tournament}"}>Show</.link>

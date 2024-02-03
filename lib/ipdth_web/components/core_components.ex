@@ -20,6 +20,23 @@ defmodule IpdthWeb.CoreComponents do
   import IpdthWeb.Gettext
 
   @doc """
+  Renders a badge
+  """
+  attr :color, :string, required: true
+  slot :inner_block, required: true
+  def badge(assigns) do
+    ~H"""
+      <div class={[
+         "bg-#{@color}-200 rounded-full px-2 py-1 text-xs",
+         "font-bold text-#{@color}-700 leading-none ring-1 ring-inset",
+         "ring-#{@color}-600/40"
+      ]}>
+        <%= render_slot(@inner_block) %>
+      </div>
+    """
+  end
+
+  @doc """
   Renders a dropdown menu.
 
   ## Examples
@@ -55,7 +72,7 @@ defmodule IpdthWeb.CoreComponents do
           class="absolute mt2 w-40 rounded bg-white shadow-xl hidden border border-color-zinc-400"
         >
           <ul class="flex flex-col gap-2 py-2 justify-end items-stretch">
-            <li :for={item <- @menu_items} class="sm:px-6 lg:px-8 hover:bg-amber-300">
+            <li :for={item <- @menu_items} class="sm:px-6 lg:px-8 hover:bg-amber-500 text-zinc-900 hover:text-white">
               <%= render_slot(item) %>
             </li>
           </ul>
@@ -311,8 +328,11 @@ defmodule IpdthWeb.CoreComponents do
     <button
       type={@type}
       class={[
-        "phx-submit-loading:opacity-75 rounded-lg bg-zinc-900 hover:bg-zinc-700 py-2 px-3",
-        "text-sm font-semibold leading-6 text-white active:text-white/80",
+        "phx-submit-loading:opacity-75 rounded-md bg-amber-600
+        hover:bg-amber-500 py-1 px-3",
+        "text-sm font-semibold leading-6 text-white",
+        "border-b-2 border-amber-800",
+        "hover:bg-amber-500 hover:border-amber-600 active:border-amber-500",
         @class
       ]}
       {@rest}
@@ -523,6 +543,8 @@ defmodule IpdthWeb.CoreComponents do
   @doc ~S"""
   Renders a table with generic styling.
 
+  TODO: 2024-02-03 - Create split button component and use for actions
+
   ## Examples
 
       <.table id="users" rows={@users}>
@@ -579,8 +601,9 @@ defmodule IpdthWeb.CoreComponents do
               </div>
             </td>
             <td :if={@action != []} class="relative w-14 p-0">
-              <div class="relative whitespace-nowrap py-4 text-right text-sm font-medium">
-                <span class="absolute -inset-y-px -right-4 left-0 group-hover:bg-zinc-50 sm:rounded-r-xl" />
+              <div class="relative whitespace-nowrap py-4 text-right text-sm font-medium group-hover:visible">
+                <span class="absolute -inset-y-px -right-4 left-0
+                group-hover:bg-zinc-50 sm:rounded-r-xl" />
                 <span
                   :for={action <- @action}
                   class="relative ml-4 font-semibold leading-6 text-zinc-900 hover:text-zinc-700"

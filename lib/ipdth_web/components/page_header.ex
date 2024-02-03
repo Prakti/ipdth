@@ -37,7 +37,7 @@ defmodule IpdthWeb.Components.PageHeader do
               <:menu_items>
                 <.link
                   href={~p"/users/settings"}
-                  class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold"
+                  class="text-[0.8125rem] leading-6 font-semibold"
                 >
                   Settings
                 </.link>
@@ -46,7 +46,7 @@ defmodule IpdthWeb.Components.PageHeader do
                 <.link
                   href={~p"/users/log_out"}
                   method="delete"
-                  class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold"
+                  class="text-[0.8125rem] leading-6 font-semibold"
                 >
                   Log out
                 </.link>
