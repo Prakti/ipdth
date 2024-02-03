@@ -27,7 +27,7 @@ defmodule IpdthWeb.CoreComponents do
   def badge(assigns) do
     ~H"""
       <div class={[
-         "bg-#{@color}-200 rounded-full px-2 py-1 text-xs",
+         "bg-#{@color}-200 rounded-md px-2 py-1 text-xs",
          "font-bold text-#{@color}-700 leading-none ring-1 ring-inset",
          "ring-#{@color}-600/40"
       ]}>
@@ -328,11 +328,10 @@ defmodule IpdthWeb.CoreComponents do
     <button
       type={@type}
       class={[
-        "phx-submit-loading:opacity-75 rounded-md bg-amber-600
-        hover:bg-amber-500 py-1 px-3",
-        "text-sm font-semibold leading-6 text-white",
-        "border-b-2 border-amber-800",
-        "hover:bg-amber-500 hover:border-amber-600 active:border-amber-500",
+        "phx-submit-loading:opacity-75 rounded-md bg-amber-500 hover:bg-amber-400 py-1 px-3",
+        "text-sm font-semibold leading-6 text-white active:text-zinc-700",
+        "border-b-2 border-amber-600 shadow",
+        "hover:border-amber-500 active:border-amber-400",
         @class
       ]}
       {@rest}
