@@ -21,11 +21,11 @@ defmodule Ipdth.AgentsTest do
     end
 
     test "create_agent/1 with valid data creates a agent" do
-      valid_attrs = %{name: "some name", status: "some status", description: "some description", url: "some url", bearer_token: "some bearer_token"}
+      valid_attrs = %{name: "some name", status: :inactive, description: "some description", url: "some url", bearer_token: "some bearer_token"}
 
       assert {:ok, %Agent{} = agent} = Agents.create_agent(valid_attrs)
       assert agent.name == "some name"
-      assert agent.status == "some status"
+      assert agent.status == :inactive
       assert agent.description == "some description"
       assert agent.url == "some url"
       assert agent.bearer_token == "some bearer_token"
@@ -37,11 +37,11 @@ defmodule Ipdth.AgentsTest do
 
     test "update_agent/2 with valid data updates the agent" do
       agent = agent_fixture()
-      update_attrs = %{name: "some updated name", status: "some updated status", description: "some updated description", url: "some updated url", bearer_token: "some updated bearer_token"}
+      update_attrs = %{name: "some updated name", status: :active, description: "some updated description", url: "some updated url", bearer_token: "some updated bearer_token"}
 
       assert {:ok, %Agent{} = agent} = Agents.update_agent(agent, update_attrs)
       assert agent.name == "some updated name"
-      assert agent.status == "some updated status"
+      assert agent.status == :active
       assert agent.description == "some updated description"
       assert agent.url == "some updated url"
       assert agent.bearer_token == "some updated bearer_token"

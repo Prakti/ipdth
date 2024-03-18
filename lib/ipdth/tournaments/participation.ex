@@ -23,4 +23,5 @@ defmodule Ipdth.Tournaments.Participation do
     |> cast(attrs, [:score, :ranking, :sign_up, :status, :details])
     |> validate_required([:score, :ranking, :sign_up, :status, :details])
   end
+
 end

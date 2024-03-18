@@ -4,8 +4,8 @@ defmodule IpdthWeb.AgentLiveTest do
   import Phoenix.LiveViewTest
   import Ipdth.AgentsFixtures
 
-  @create_attrs %{name: "some name", status: "some status", description: "some description", url: "some url", bearer_token: "some bearer_token"}
-  @update_attrs %{name: "some updated name", status: "some updated status", description: "some updated description", url: "some updated url", bearer_token: "some updated bearer_token"}
+  @create_attrs %{name: "some name", status: :inactive, description: "some description", url: "some url", bearer_token: "some bearer_token"}
+  @update_attrs %{name: "some updated name", status: :active, description: "some updated description", url: "some updated url", bearer_token: "some updated bearer_token"}
   @invalid_attrs %{name: nil, status: nil, description: nil, url: nil, bearer_token: nil}
 
   defp create_agent(_) do

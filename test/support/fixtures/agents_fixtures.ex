@@ -14,7 +14,7 @@ defmodule Ipdth.AgentsFixtures do
         bearer_token: "some bearer_token",
         description: "some description",
         name: "some name",
-        status: "some status",
+        status: :inactive,
         url: "some url"
       })
       |> Ipdth.Agents.create_agent()

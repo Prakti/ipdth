@@ -1,0 +1,122 @@
+openapi: 3.0.1
+info:
+  title: IPDTH Agent API
+  version: 1.0.0
+  description: |
+    The Iterated Prisoner's Dilemma Tournament Hub (IPDTH) Agent API allows programmed agents to submit decisions for a round of an Iterated Prisoner's Dilemma match. The API is designed to facilitate stateless implementations, providing agents with information about past rounds, the current round number and information about match and tournament.
+
+    # Iterated Prisoner's Dilemma Overview
+    The Iterated Prisoner's Dilemma is a classic game theory scenario where two players must decide whether to cooperate or compete. The outcome depends on the combined decisions of both players, leading to a series of interactions over multiple rounds.
+
+    # Match Structure
+    A match in the tournament consists of multiple rounds, with agents making decisions in each round based on past outcomes. Using the API the tournament hub contacts participating agents and asks for their decision for this round of the match.
+
+    # Tournament Participation
+    Tournaments consist of participating agents engaging in matches, with each agent facing various opponents. The objective is to accumulate points based on the outcomes of individual rounds. The final score of an agent is calculated from the points of their matches. All tournaments are held in a round robin fashion, to see how individual agents interact.
+
+    # Test Matches
+    In addition to regular tournament matches, agents have the option to engage in test matches. These matches serve as opportunities for agents to test their strategies against specific opponents, contributing to their development and improvement.
+
+paths:
+  /decide:
+    post:
+      summary: Receive decision from Agent
+      description: |
+        This endpoint will be called by the IPDTH to allow an Agent to submit its decision for the current round of a match. The Agent receives information about past rounds, the current round number, and additional match info and is supposed to return an object that contains the Agent's decision based on the provided information.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                round_number:
+                  type: integer
+                  description: The current round number of the ongoing match.
+                past_results:
+                  type: array
+                  description: Results of past rounds.
+                  items:
+                    type: object
+                    properties:
+                      action:
+                        type: string
+                        enum: ['Cooperate', 'Compete']
+                        description: |
+                          The decision of this Agent that round, i.e.: cooperate or not.
+                      points:
+                        type: integer
+                        enum: [0, 1, 2]
+                        description: |
+                          The points this agent earned in that round as a result of this decision.
+                match_info:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      enum: ['Tournament', 'Test Match']
+                      description: |
+                        The type of this match. (test match or a match in a tournament)
+                    tournament_id:
+                      type: string
+                      description: |
+                        Unique ID of the tournament. Will be -1 in case of test matches.
+                    match_id:
+                      type: string
+                      description: Unique ID of the match.
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  roundNumber:
+                    type: integer
+                    description: The current round number in the ongoing match.
+                  action:
+                    type: string
+                    enum: ['Cooperate', 'Compete']
+                    description: |
+                      The decision of this Agent that round, i.e.: cooperate or not.
+                  matchInfo:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        enum: ['Tournament', 'Test Match']
+                        description: |
+                          The type of this match. (test match or a match in a tournament)
+                      tournamentId:
+                        type: string
+                        description: |
+                          Unique ID of the tournament. Will be -1 in case of test matches.
+                      matchId:
+                        type: string
+                        description: Unique ID of the match.
+        '401':
+          description: Authentication Problem
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  details:
+                    type: string
+                    description: Details on why authentication failed.
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Name of the Error
+                  details:
+                    type: string
+                    description: |
+                      Debug information about the error.
+                      This part should only be sent to authenticated clients and stay empty otherwise.
