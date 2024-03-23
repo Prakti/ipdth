@@ -21,7 +21,7 @@ defmodule Ipdth.AgentsTest do
     end
 
     test "create_agent/1 with valid data creates a agent" do
-      valid_attrs = %{name: "some name", status: :inactive, description: "some description", url: "some url", bearer_token: "some bearer_token"}
+      valid_attrs = %{name: "some name", description: "some description", url: "some url", bearer_token: "some bearer_token"}
 
       assert {:ok, %Agent{} = agent} = Agents.create_agent(valid_attrs)
       assert agent.name == "some name"
@@ -37,11 +37,11 @@ defmodule Ipdth.AgentsTest do
 
     test "update_agent/2 with valid data updates the agent" do
       agent = agent_fixture()
-      update_attrs = %{name: "some updated name", status: :active, description: "some updated description", url: "some updated url", bearer_token: "some updated bearer_token"}
+      update_attrs = %{name: "some updated name", description: "some updated description", url: "some updated url", bearer_token: "some updated bearer_token"}
 
       assert {:ok, %Agent{} = agent} = Agents.update_agent(agent, update_attrs)
       assert agent.name == "some updated name"
-      assert agent.status == :active
+      assert agent.status == :inactive
       assert agent.description == "some updated description"
       assert agent.url == "some updated url"
       assert agent.bearer_token == "some updated bearer_token"
@@ -53,13 +53,17 @@ defmodule Ipdth.AgentsTest do
       assert agent == Agents.get_agent!(agent.id)
     end
 
+    # TODO: 2024-03-18 - We need a test for activation
+    # TODO: 2024-03-18 - We need a test for deactivation
+    # TODO: 2024-03-18 - We need a test for error_backoff
+
     test "delete_agent/1 deletes the agent" do
       agent = agent_fixture()
       assert {:ok, %Agent{}} = Agents.delete_agent(agent)
       assert_raise Ecto.NoResultsError, fn -> Agents.get_agent!(agent.id) end
     end
 
-    test "change_agent/1 returns a agent changeset" do
+    test "change_agent/1 returns an agent changeset" do
       agent = agent_fixture()
       assert %Ecto.Changeset{} = Agents.change_agent(agent)
     end

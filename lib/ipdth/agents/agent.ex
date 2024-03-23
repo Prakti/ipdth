@@ -4,6 +4,7 @@ defmodule Ipdth.Agents.Agent do
 
   alias Ipdth.Tournaments.Participation
   alias Ipdth.Accounts.User
+  alias Ipdth.Agents.Agent
 
   schema "agents" do
     field :name, :string
@@ -17,7 +18,6 @@ defmodule Ipdth.Agents.Agent do
     timestamps([type: :utc_datetime_usec])
   end
 
-  # TODO: 2024-01-21 - Set some new status on creation
   # TODO: 2024-01-21 - Introduce Validation for url
 
   @doc false
@@ -25,5 +25,31 @@ defmodule Ipdth.Agents.Agent do
     agent
     |> cast(attrs, [:name, :description, :url, :bearer_token, :status])
     |> validate_required([:name, :url, :bearer_token, :status])
+    |> validate_inclusion(:status, Ecto.Enum.values(Agent, :status))
   end
+
+  def update(agent, attrs) do
+    agent
+    |> cast(attrs, [:name, :description, :url, :bearer_token])
+    |> validate_required([:name, :url, :bearer_token])
+  end
+
+  def new(agent, attrs) do
+    agent
+    |> update(attrs)
+    |> put_change(:status, :inactive)
+  end
+
+  def activate(agent) do
+    change(agent, status: :active)
+  end
+
+  def error_backoff(agent) do
+    change(agent, status: :error_backoff)
+  end
+
+  def deactivate(agent) do
+    change(agent, status: :inactive)
+  end
+  
 end

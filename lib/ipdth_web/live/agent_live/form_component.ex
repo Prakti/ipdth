@@ -23,7 +23,7 @@ defmodule IpdthWeb.AgentLive.FormComponent do
         <.input field={@form[:description]} type="text" label="Description" />
         <.input field={@form[:url]} type="text" label="Url" />
         <.input field={@form[:bearer_token]} type="text" label="Bearer token" />
-        <.input field={@form[:status]} type="text" label="Status" />
+        <%!-- <.input field={@form[:status]} type="text" label="Status" /> --%>
         <:actions>
           <.button phx-disable-with="Saving...">Save Agent</.button>
         </:actions>

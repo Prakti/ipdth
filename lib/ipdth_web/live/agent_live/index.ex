@@ -35,6 +35,7 @@ defmodule IpdthWeb.AgentLive.Index do
     |> assign(:agent, nil)
   end
 
+
   @impl true
   def handle_info({IpdthWeb.AgentLive.FormComponent, {:saved, agent}}, socket) do
     {:noreply, stream_insert(socket, :agents, agent)}
@@ -46,5 +47,17 @@ defmodule IpdthWeb.AgentLive.Index do
     {:ok, _} = Agents.delete_agent(agent)
 
     {:noreply, stream_delete(socket, :agents, agent)}
+  end
+
+  @impl true
+  def handle_event("activate", %{"id" => id}, socket) do
+    agent = Agents.get_agent!(id)
+    # TODO: 2024-03-18 - Use put_flash to display flash-message, succes, error
+    case Agents.activate_agent(agent) do
+      {:ok, _} ->
+        {:noreply, stream(socket, :agents, Agents.list_agents())}
+      {:error, _} ->
+        {:noreply, socket}
+    end
   end
 end

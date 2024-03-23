@@ -7,6 +7,10 @@ defmodule Ipdth.Agents do
   alias Ipdth.Repo
 
   alias Ipdth.Agents.Agent
+  alias Ipdth.Agents.Connection
+
+  # TODO: 2024-03-18 - Save User as Owner upon creation
+  # TODO: 2024-03-18 - Ensure that only Owner can update, activate, deactivate an agent
 
   @doc """
   Returns the list of agents.
@@ -51,7 +55,7 @@ defmodule Ipdth.Agents do
   """
   def create_agent(attrs \\ %{}) do
     %Agent{}
-    |> Agent.changeset(attrs)
+    |> Agent.new(attrs)
     |> Repo.insert()
   end
 
@@ -69,7 +73,7 @@ defmodule Ipdth.Agents do
   """
   def update_agent(%Agent{} = agent, attrs) do
     agent
-    |> Agent.changeset(attrs)
+    |> Agent.update(attrs)
     |> Repo.update()
   end
 
@@ -100,5 +104,28 @@ defmodule Ipdth.Agents do
   """
   def change_agent(%Agent{} = agent, attrs \\ %{}) do
     Agent.changeset(agent, attrs)
+  end
+
+  @doc """
+  Activates an agent. Tests the connection before activation.
+
+  ## Examples
+
+      iex> activate_agent(agent)
+      {:ok, %Agent{}}
+  """
+  def activate_agent(%Agent{} = agent) do
+    # TODO: 2024-03-18 - Think about running the connection test in a separate process
+
+    case Connection.test(agent) do
+      :ok ->
+        agent
+        |> Agent.activate()
+        |> Repo.update()
+      {:error, {_type, _details}} ->
+        agent
+        |> Agent.error_backoff()
+        |> Repo.update()
+    end
   end
 end

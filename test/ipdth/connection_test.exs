@@ -30,6 +30,8 @@ defmodule Ipdth.Agents.ConnectionTest do
   end
 
   def validate_req_body(req_body) do
+    
+
     validate_past_result = fn past_result ->
       validator_map = %{
         "action" => &Dredd.validate_string/1,
