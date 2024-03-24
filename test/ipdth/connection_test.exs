@@ -1,37 +1,14 @@
 defmodule Ipdth.Agents.ConnectionTest do
-  use ExUnit.Case, async: true
+  use Ipdth.DataCase
 
   import Ipdth.AgentsFixtures
 
   alias Ipdth.Agents.Agent
+  alias Ipdth.Agents.Connection
 
-  @test_bearer_token "0xBABAF00"
-  @success_response ~s<{
-    "roundNumber": 0,
-    "action": "Cooperate",
-    "matchInfo": {
-      "type": "Tournament",
-      "tournamentId": "string",
-      "matchId": "string"
-    }
-  }>
-
-
-  defp endpoint_url(port), do: "http://localhost:#{port}/"
-
-  defp create_agent_and_bypass(_) do
-    bypass = Bypass.open()
-    agent = %{
-      url: "http://localhost:#{bypass.port}/decide",
-      bearer_token: @test_bearer_token
-    }
-
-    %{agent: agent, bypass: bypass}
-  end
+  # TODO: 2024-03-23 - Property Test the Connection using StreamData
 
   def validate_req_body(req_body) do
-    
-
     validate_past_result = fn past_result ->
       validator_map = %{
         "action" => &Dredd.validate_string/1,
@@ -63,10 +40,11 @@ defmodule Ipdth.Agents.ConnectionTest do
     Dredd.validate_map(req_body, validator_map)
   end
 
-  describe "Connection.test" do
-    setup [:create_agent_and_bypass]
+  describe "Connection" do
 
-    test "returns :ok if the connected agent responds correctly", %{agent: agent, bypass: bypass} do
+    test "test/1 returns :ok if the connected agent responds correctly" do
+      %{agent: agent, bypass: bypass} = agent_fixture_and_mock_service()
+
       # Setup Bypass for a success case
       Bypass.expect_once(bypass, "POST", "/decide", fn conn ->
             assert "POST" == conn.method
@@ -74,7 +52,7 @@ defmodule Ipdth.Agents.ConnectionTest do
             # Ensure that our client sends correct Headers
             req_headers = conn.req_headers
             assert Enum.find(req_headers, fn header -> header == {"content-type", "application/json"} end)
-            assert Enum.find(req_headers, fn header -> header == {"authorization", "Bearer " <> @test_bearer_token} end)
+            assert Enum.find(req_headers, fn header -> header == {"authorization", "Bearer " <> agent_service_bearer_token()} end)
             assert Enum.find(req_headers, fn header -> header == {"accept", "application/json"} end)
 
             conn = Plug.run(conn, [{Plug.Parsers, [parsers: [:json], json_decoder: Jason]}])
@@ -85,7 +63,7 @@ defmodule Ipdth.Agents.ConnectionTest do
 
             conn
             |> Plug.Conn.merge_resp_headers([{"content-type", "application/json"}])
-            |> Plug.Conn.resp(200, @success_response)
+            |> Plug.Conn.resp(200, agent_service_success_response())
       end)
 
       assert :ok == Ipdth.Agents.Connection.test(agent)

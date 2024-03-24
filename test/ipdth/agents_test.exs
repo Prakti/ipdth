@@ -35,6 +35,25 @@ defmodule Ipdth.AgentsTest do
       assert {:error, %Ecto.Changeset{}} = Agents.create_agent(@invalid_attrs)
     end
 
+    test "activate_agent/1 with responsive agent activates the agent" do
+      %{agent: agent, bypass: bypass} = agent_fixture_and_mock_service()
+
+      Bypass.expect_once(bypass, "POST", "/decide", fn conn ->
+        assert "POST" == conn.method
+
+        conn
+        |> Plug.Conn.merge_resp_headers([{"content-type", "application/json"}])
+        |> Plug.Conn.resp(200, agent_service_success_response())
+      end)
+
+      assert {:ok, %Agent{} = activated_agent} = Agents.activate_agent(agent)
+      assert activated_agent.status == :active
+    end
+
+    test "activate_agent/1 with unresponsive agent service puts agent into error_backoff" do
+      assert false, "Implement Test"
+    end
+
     test "update_agent/2 with valid data updates the agent" do
       agent = agent_fixture()
       update_attrs = %{name: "some updated name", description: "some updated description", url: "some updated url", bearer_token: "some updated bearer_token"}
