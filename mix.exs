@@ -54,6 +54,7 @@ defmodule Ipdth.MixProject do
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:esbuild, "~> 0.7", runtime: Mix.env() == :dev},
       {:tailwind, "~> 0.2.0", runtime: Mix.env() == :dev},
+      {:credo, "~> 1.6", only: [:dev, :test], runtime: false}
     ]
   end
 
