@@ -51,5 +51,4 @@ defmodule Ipdth.Agents.Agent do
   def deactivate(agent) do
     change(agent, status: :inactive)
   end
-  
 end

@@ -4,6 +4,8 @@ defmodule Ipdth.Accounts.User do
 
   alias Ipdth.Agents.Agent
 
+  # TODO: extend schema with :name, :string field (required)
+
   schema "users" do
     field :email, :string
     field :password, :string, virtual: true, redact: true

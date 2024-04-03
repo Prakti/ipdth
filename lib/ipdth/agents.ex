@@ -115,7 +115,8 @@ defmodule Ipdth.Agents do
       {:ok, %Agent{}}
   """
   def activate_agent(%Agent{} = agent) do
-    # TODO: 2024-03-18 - Think about running the connection test in a separate process
+    # TODO: 2024-03-18 - Run the connection test in a separate process
+    # TODO: 2024-04-03 - Trap exits of the separate process and handle errors
 
     case Connection.test(agent) do
       :ok ->
@@ -127,5 +128,19 @@ defmodule Ipdth.Agents do
         |> Agent.error_backoff()
         |> Repo.update()
     end
+  end
+
+  @doc """
+  Deactivates an agent. Resets error status.
+
+  ## Examples
+
+      iex> activate_agent(agent)
+      {:ok, %Agent{}}
+  """
+  def deactivate_agent(%Agent{} = agent) do
+    agent
+    |> Agent.deactivate()
+    |> Repo.update()
   end
 end

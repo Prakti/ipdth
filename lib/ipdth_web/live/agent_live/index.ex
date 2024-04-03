@@ -52,12 +52,28 @@ defmodule IpdthWeb.AgentLive.Index do
   @impl true
   def handle_event("activate", %{"id" => id}, socket) do
     agent = Agents.get_agent!(id)
-    # TODO: 2024-03-18 - Use put_flash to display flash-message, succes, error
+    # TODO: 2024-03-18 - Use put_flash to display flash-message, success / error
     case Agents.activate_agent(agent) do
       {:ok, _} ->
-        {:noreply, stream(socket, :agents, Agents.list_agents())}
+        {:noreply, socket
+                   |> stream(:agents, Agents.list_agents())
+                   |> put_flash(:success, "Agent #{agent.name} activated")}
       {:error, _} ->
-        {:noreply, socket}
+        {:noreply, put_flash(socket, :error, "Could not activate Agent #{agent.name}")}
+    end
+  end
+
+  @impl true
+  def handle_event("deactivate", %{"id" => id}, socket) do
+    agent = Agents.get_agent!(id)
+    # TODO: 2024-03-18 - Use put_flash to display flash-message, succes, error
+    case Agents.deactivate_agent(agent) do
+      {:ok, _} ->
+        {:noreply, socket
+                   |> stream(:agents, Agents.list_agents())
+                   |> put_flash(:success, "Agent #{agent.name} activated")}
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Could not deactivate Agent #{agent.name}")}
     end
   end
 end
