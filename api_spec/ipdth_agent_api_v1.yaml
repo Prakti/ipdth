@@ -66,13 +66,13 @@ paths:
                       description: Unique ID of the match.
       responses:
         '200':
-          description: Successful operation
+          description: Successful Decision
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  roundNumber:
+                  round_number:
                     type: integer
                     description: The current round number in the ongoing match.
                   action:
@@ -80,7 +80,7 @@ paths:
                     enum: ['Cooperate', 'Compete']
                     description: |
                       The decision of this Agent that round, i.e.: cooperate or not.
-                  matchInfo:
+                  match_info:
                     type: object
                     properties:
                       type:
@@ -88,13 +88,23 @@ paths:
                         enum: ['Tournament', 'Test Match']
                         description: |
                           The type of this match. (test match or a match in a tournament)
-                      tournamentId:
+                      tournament_id:
                         type: string
                         description: |
                           Unique ID of the tournament. Will be -1 in case of test matches.
                       matchId:
                         type: string
                         description: Unique ID of the match.
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  details: 
+                    type: string
+                    description: Details on why the request was considered bad.
         '401':
           description: Authentication Problem
           content:
@@ -102,7 +112,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  details:
+                  details: 
                     type: string
                     description: Details on why authentication failed.
         '500':
@@ -118,5 +128,5 @@ paths:
                   details:
                     type: string
                     description: |
-                      Debug information about the error.
+                      Debug information about the error. 
                       This part should only be sent to authenticated clients and stay empty otherwise.
