@@ -82,6 +82,79 @@ defmodule IpdthWeb.CoreComponents do
   end
 
   @doc """
+  Renders a split-button.
+
+  ## Examples
+
+    <.split_button>
+      Edit
+      <:buttons>Activate</:buttons>
+      <:buttons>Delete </:buttons>
+    </.split-button>
+  """
+  attr :id, :string, required: true
+  slot :buttons, required: true
+  slot :inner_block, required: true
+
+  def split_button(assigns) do
+    ~H"""
+      <div>
+        <div>
+          <span><%= render_slot(@inner_block) %></span>
+          <button
+            class="inline"
+            phx-click={toggle_visibility("##{@id}-container")}
+          >
+            <.icon name="hero-chevron-down" class="h-4 w-4"/>
+          </button>
+        </div>
+        <.focus_wrap
+          id={"#{@id}-container"}
+          phx-click-away={hide("##{@id}-container")}
+          class="absolute hidden z-50 bg-zinc-500 shadow-xl right-0"
+        >
+          <div :for={button <- @buttons}>
+            <%= render_slot(button) %>
+          </div>
+        </.focus_wrap>
+      </div>
+    """
+  end
+
+  @doc """
+  Renders a button.
+
+  ## Examples
+
+      <.button>Send!</.button>
+      <.button phx-click="go" class="ml-2">Send!</.button>
+  """
+  attr :type, :string, default: nil
+  attr :class, :string, default: nil
+  attr :rest, :global, include: ~w(disabled form name value)
+
+  slot :inner_block, required: true
+
+  def button(assigns) do
+    ~H"""
+    <button
+      type={@type}
+      class={[
+        "phx-submit-loading:opacity-75 rounded-md bg-amber-500 hover:bg-amber-400 py-1 px-3",
+        "text-sm font-semibold leading-6 text-white active:text-zinc-700",
+        "border-b-2 border-amber-600 shadow",
+        "hover:border-amber-500 active:border-amber-400",
+        @class
+      ]}
+      {@rest}
+    >
+      <%= render_slot(@inner_block) %>
+    </button>
+    """
+  end
+
+
+  @doc """
   Renders a navbar.
 
   ## Examples
@@ -309,37 +382,6 @@ defmodule IpdthWeb.CoreComponents do
     """
   end
 
-  @doc """
-  Renders a button.
-
-  ## Examples
-
-      <.button>Send!</.button>
-      <.button phx-click="go" class="ml-2">Send!</.button>
-  """
-  attr :type, :string, default: nil
-  attr :class, :string, default: nil
-  attr :rest, :global, include: ~w(disabled form name value)
-
-  slot :inner_block, required: true
-
-  def button(assigns) do
-    ~H"""
-    <button
-      type={@type}
-      class={[
-        "phx-submit-loading:opacity-75 rounded-md bg-amber-500 hover:bg-amber-400 py-1 px-3",
-        "text-sm font-semibold leading-6 text-white active:text-zinc-700",
-        "border-b-2 border-amber-600 shadow",
-        "hover:border-amber-500 active:border-amber-400",
-        @class
-      ]}
-      {@rest}
-    >
-      <%= render_slot(@inner_block) %>
-    </button>
-    """
-  end
 
   @doc """
   Renders an input with label and error messages.
@@ -543,6 +585,9 @@ defmodule IpdthWeb.CoreComponents do
   Renders a table with generic styling.
 
   TODO: 2024-02-03 - Create split button component and use for actions
+  TODO: 2024-04-03 - Introduce :primary_action for split button
+  TODO: 2024-04-03 - Introduce :secondary_action for split button
+  TODO: 2024-04-03 - Introduce :hidden_action for split button
 
   ## Examples
 
