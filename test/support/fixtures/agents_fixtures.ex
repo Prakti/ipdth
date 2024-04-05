@@ -4,20 +4,23 @@ defmodule Ipdth.AgentsFixtures do
   entities via the `Ipdth.Agents` context.
   """
 
+  alias Ipdth.AccountsFixtures
+
   @doc """
   Generate a agent.
   """
   def agent_fixture(attrs \\ %{}) do
-    {:ok, agent} =
-      attrs
-      |> Enum.into(%{
-        bearer_token: "some bearer_token",
-        description: "some description",
-        name: "some name",
-        status: :active,
-        url: "some url"
-      })
-      |> Ipdth.Agents.create_agent()
+    user = AccountsFixtures.user_fixture()
+
+    agent_attrs = Enum.into(attrs, %{
+      bearer_token: "some bearer_token",
+      description: "some description",
+      name: "some name",
+      status: :active,
+      url: "some url"
+    })
+
+    {:ok, agent} = Ipdth.Agents.create_agent(user.id, agent_attrs)
 
     agent
   end

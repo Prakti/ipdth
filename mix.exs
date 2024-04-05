@@ -49,6 +49,7 @@ defmodule Ipdth.MixProject do
       {:plug_cowboy, "~> 2.5"},
       {:req, "~> 0.4.0"},
       {:dredd, "~> 2.0"},
+      {:faker, "~> 0.18", only: [:dev, :test]},
       {:floki, ">= 0.30.0", only: :test},
       {:bypass, "~> 2.1", only: :test},
       {:phoenix_live_reload, "~> 1.2", only: :dev},

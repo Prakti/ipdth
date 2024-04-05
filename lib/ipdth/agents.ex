@@ -22,7 +22,7 @@ defmodule Ipdth.Agents do
 
   """
   def list_agents do
-    Repo.all(Agent)
+    Repo.all(from a in Agent, preload: :owner)
   end
 
   @doc """
@@ -39,23 +39,35 @@ defmodule Ipdth.Agents do
       ** (Ecto.NoResultsError)
 
   """
-  def get_agent!(id), do: Repo.get!(Agent, id)
+  def get_agent!(id, preload \\ []), do: Repo.get!(Agent, id) |> Repo.preload(preload)
+
+  @doc """
+  Loads the owner for a given Agent. Sometimes you already have a loaded agent
+  and also want the owner for it. You can then use this to load the owner into
+  the association on the agent schema.
+
+  ## Example
+
+     iex> load_owner(agent)
+     %Agent{}
+  """
+  def load_owner(%Agent{} = agent), do: Repo.preload(agent, [:owner])
 
   @doc """
   Creates a agent.
 
   ## Examples
 
-      iex> create_agent(%{field: value})
+      iex> create_agent(owner_id, %{field: value})
       {:ok, %Agent{}}
 
-      iex> create_agent(%{field: bad_value})
+      iex> create_agent(owner_id, %{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_agent(attrs \\ %{}) do
+  def create_agent(owner_id, attrs \\ %{}) do
     %Agent{}
-    |> Agent.new(attrs)
+    |> Agent.new(owner_id, attrs)
     |> Repo.insert()
   end
 

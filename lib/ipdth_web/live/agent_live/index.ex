@@ -35,9 +35,12 @@ defmodule IpdthWeb.AgentLive.Index do
     |> assign(:agent, nil)
   end
 
+  # TODO: 2024-04-05 - Ensure only onwers can trigger actions on agents
+  # TODO: 2024-04-05 - Ensure only onwers can see action buttons in all views of agents
 
   @impl true
   def handle_info({IpdthWeb.AgentLive.FormComponent, {:saved, agent}}, socket) do
+    agent = Agents.load_owner(agent)
     {:noreply, stream_insert(socket, :agents, agent)}
   end
 
@@ -52,12 +55,12 @@ defmodule IpdthWeb.AgentLive.Index do
   @impl true
   def handle_event("activate", %{"id" => id}, socket) do
     agent = Agents.get_agent!(id)
-    # TODO: 2024-03-18 - Use put_flash to display flash-message, success / error
     case Agents.activate_agent(agent) do
       {:ok, _} ->
         {:noreply, socket
                    |> stream(:agents, Agents.list_agents())
-                   |> put_flash(:success, "Agent #{agent.name} activated")}
+                   |> put_flash(:info, "Agent #{agent.name} activated")
+                   |> push_patch(to: ~p"/agents")}
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Could not activate Agent #{agent.name}")}
     end
@@ -66,12 +69,12 @@ defmodule IpdthWeb.AgentLive.Index do
   @impl true
   def handle_event("deactivate", %{"id" => id}, socket) do
     agent = Agents.get_agent!(id)
-    # TODO: 2024-03-18 - Use put_flash to display flash-message, succes, error
     case Agents.deactivate_agent(agent) do
       {:ok, _} ->
         {:noreply, socket
                    |> stream(:agents, Agents.list_agents())
-                   |> put_flash(:success, "Agent #{agent.name} activated")}
+                   |> put_flash(:info, "Agent #{agent.name} deactivated")
+                   |> push_patch(to: ~p"/agents")}
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Could not deactivate Agent #{agent.name}")}
     end

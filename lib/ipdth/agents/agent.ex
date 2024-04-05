@@ -34,9 +34,10 @@ defmodule Ipdth.Agents.Agent do
     |> validate_required([:name, :url, :bearer_token])
   end
 
-  def new(agent, attrs) do
+  def new(agent, owner_id, attrs) do
     agent
     |> update(attrs)
+    |> put_change(:owner_id, owner_id)
     |> put_change(:status, :inactive)
   end
 

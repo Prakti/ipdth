@@ -23,7 +23,6 @@ defmodule IpdthWeb.AgentLive.FormComponent do
         <.input field={@form[:description]} type="text" label="Description" />
         <.input field={@form[:url]} type="text" label="Url" />
         <.input field={@form[:bearer_token]} type="text" label="Bearer token" />
-        <%!-- <.input field={@form[:status]} type="text" label="Status" /> --%>
         <:actions>
           <.button phx-disable-with="Saving...">Save Agent</.button>
         </:actions>
@@ -72,7 +71,8 @@ defmodule IpdthWeb.AgentLive.FormComponent do
   end
 
   defp save_agent(socket, :new, agent_params) do
-    case Agents.create_agent(agent_params) do
+    owner = socket.assigns.current_user
+    case Agents.create_agent(owner.id, agent_params) do
       {:ok, agent} ->
         notify_parent({:saved, agent})
 

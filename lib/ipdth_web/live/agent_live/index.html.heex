@@ -8,7 +8,6 @@
 </.header>
 
 <%!-- TODO: 2024-02-03 -- Only show actions if the Agent is owned by the current_user --%>
-<%!-- TODO: 2024-02-03 -- Create activate action if the Agent is owned by the current_user --%>
 <%!-- TODO: 2024-02-03 -- Create agent_badge component that matches colors to agent state --%>
 
 <.table
@@ -21,12 +20,13 @@
   <:col :let={{_id, agent}} label="Url"><%= agent.url %></:col>
   <:col :let={{_id, agent}} label="Bearer token"><%= agent.bearer_token %></:col>
   <:col :let={{_id, agent}} label="Status"><%= agent.status %></:col>
+  <:col :let={{_id, agent}} label="Owner"><%= agent.owner.email %></:col>
   <:action :let={{_id, agent}} >
-    <.link :if={agent.status != :active}
+    <.link :if={agent.status != :active && agent.owner.id == @current_user.id}
       phx-click={JS.push("activate", value: %{id: agent.id})}>
       Activate
     </.link>
-    <.link :if={agent.status == :active}
+    <.link :if={agent.status == :active && agent.owner.id == @current_uer.id}
       phx-click={JS.push("deactivate", value: %{id: agent.id})}>
       Deactivate
     </.link>
@@ -35,10 +35,13 @@
     <div class="sr-only">
       <.link navigate={~p"/agents/#{agent}"}>Show</.link>
     </div>
-    <.link patch={~p"/agents/#{agent}/edit"}>Edit</.link>
+    <.link :if={agent.owner.id == @current_user.id} patch={~p"/agents/#{agent}/edit"}>
+      Edit
+    </.link>
   </:action>
   <:action :let={{id, agent}}>
     <.link
+      :if={agent.owner.id == @current_user.id}
       phx-click={JS.push("delete", value: %{id: agent.id}) |> hide("##{id}")}
       data-confirm="Are you sure?"
     >
@@ -54,6 +57,7 @@
     title={@page_title}
     action={@live_action}
     agent={@agent}
+    current_user={@current_user}
     patch={~p"/agents"}
   />
 </.modal>

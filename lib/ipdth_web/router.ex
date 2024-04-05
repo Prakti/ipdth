@@ -65,9 +65,9 @@ defmodule IpdthWeb.Router do
       live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
 
       # Agent Managemet for Users
-      live "/my/agents/", MyAgentLive.Index, :index
-      live "/my/agents/new", MyAgentLive.Index, :new
-      live "/my/agents/:id/edit", MyAgentLive.Index, :edit
+      #live "/my/agents/", MyAgentLive.Index, :index
+      #live "/my/agents/new", MyAgentLive.Index, :new
+      #live "/my/agents/:id/edit", MyAgentLive.Index, :edit
 
       # Global Agent Management
       # TODO: 2021-01-21 - Create permission to globally edit agents (Admin)

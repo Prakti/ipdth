@@ -7,11 +7,13 @@ defmodule Ipdth.AgentsTest do
     alias Ipdth.Agents.Agent
 
     import Ipdth.AgentsFixtures
+    import Ipdth.AccountsFixtures
 
     @invalid_attrs %{name: nil, status: nil, description: nil, url: nil, bearer_token: nil}
 
     test "list_agents/0 returns all agents" do
-      agent = agent_fixture()
+      agent = Agents.load_owner(agent_fixture())
+
       assert Agents.list_agents() == [agent]
     end
 
@@ -21,9 +23,10 @@ defmodule Ipdth.AgentsTest do
     end
 
     test "create_agent/1 with valid data creates a agent" do
+      owner = user_fixture()
       valid_attrs = %{name: "some name", description: "some description", url: "some url", bearer_token: "some bearer_token"}
 
-      assert {:ok, %Agent{} = agent} = Agents.create_agent(valid_attrs)
+      assert {:ok, %Agent{} = agent} = Agents.create_agent(owner.id, valid_attrs)
       assert agent.name == "some name"
       assert agent.status == :inactive
       assert agent.description == "some description"
