@@ -8,13 +8,13 @@ defmodule IpdthWeb.AgentLiveTest do
   @update_attrs %{name: "some updated name", description: "some updated description", url: "some updated url", bearer_token: "some updated bearer_token"}
   @invalid_attrs %{name: nil, description: nil, url: nil, bearer_token: nil}
 
-  defp create_agent(_) do
-    agent = agent_fixture()
+  defp create_agent(%{user: owner}) do
+    agent = agent_fixture(owner)
     %{agent: agent}
   end
 
   describe "Index" do
-    setup [:create_agent, :register_and_log_in_user]
+    setup [:register_and_log_in_user, :create_agent]
 
     test "lists all agents", %{conn: conn, agent: agent} do
       {:ok, _index_live, html} = live(conn, ~p"/agents")
@@ -49,6 +49,8 @@ defmodule IpdthWeb.AgentLiveTest do
     test "updates agent in listing", %{conn: conn, agent: agent} do
       {:ok, index_live, _html} = live(conn, ~p"/agents")
 
+      assert has_element?(index_live, "#agents-#{agent.id}", "Edit")
+
       assert index_live |> element("#agents-#{agent.id} a", "Edit") |> render_click() =~
                "Edit Agent"
 
@@ -78,7 +80,7 @@ defmodule IpdthWeb.AgentLiveTest do
   end
 
   describe "Show" do
-    setup [:create_agent, :register_and_log_in_user]
+    setup [:register_and_log_in_user, :create_agent]
 
     test "displays agent", %{conn: conn, agent: agent} do
       {:ok, _show_live, html} = live(conn, ~p"/agents/#{agent}")

@@ -20,9 +20,10 @@ defmodule Ipdth.Agents.Connection do
   end
 
   def test(agent) do
+    # Do something
     auth = {:bearer, agent.bearer_token}
     test_request = create_test_request()
-    
+
     req = Req.new(json: test_request, auth: auth, url: agent.url)
 
     with {:ok, response} <- Req.post(req) do
@@ -35,7 +36,7 @@ defmodule Ipdth.Agents.Connection do
     end
   end
 
-  def validate_body(response, test_request) do
+  def validate_body(response, _test_request) do
     json =  response.body
     if json["action"]  != nil do
       :ok
@@ -44,8 +45,9 @@ defmodule Ipdth.Agents.Connection do
     end
   end
 
-  def fill_error_details(error, response) do
+  def fill_error_details(error, _response) do
     # TODO: 2024-03-17 - Do proper inspection of response body.
+    {error, "TODO: fill in more details!"}
   end
 
 

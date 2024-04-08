@@ -2,6 +2,7 @@ defmodule Ipdth.Agents.ConnectionTest do
   use Ipdth.DataCase
 
   import Ipdth.AgentsFixtures
+  import Ipdth.AccountsFixtures
 
   alias Ipdth.Agents.Agent
   alias Ipdth.Agents.Connection
@@ -43,7 +44,8 @@ defmodule Ipdth.Agents.ConnectionTest do
   describe "Connection" do
 
     test "test/1 returns :ok if the connected agent responds correctly" do
-      %{agent: agent, bypass: bypass} = agent_fixture_and_mock_service()
+      owner = user_fixture()
+      %{agent: agent, bypass: bypass} = agent_fixture_and_mock_service(owner)
 
       # Setup Bypass for a success case
       Bypass.expect_once(bypass, "POST", "/decide", fn conn ->

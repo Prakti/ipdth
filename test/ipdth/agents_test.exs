@@ -12,13 +12,15 @@ defmodule Ipdth.AgentsTest do
     @invalid_attrs %{name: nil, status: nil, description: nil, url: nil, bearer_token: nil}
 
     test "list_agents/0 returns all agents" do
-      agent = Agents.load_owner(agent_fixture())
+      owner = user_fixture()
+      agent = Agents.load_owner(agent_fixture(owner))
 
       assert Agents.list_agents() == [agent]
     end
 
     test "get_agent!/1 returns the agent with given id" do
-      agent = agent_fixture()
+      owner = user_fixture()
+      agent = agent_fixture(owner)
       assert Agents.get_agent!(agent.id) == agent
     end
 
@@ -39,7 +41,8 @@ defmodule Ipdth.AgentsTest do
     end
 
     test "activate_agent/1 with responsive agent activates the agent" do
-      %{agent: agent, bypass: bypass} = agent_fixture_and_mock_service()
+      owner = user_fixture()
+      %{agent: agent, bypass: bypass} = agent_fixture_and_mock_service(owner)
 
       Bypass.expect_once(bypass, "POST", "/decide", fn conn ->
         assert "POST" == conn.method
@@ -58,7 +61,8 @@ defmodule Ipdth.AgentsTest do
     end
 
     test "update_agent/2 with valid data updates the agent" do
-      agent = agent_fixture()
+      owner = user_fixture()
+      agent = agent_fixture(owner)
       update_attrs = %{name: "some updated name", description: "some updated description", url: "some updated url", bearer_token: "some updated bearer_token"}
 
       assert {:ok, %Agent{} = agent} = Agents.update_agent(agent, update_attrs)
@@ -70,7 +74,8 @@ defmodule Ipdth.AgentsTest do
     end
 
     test "update_agent/2 with invalid data returns error changeset" do
-      agent = agent_fixture()
+      owner = user_fixture()
+      agent = agent_fixture(owner)
       assert {:error, %Ecto.Changeset{}} = Agents.update_agent(agent, @invalid_attrs)
       assert agent == Agents.get_agent!(agent.id)
     end
@@ -80,13 +85,15 @@ defmodule Ipdth.AgentsTest do
     # TODO: 2024-03-18 - We need a test for error_backoff
 
     test "delete_agent/1 deletes the agent" do
-      agent = agent_fixture()
+      owner = user_fixture()
+      agent = agent_fixture(owner)
       assert {:ok, %Agent{}} = Agents.delete_agent(agent)
       assert_raise Ecto.NoResultsError, fn -> Agents.get_agent!(agent.id) end
     end
 
     test "change_agent/1 returns an agent changeset" do
-      agent = agent_fixture()
+      owner = user_fixture()
+      agent = agent_fixture(owner)
       assert %Ecto.Changeset{} = Agents.change_agent(agent)
     end
   end
