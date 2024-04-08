@@ -17,7 +17,7 @@ defmodule IpdthWeb.DashboardLive do
               <h2 class="text-sm absolute top-1 right-1 text-zinc-400 ">#23</h2>
               <p class="mb-8 mt-4">this is a description lorem ipsum dolor sit amet blah foo blah 1 2 3 4 5</p>
 
-              <div class="absolute bottom-2 right-2 bg-green-200 rounded-full px-2 py-1 text-xs font-bold text-green-700 leading-none ring-1 ring-inset ring-green-600/40">active</div>
+              <div class="absolute bottom-2 right-2 bg-green-200 rounded-full px-3 py-2 text-xs font-bold text-green-700 leading-none ring-1 ring-inset ring-green-500/40">Active</div>
             </div>
              <div class="relative rounded ring-1 ring-zinc-300 border-b-2 border-zinc-300 shadow-md p-2">
               <h1 class="text-xl">tit-for-tat</h1> 
@@ -30,7 +30,7 @@ defmodule IpdthWeb.DashboardLive do
               <h2 class="text-sm absolute top-1 right-1 text-zinc-400 ">#23</h2>
               <p class="mb-8 mt-4">this is a description lorem ipsum dolor sit amet blah foo blah 1 2 3 4 5</p>
 
-              <div class="absolute bottom-2 right-2 bg-green-200 rounded-full px-2 py-1 text-xs font-bold text-green-700 leading-none ring-1 ring-inset ring-green-600/40">active</div>
+            <div class="absolute bottom-2 right-2 bg-green-200 rounded-full px-2 py-1 text-xs font-bold text-green-700 leading-none ring-1 ring-inset ring-green-600/40">active</div>
             </div> <div class="relative rounded ring-1 ring-zinc-300 border-b-2 border-zinc-300 shadow-md p-2">
               <h1 class="text-xl">tit-for-tat</h1> 
               <h2 class="text-sm absolute top-1 right-1 text-zinc-400 ">#23</h2>
