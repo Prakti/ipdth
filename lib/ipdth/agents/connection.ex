@@ -20,20 +20,33 @@ defmodule Ipdth.Agents.Connection do
   end
 
   def test(agent) do
-    # Do something
-    auth = {:bearer, agent.bearer_token}
-    test_request = create_test_request()
+      pid = Task.Supervisor.async_nolink(Ipdth.ConnectionTestSupervisor, fn ->
+        auth = {:bearer, agent.bearer_token}
+        test_request = create_test_request()
 
-    req = Req.new(json: test_request, auth: auth, url: agent.url)
+        req = Req.new(json: test_request, auth: auth, url: agent.url)
 
-    with {:ok, response} <- Req.post(req) do
-      case response.status do
-        200 -> validate_body(response, test_request)
-        401 -> {:error, fill_error_details(:auth_error, response)}
-        500 -> {:error, fill_error_details(:server_error, response)}
-        _ -> {:error, fill_error_details(:undefined_error, response)}
+        with {:ok, response} <- Req.post(req) do
+          case response.status do
+            200 -> validate_body(response, test_request)
+            401 -> {:error, fill_error_details(:auth_error, response)}
+            500 -> {:error, fill_error_details(:server_error, response)}
+            _ -> {:error, fill_error_details(:undefined_error, response)}
+          end
+        end
+      end)
+
+      case Task.yield(pid) do
+        {:ok, result} ->
+          Task.shutdown(pid)
+          result
+        {:exit, {exception, _stacktrace}} when is_exception(exception)->
+          Task.shutdown(pid)
+          {:error, {:runtime_exception, Exception.message(exception)}}
+        {:exit, {reason, details}} ->
+          Task.shutdown(pid)
+          {:error, {reason, details}}
       end
-    end
   end
 
   def validate_body(response, _test_request) do

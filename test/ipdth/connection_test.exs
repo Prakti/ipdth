@@ -1,5 +1,6 @@
 defmodule Ipdth.Agents.ConnectionTest do
   use Ipdth.DataCase
+  use ExUnitProperties
 
   import Ipdth.AgentsFixtures
   import Ipdth.AccountsFixtures
@@ -7,7 +8,23 @@ defmodule Ipdth.Agents.ConnectionTest do
   alias Ipdth.Agents.Agent
   alias Ipdth.Agents.Connection
 
-  # TODO: 2024-03-23 - Property Test the Connection using StreamData
+  setup tags do
+    if tags[:silence_logger] do
+      # Store the current log level
+      original_log_level = Logger.level()
+
+      # Set the Logger level to :none to silence it
+      :ok = Logger.configure(level: :none)
+
+      # Ensure the Logger level is restored after the test
+      on_exit(fn ->
+        :ok = Logger.configure(level: original_log_level)
+      end)
+    end
+
+    # Continue with the test
+    :ok
+  end
 
   def validate_req_body(req_body) do
     validate_past_result = fn past_result ->
@@ -41,9 +58,24 @@ defmodule Ipdth.Agents.ConnectionTest do
     Dredd.validate_map(req_body, validator_map)
   end
 
-  describe "Connection" do
+  def http_status_code_gen() do
+    ranges = [
+      200..206,   # Common successful responses
+      301, 302, 304, # Common redirection messages
+      400, 401, 403, 404, 405, 406, 408, 409, 410, 411, 412, 413, 414, 415, 422, 429, # Common client error responses
+      500, 501, 502, 503, 504, 505  # Common server error responses
+    ]
 
-    test "test/1 returns :ok if the connected agent responds correctly" do
+    ranges
+    |> Enum.flat_map(fn
+      range when is_integer(range) -> [range]
+      range -> Enum.to_list(range)
+    end)
+    |> StreamData.member_of()
+  end
+
+  describe "Connection test/1" do
+    test "returns :ok if the connected agent responds correctly" do
       owner = user_fixture()
       %{agent: agent, bypass: bypass} = agent_fixture_and_mock_service(owner)
 
@@ -71,6 +103,30 @@ defmodule Ipdth.Agents.ConnectionTest do
       assert :ok == Ipdth.Agents.Connection.test(agent)
     end
 
+    @tag silence_logger: true
+    test "returns :error if the connected agent is offline" do
+      owner = user_fixture()
+      agent = agent_fixture(owner)
+
+      assert {:error, {:runtime_exception, _}} = Ipdth.Agents.Connection.test(agent)
+    end
+
+    @tag silence_logger: true
+    property "returns :error if the connected agent is responding with garbage" do
+      owner = user_fixture()
+
+      check all body <- string(:ascii),
+                status <- http_status_code_gen() do
+
+        %{agent: agent, bypass: bypass} = agent_fixture_and_mock_service(owner)
+        # Setup Bypass for misbehaving agent
+        Bypass.expect_once(bypass, "POST", "/decide", fn conn ->
+          Plug.Conn.resp(conn, status, body)
+        end)
+
+        assert {:error, _} = Ipdth.Agents.Connection.test(agent)
+      end
+    end
   end
 
 end

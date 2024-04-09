@@ -52,6 +52,7 @@ defmodule Ipdth.MixProject do
       {:faker, "~> 0.18", only: [:dev, :test]},
       {:floki, ">= 0.30.0", only: :test},
       {:bypass, "~> 2.1", only: :test},
+      {:stream_data, "~> 0.6.0", only: :test},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:esbuild, "~> 0.7", runtime: Mix.env() == :dev},
       {:tailwind, "~> 0.2.0", runtime: Mix.env() == :dev},
