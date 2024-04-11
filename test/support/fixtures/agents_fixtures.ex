@@ -15,7 +15,7 @@ defmodule Ipdth.AgentsFixtures do
       description: "some description",
       name: "some name",
       status: :active,
-      url: "some url"
+      url: "http://example.com"
     })
 
     {:ok, agent} = Ipdth.Agents.create_agent(owner.id, agent_attrs)

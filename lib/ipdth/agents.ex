@@ -127,9 +127,6 @@ defmodule Ipdth.Agents do
       {:ok, %Agent{}}
   """
   def activate_agent(%Agent{} = agent) do
-    # TODO: 2024-03-18 - Run the connection test in a separate process
-    # TODO: 2024-04-03 - Trap exits of the separate process and handle errors
-
     case Connection.test(agent) do
       :ok ->
         agent

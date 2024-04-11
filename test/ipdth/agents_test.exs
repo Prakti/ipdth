@@ -3,6 +3,24 @@ defmodule Ipdth.AgentsTest do
 
   alias Ipdth.Agents
 
+  setup tags do
+    if tags[:silence_logger] do
+      # Store the current log level
+      original_log_level = Logger.level()
+
+      # Set the Logger level to :none to silence it
+      :ok = Logger.configure(level: :none)
+
+      # Ensure the Logger level is restored after the test
+      on_exit(fn ->
+        :ok = Logger.configure(level: original_log_level)
+      end)
+    end
+
+    # Continue with the test
+    :ok
+  end
+
   describe "agents" do
     alias Ipdth.Agents.Agent
 
@@ -26,13 +44,13 @@ defmodule Ipdth.AgentsTest do
 
     test "create_agent/1 with valid data creates a agent" do
       owner = user_fixture()
-      valid_attrs = %{name: "some name", description: "some description", url: "some url", bearer_token: "some bearer_token"}
+      valid_attrs = %{name: "some name", description: "some description", url: "http://example.com", bearer_token: "some bearer_token"}
 
       assert {:ok, %Agent{} = agent} = Agents.create_agent(owner.id, valid_attrs)
       assert agent.name == "some name"
       assert agent.status == :inactive
       assert agent.description == "some description"
-      assert agent.url == "some url"
+      assert agent.url == "http://example.com"
       assert agent.bearer_token == "some bearer_token"
     end
 
@@ -40,7 +58,7 @@ defmodule Ipdth.AgentsTest do
       assert {:error, %Ecto.Changeset{}} = Agents.create_agent(@invalid_attrs)
     end
 
-    test "activate_agent/1 with responsive agent activates the agent" do
+    test "activate_agent/1 with responsive, deactivated agent activates the agent" do
       owner = user_fixture()
       %{agent: agent, bypass: bypass} = agent_fixture_and_mock_service(owner)
 
@@ -56,20 +74,76 @@ defmodule Ipdth.AgentsTest do
       assert activated_agent.status == :active
     end
 
-    test "activate_agent/1 with unresponsive agent service puts agent into error_backoff" do
-      assert false, "Implement Test"
+    test "activate_agent/1 handles unresponsive agents and error_backoff properly" do
+      owner = user_fixture()
+      %{agent: agent, bypass: bypass} = agent_fixture_and_mock_service(owner)
+
+      Bypass.expect_once(bypass, "POST", "/decide", fn conn ->
+        assert "POST" == conn.method
+
+        conn
+        |> Plug.Conn.merge_resp_headers([{"content-type", "application/json"}])
+        |> Plug.Conn.resp(200, agent_service_success_response())
+      end)
+
+      Bypass.down(bypass)
+
+      assert {:error, _reason} = Agents.activate_agent(agent)
+
+      Bypass.up(bypass)
+
+      assert {:ok, %Agent{} = activated_agent} = Agents.activate_agent(agent)
+      assert activated_agent.status == :active
+    end
+
+
+    test "deactivate_agent/1 with active agent results in deavtivated agent" do
+      owner = user_fixture()
+      %{agent: agent, bypass: bypass} = agent_fixture_and_mock_service(owner)
+
+      Bypass.expect_once(bypass, "POST", "/decide", fn conn ->
+        assert "POST" == conn.method
+
+        conn
+        |> Plug.Conn.merge_resp_headers([{"content-type", "application/json"}])
+        |> Plug.Conn.resp(200, agent_service_success_response())
+      end)
+
+      assert {:ok, %Agent{} = activated_agent} = Agents.activate_agent(agent)
+      assert activated_agent.status == :active
+
+      assert {:ok, %Agent{} = deactivated_agent} = Agents.deactivate_agent(activated_agent)
+      assert deactivated_agent.status == :inactive
+    end
+
+    @tag silence_logger: true
+    test "deactivate_agent/1 with agent in error_backoff results in deavtivated agent" do
+      owner = user_fixture()
+      agent = agent_fixture(owner)
+
+      assert {:error, _reason} = Agents.activate_agent(agent)
+      error_agent = Agents.get_agent!(agent.id)
+      assert error_agent.status == :error_backoff
+
+      assert {:ok, %Agent{} = deactivated_agent} = Agents.deactivate_agent(error_agent)
+      assert deactivated_agent.status == :inactive
     end
 
     test "update_agent/2 with valid data updates the agent" do
       owner = user_fixture()
       agent = agent_fixture(owner)
-      update_attrs = %{name: "some updated name", description: "some updated description", url: "some updated url", bearer_token: "some updated bearer_token"}
+      update_attrs = %{
+        name: "some updated name",
+        description: "some updated description",
+        url: "http://localhost:4004/api/examples/pushover",
+        bearer_token: "some updated bearer_token"
+      }
 
       assert {:ok, %Agent{} = agent} = Agents.update_agent(agent, update_attrs)
       assert agent.name == "some updated name"
       assert agent.status == :inactive
       assert agent.description == "some updated description"
-      assert agent.url == "some updated url"
+      assert agent.url == "http://localhost:4004/api/examples/pushover"
       assert agent.bearer_token == "some updated bearer_token"
     end
 
@@ -79,10 +153,6 @@ defmodule Ipdth.AgentsTest do
       assert {:error, %Ecto.Changeset{}} = Agents.update_agent(agent, @invalid_attrs)
       assert agent == Agents.get_agent!(agent.id)
     end
-
-    # TODO: 2024-03-18 - We need a test for activation
-    # TODO: 2024-03-18 - We need a test for deactivation
-    # TODO: 2024-03-18 - We need a test for error_backoff
 
     test "delete_agent/1 deletes the agent" do
       owner = user_fixture()

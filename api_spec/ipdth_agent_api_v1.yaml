@@ -130,3 +130,13 @@ paths:
                     description: |
                       Debug information about the error. 
                       This part should only be sent to authenticated clients and stay empty otherwise.
+      security:
+        - BearerAuth: []
+
+security:
+  - BearerAuth: []
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer

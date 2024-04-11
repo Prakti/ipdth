@@ -18,20 +18,20 @@ defmodule Ipdth.Agents.Agent do
     timestamps([type: :utc_datetime_usec])
   end
 
-  # TODO: 2024-01-21 - Introduce Validation for url
-
   @doc false
   def changeset(agent, attrs) do
     agent
     |> cast(attrs, [:name, :description, :url, :bearer_token, :status])
     |> validate_required([:name, :url, :bearer_token, :status])
     |> validate_inclusion(:status, Ecto.Enum.values(Agent, :status))
+    |> validate_url(:url)
   end
 
   def update(agent, attrs) do
     agent
     |> cast(attrs, [:name, :description, :url, :bearer_token])
     |> validate_required([:name, :url, :bearer_token])
+    |> validate_url(:url)
   end
 
   def new(agent, owner_id, attrs) do
@@ -51,5 +51,14 @@ defmodule Ipdth.Agents.Agent do
 
   def deactivate(agent) do
     change(agent, status: :inactive)
+  end
+
+  defp validate_url(changeset, field) do
+    validate_change(changeset, field, fn _, value ->
+      case Regex.match?(~r/^https?:\/\/[^\s$.?#].[^\s]*$/, value) do
+        true -> []
+        false -> [{field, "is not a valid URL"}]
+      end
+    end)
   end
 end
