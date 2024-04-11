@@ -9,9 +9,6 @@ defmodule Ipdth.Agents do
   alias Ipdth.Agents.Agent
   alias Ipdth.Agents.Connection
 
-  # TODO: 2024-03-18 - Save User as Owner upon creation
-  # TODO: 2024-03-18 - Ensure that only Owner can update, activate, deactivate an agent
-
   @doc """
   Returns the list of agents.
 
@@ -83,10 +80,14 @@ defmodule Ipdth.Agents do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_agent(%Agent{} = agent, attrs) do
-    agent
-    |> Agent.update(attrs)
-    |> Repo.update()
+  def update_agent(%Agent{} = agent, user_id, attrs) do
+    if agent.owner_id == user_id do
+      agent
+      |> Agent.update(attrs)
+      |> Repo.update()
+    else
+      {:error, :not_authorized}
+    end
   end
 
   @doc """
@@ -101,8 +102,12 @@ defmodule Ipdth.Agents do
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_agent(%Agent{} = agent) do
-    Repo.delete(agent)
+  def delete_agent(%Agent{} = agent, user_id) do
+    if agent.owner_id == user_id do
+      Repo.delete(agent)
+    else
+      {:error, :not_authorized}
+    end
   end
 
   @doc """
@@ -126,24 +131,28 @@ defmodule Ipdth.Agents do
       iex> activate_agent(agent)
       {:ok, %Agent{}}
   """
-  def activate_agent(%Agent{} = agent) do
-    case Connection.test(agent) do
-      :ok ->
-        agent
-        |> Agent.activate()
-        |> Repo.update()
-      {:error, {_type, details}} ->
-        # TODO: 2024-04-08 - Save details of errors in a text field on the agent
-        agent
-        |> Agent.error_backoff()
-        |> Repo.update()
-        {:error, details}
-      {:error, details} ->
-        # TODO: 2024-04-08 - Save details of errors in a text field on the agent
-        agent
-        |> Agent.error_backoff()
-        |> Repo.update()
-        {:error, details}
+  def activate_agent(%Agent{} = agent, user_id) do
+    if agent.owner_id == user_id do
+      case Connection.test(agent) do
+        :ok ->
+          agent
+          |> Agent.activate()
+          |> Repo.update()
+        {:error, {_type, details}} ->
+          # TODO: 2024-04-08 - Save details of errors in a text field on the agent
+          agent
+          |> Agent.error_backoff()
+          |> Repo.update()
+          {:error, details}
+        {:error, details} ->
+          # TODO: 2024-04-08 - Save details of errors in a text field on the agent
+          agent
+          |> Agent.error_backoff()
+          |> Repo.update()
+          {:error, details}
+      end
+    else
+      {:error, :not_authorized}
     end
   end
 
@@ -155,9 +164,13 @@ defmodule Ipdth.Agents do
       iex> activate_agent(agent)
       {:ok, %Agent{}}
   """
-  def deactivate_agent(%Agent{} = agent) do
-    agent
-    |> Agent.deactivate()
-    |> Repo.update()
+  def deactivate_agent(%Agent{} = agent, user_id) do
+    if agent.owner_id == user_id do
+      agent
+      |> Agent.deactivate()
+      |> Repo.update()
+    else
+      {:error, :not_authorized}
+    end
   end
 end

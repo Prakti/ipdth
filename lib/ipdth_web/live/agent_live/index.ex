@@ -47,7 +47,8 @@ defmodule IpdthWeb.AgentLive.Index do
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
     agent = Agents.get_agent!(id)
-    {:ok, _} = Agents.delete_agent(agent)
+    user = socket.assigns.current_user
+    {:ok, _} = Agents.delete_agent(agent, user.id)
 
     {:noreply, stream_delete(socket, :agents, agent)}
   end
@@ -55,7 +56,8 @@ defmodule IpdthWeb.AgentLive.Index do
   @impl true
   def handle_event("activate", %{"id" => id}, socket) do
     agent = Agents.get_agent!(id)
-    case Agents.activate_agent(agent) do
+    user = socket.assigns.current_user
+    case Agents.activate_agent(agent, user.id) do
       {:ok, _} ->
         {:noreply, socket
                    |> stream(:agents, Agents.list_agents())
@@ -69,7 +71,8 @@ defmodule IpdthWeb.AgentLive.Index do
   @impl true
   def handle_event("deactivate", %{"id" => id}, socket) do
     agent = Agents.get_agent!(id)
-    case Agents.deactivate_agent(agent) do
+    user = socket.assigns.current_user
+    case Agents.deactivate_agent(agent, user.id) do
       {:ok, _} ->
         {:noreply, socket
                    |> stream(:agents, Agents.list_agents())

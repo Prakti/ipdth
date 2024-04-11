@@ -70,7 +70,7 @@ defmodule Ipdth.AgentsTest do
         |> Plug.Conn.resp(200, agent_service_success_response())
       end)
 
-      assert {:ok, %Agent{} = activated_agent} = Agents.activate_agent(agent)
+      assert {:ok, %Agent{} = activated_agent} = Agents.activate_agent(agent, owner.id)
       assert activated_agent.status == :active
     end
 
@@ -88,11 +88,11 @@ defmodule Ipdth.AgentsTest do
 
       Bypass.down(bypass)
 
-      assert {:error, _reason} = Agents.activate_agent(agent)
+      assert {:error, _reason} = Agents.activate_agent(agent, owner.id)
 
       Bypass.up(bypass)
 
-      assert {:ok, %Agent{} = activated_agent} = Agents.activate_agent(agent)
+      assert {:ok, %Agent{} = activated_agent} = Agents.activate_agent(agent, owner.id)
       assert activated_agent.status == :active
     end
 
@@ -109,10 +109,10 @@ defmodule Ipdth.AgentsTest do
         |> Plug.Conn.resp(200, agent_service_success_response())
       end)
 
-      assert {:ok, %Agent{} = activated_agent} = Agents.activate_agent(agent)
+      assert {:ok, %Agent{} = activated_agent} = Agents.activate_agent(agent, owner.id)
       assert activated_agent.status == :active
 
-      assert {:ok, %Agent{} = deactivated_agent} = Agents.deactivate_agent(activated_agent)
+      assert {:ok, %Agent{} = deactivated_agent} = Agents.deactivate_agent(activated_agent, owner.id)
       assert deactivated_agent.status == :inactive
     end
 
@@ -121,11 +121,11 @@ defmodule Ipdth.AgentsTest do
       owner = user_fixture()
       agent = agent_fixture(owner)
 
-      assert {:error, _reason} = Agents.activate_agent(agent)
+      assert {:error, _reason} = Agents.activate_agent(agent, owner.id)
       error_agent = Agents.get_agent!(agent.id)
       assert error_agent.status == :error_backoff
 
-      assert {:ok, %Agent{} = deactivated_agent} = Agents.deactivate_agent(error_agent)
+      assert {:ok, %Agent{} = deactivated_agent} = Agents.deactivate_agent(error_agent, owner.id)
       assert deactivated_agent.status == :inactive
     end
 
@@ -139,7 +139,7 @@ defmodule Ipdth.AgentsTest do
         bearer_token: "some updated bearer_token"
       }
 
-      assert {:ok, %Agent{} = agent} = Agents.update_agent(agent, update_attrs)
+      assert {:ok, %Agent{} = agent} = Agents.update_agent(agent, owner.id, update_attrs)
       assert agent.name == "some updated name"
       assert agent.status == :inactive
       assert agent.description == "some updated description"
@@ -150,14 +150,14 @@ defmodule Ipdth.AgentsTest do
     test "update_agent/2 with invalid data returns error changeset" do
       owner = user_fixture()
       agent = agent_fixture(owner)
-      assert {:error, %Ecto.Changeset{}} = Agents.update_agent(agent, @invalid_attrs)
+      assert {:error, %Ecto.Changeset{}} = Agents.update_agent(agent, owner.id, @invalid_attrs)
       assert agent == Agents.get_agent!(agent.id)
     end
 
     test "delete_agent/1 deletes the agent" do
       owner = user_fixture()
       agent = agent_fixture(owner)
-      assert {:ok, %Agent{}} = Agents.delete_agent(agent)
+      assert {:ok, %Agent{}} = Agents.delete_agent(agent, owner.id)
       assert_raise Ecto.NoResultsError, fn -> Agents.get_agent!(agent.id) end
     end
 
