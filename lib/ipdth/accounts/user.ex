@@ -4,7 +4,9 @@ defmodule Ipdth.Accounts.User do
 
   alias Ipdth.Agents.Agent
 
-  # TODO: extend schema with :name, :string field (required)
+  # TODO: 2024-04-11 - extend schema with :name, :string field (required)
+  # TODO: 2024-04-11 - extend schema with timezone and language of user
+  # TODO: 2024-04-12 - extend schema with roles array
 
   schema "users" do
     field :email, :string
