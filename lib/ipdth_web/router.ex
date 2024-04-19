@@ -60,14 +60,13 @@ defmodule IpdthWeb.Router do
 
     live_session :require_authenticated_user,
       on_mount: [{IpdthWeb.UserAuth, :ensure_authenticated}] do
-
       live "/users/settings", UserSettingsLive, :edit
       live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
 
       # Agent Managemet for Users
-      #live "/my/agents/", MyAgentLive.Index, :index
-      #live "/my/agents/new", MyAgentLive.Index, :new
-      #live "/my/agents/:id/edit", MyAgentLive.Index, :edit
+      # live "/my/agents/", MyAgentLive.Index, :index
+      # live "/my/agents/new", MyAgentLive.Index, :new
+      # live "/my/agents/:id/edit", MyAgentLive.Index, :edit
 
       # Global Agent Management
       # TODO: 2021-01-21 - Create permission to globally edit agents (Admin)
@@ -102,7 +101,6 @@ defmodule IpdthWeb.Router do
 
       live "/matches/:id", MatchLive.Show, :show
       live "/matches/:id/show/edit", MatchLive.Show, :edit
-
     end
   end
 
@@ -113,7 +111,6 @@ defmodule IpdthWeb.Router do
 
     live_session :current_user,
       on_mount: [{IpdthWeb.UserAuth, :mount_current_user}] do
-
       # Global List and View of Agents
       live "/agents", AgentLive.Index, :index
       live "/agents/:id", AgentLive.Show, :show

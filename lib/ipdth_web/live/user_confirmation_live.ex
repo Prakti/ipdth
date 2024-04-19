@@ -25,9 +25,12 @@ defmodule IpdthWeb.UserConfirmationLive do
 
   def mount(%{"token" => token}, _session, socket) do
     form = to_form(%{"token" => token}, as: "user")
-    socket = socket
-             |> assign(form: form)
-             |> assign(active_page: "user_confirmation")
+
+    socket =
+      socket
+      |> assign(form: form)
+      |> assign(active_page: "user_confirmation")
+
     {:ok, socket, temporary_assigns: [form: nil]}
   end
 

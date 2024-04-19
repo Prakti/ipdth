@@ -5,9 +5,6 @@ defmodule Ipdth.Agents.ConnectionTest do
   import Ipdth.AgentsFixtures
   import Ipdth.AccountsFixtures
 
-  alias Ipdth.Agents.Agent
-  alias Ipdth.Agents.Connection
-
   setup tags do
     if tags[:silence_logger] do
       # Store the current log level
@@ -30,8 +27,9 @@ defmodule Ipdth.Agents.ConnectionTest do
     validate_past_result = fn past_result ->
       validator_map = %{
         "action" => &Dredd.validate_string/1,
-        "points" =>  &Dredd.validate_number(&1, :integer)
+        "points" => &Dredd.validate_number(&1, :integer)
       }
+
       Dredd.validate_map(past_result, validator_map)
     end
 
@@ -60,10 +58,36 @@ defmodule Ipdth.Agents.ConnectionTest do
 
   def http_status_code_gen() do
     ranges = [
-      200..206,   # Common successful responses
-      301, 302, 304, # Common redirection messages
-      400, 401, 403, 404, 405, 406, 408, 409, 410, 411, 412, 413, 414, 415, 422, 429, # Common client error responses
-      500, 501, 502, 503, 504, 505  # Common server error responses
+      # Common successful responses
+      200..206,
+      # Common redirection messages
+      301,
+      302,
+      304,
+      # Common client error responses
+      400,
+      401,
+      403,
+      404,
+      405,
+      406,
+      408,
+      409,
+      410,
+      411,
+      412,
+      413,
+      414,
+      415,
+      422,
+      429,
+      # Common server error responses
+      500,
+      501,
+      502,
+      503,
+      504,
+      505
     ]
 
     ranges
@@ -81,23 +105,30 @@ defmodule Ipdth.Agents.ConnectionTest do
 
       # Setup Bypass for a success case
       Bypass.expect_once(bypass, "POST", "/decide", fn conn ->
-            assert "POST" == conn.method
+        assert "POST" == conn.method
 
-            # Ensure that our client sends correct Headers
-            req_headers = conn.req_headers
-            assert Enum.find(req_headers, fn header -> header == {"content-type", "application/json"} end)
-            assert Enum.find(req_headers, fn header -> header == {"authorization", "Bearer " <> agent_service_bearer_token()} end)
-            assert Enum.find(req_headers, fn header -> header == {"accept", "application/json"} end)
+        # Ensure that our client sends correct Headers
+        req_headers = conn.req_headers
 
-            conn = Plug.run(conn, [{Plug.Parsers, [parsers: [:json], json_decoder: Jason]}])
-            req_body = conn.body_params
+        assert Enum.find(req_headers, fn header ->
+                 header == {"content-type", "application/json"}
+               end)
 
-            dataset = validate_req_body(req_body)
-            assert dataset.valid?
+        assert Enum.find(req_headers, fn header ->
+                 header == {"authorization", "Bearer " <> agent_service_bearer_token()}
+               end)
 
-            conn
-            |> Plug.Conn.merge_resp_headers([{"content-type", "application/json"}])
-            |> Plug.Conn.resp(200, agent_service_success_response())
+        assert Enum.find(req_headers, fn header -> header == {"accept", "application/json"} end)
+
+        conn = Plug.run(conn, [{Plug.Parsers, [parsers: [:json], json_decoder: Jason]}])
+        req_body = conn.body_params
+
+        dataset = validate_req_body(req_body)
+        assert dataset.valid?
+
+        conn
+        |> Plug.Conn.merge_resp_headers([{"content-type", "application/json"}])
+        |> Plug.Conn.resp(200, agent_service_success_response())
       end)
 
       assert :ok == Ipdth.Agents.Connection.test(agent)
@@ -106,7 +137,7 @@ defmodule Ipdth.Agents.ConnectionTest do
     @tag silence_logger: true
     test "returns :error if the connected agent is offline" do
       owner = user_fixture()
-      agent = agent_fixture(owner, %{ url: "http://localhost:4000/"})
+      agent = agent_fixture(owner, %{url: "http://localhost:4000/"})
 
       # TODO: 2024-04-11 - Handle %Mint.TransportError{reason: :econnrefused}
       assert {:error, _} = Ipdth.Agents.Connection.test(agent)
@@ -116,9 +147,10 @@ defmodule Ipdth.Agents.ConnectionTest do
     property "returns :error if the connected agent is responding with garbage" do
       owner = user_fixture()
 
-      check all body <- string(:ascii),
-                status <- http_status_code_gen() do
-
+      check all(
+              body <- string(:ascii),
+              status <- http_status_code_gen()
+            ) do
         %{agent: agent, bypass: bypass} = agent_fixture_and_mock_service(owner)
         # Setup Bypass for misbehaving agent
         Bypass.expect_once(bypass, "POST", "/decide", fn conn ->
@@ -129,5 +161,4 @@ defmodule Ipdth.Agents.ConnectionTest do
       end
     end
   end
-
 end

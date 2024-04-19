@@ -19,11 +19,12 @@ create_users = fn count ->
     }
 
     with {:ok, user} <- Accounts.register_user(user_params) do
-        Accounts.deliver_user_confirmation_instructions(user, fn token ->
-          Accounts.confirm_user(token)
-          "<irrelevant>"
-        end)
-        user
+      Accounts.deliver_user_confirmation_instructions(user, fn token ->
+        Accounts.confirm_user(token)
+        "<irrelevant>"
+      end)
+
+      user
     end
   end)
 end

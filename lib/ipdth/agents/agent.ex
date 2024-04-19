@@ -15,7 +15,7 @@ defmodule Ipdth.Agents.Agent do
     has_many :participations, Participation
     belongs_to :owner, User
 
-    timestamps([type: :utc_datetime_usec])
+    timestamps(type: :utc_datetime_usec)
   end
 
   @doc false

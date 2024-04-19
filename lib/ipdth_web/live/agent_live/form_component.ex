@@ -33,7 +33,6 @@ defmodule IpdthWeb.AgentLive.FormComponent do
     """
   end
 
-
   @impl true
   def update(%{agent: agent} = assigns, socket) do
     changeset = Agents.change_agent(agent)
@@ -60,6 +59,7 @@ defmodule IpdthWeb.AgentLive.FormComponent do
 
   defp save_agent(socket, :edit, agent_params) do
     user = socket.assigns.current_user
+
     case Agents.update_agent(socket.assigns.agent, user.id, agent_params) do
       {:ok, agent} ->
         notify_parent({:saved, agent})
@@ -76,6 +76,7 @@ defmodule IpdthWeb.AgentLive.FormComponent do
 
   defp save_agent(socket, :new, agent_params) do
     owner = socket.assigns.current_user
+
     case Agents.create_agent(owner.id, agent_params) do
       {:ok, agent} ->
         notify_parent({:saved, agent})

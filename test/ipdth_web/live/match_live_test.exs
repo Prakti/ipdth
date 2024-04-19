@@ -4,8 +4,18 @@ defmodule IpdthWeb.MatchLiveTest do
   import Phoenix.LiveViewTest
   import Ipdth.MatchesFixtures
 
-  @create_attrs %{start_date: "2024-01-20T20:00:00.000000Z", end_date: "2024-01-20T20:00:00.000000Z", score_a: 42, score_b: 42}
-  @update_attrs %{start_date: "2024-01-21T20:00:00.000000Z", end_date: "2024-01-21T20:00:00.000000Z", score_a: 43, score_b: 43}
+  @create_attrs %{
+    start_date: "2024-01-20T20:00:00.000000Z",
+    end_date: "2024-01-20T20:00:00.000000Z",
+    score_a: 42,
+    score_b: 42
+  }
+  @update_attrs %{
+    start_date: "2024-01-21T20:00:00.000000Z",
+    end_date: "2024-01-21T20:00:00.000000Z",
+    score_a: 43,
+    score_b: 43
+  }
   @invalid_attrs %{start_date: nil, end_date: nil, score_a: nil, score_b: nil}
 
   defp create_match(_) do

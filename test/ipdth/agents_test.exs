@@ -44,7 +44,13 @@ defmodule Ipdth.AgentsTest do
 
     test "create_agent/1 with valid data creates a agent" do
       owner = user_fixture()
-      valid_attrs = %{name: "some name", description: "some description", url: "http://example.com", bearer_token: "some bearer_token"}
+
+      valid_attrs = %{
+        name: "some name",
+        description: "some description",
+        url: "http://example.com",
+        bearer_token: "some bearer_token"
+      }
 
       assert {:ok, %Agent{} = agent} = Agents.create_agent(owner.id, valid_attrs)
       assert agent.name == "some name"
@@ -96,7 +102,6 @@ defmodule Ipdth.AgentsTest do
       assert activated_agent.status == :active
     end
 
-
     test "deactivate_agent/1 with active agent results in deavtivated agent" do
       owner = user_fixture()
       %{agent: agent, bypass: bypass} = agent_fixture_and_mock_service(owner)
@@ -112,7 +117,9 @@ defmodule Ipdth.AgentsTest do
       assert {:ok, %Agent{} = activated_agent} = Agents.activate_agent(agent, owner.id)
       assert activated_agent.status == :active
 
-      assert {:ok, %Agent{} = deactivated_agent} = Agents.deactivate_agent(activated_agent, owner.id)
+      assert {:ok, %Agent{} = deactivated_agent} =
+               Agents.deactivate_agent(activated_agent, owner.id)
+
       assert deactivated_agent.status == :inactive
     end
 
@@ -132,6 +139,7 @@ defmodule Ipdth.AgentsTest do
     test "update_agent/2 with valid data updates the agent" do
       owner = user_fixture()
       agent = agent_fixture(owner)
+
       update_attrs = %{
         name: "some updated name",
         description: "some updated description",

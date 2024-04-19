@@ -1,5 +1,4 @@
 defmodule Ipdth.Agents.Connection do
-
   defmodule Request do
     @derive Jason.Encoder
     defstruct round_number: -1, past_results: [], match_info: %{}
@@ -20,7 +19,8 @@ defmodule Ipdth.Agents.Connection do
   end
 
   def test(agent) do
-      pid = Task.Supervisor.async_nolink(Ipdth.ConnectionTestSupervisor, fn ->
+    pid =
+      Task.Supervisor.async_nolink(Ipdth.ConnectionTestSupervisor, fn ->
         auth = {:bearer, agent.bearer_token}
         test_request = create_test_request()
 
@@ -36,22 +36,25 @@ defmodule Ipdth.Agents.Connection do
         end
       end)
 
-      case Task.yield(pid) do
-        {:ok, result} ->
-          Task.shutdown(pid)
-          result
-        {:exit, {exception, _stacktrace}} when is_exception(exception)->
-          Task.shutdown(pid)
-          {:error, {:runtime_exception, Exception.message(exception)}}
-        {:exit, {reason, details}} ->
-          Task.shutdown(pid)
-          {:error, {reason, details}}
-      end
+    case Task.yield(pid) do
+      {:ok, result} ->
+        Task.shutdown(pid)
+        result
+
+      {:exit, {exception, _stacktrace}} when is_exception(exception) ->
+        Task.shutdown(pid)
+        {:error, {:runtime_exception, Exception.message(exception)}}
+
+      {:exit, {reason, details}} ->
+        Task.shutdown(pid)
+        {:error, {reason, details}}
+    end
   end
 
   def validate_body(response, _test_request) do
-    json =  response.body
-    if json["action"]  != nil do
+    json = response.body
+
+    if json["action"] != nil do
       :ok
     else
       {:error, {:no_action_given, json}}
@@ -63,22 +66,23 @@ defmodule Ipdth.Agents.Connection do
     {error, "TODO: fill in more details!"}
   end
 
-
   def create_test_request() do
-    past_results = Enum.map(1..100, fn num -> 
-      modnum = Integer.mod(num, 2)
-      if modnum == 0 do
-        %PastResult{
-          action: "Cooperate",
-          points: modnum
-        }
-      else
-        %PastResult{
-          action: "Compete",
-          points: modnum + 1
-        }
-      end
-    end)
+    past_results =
+      Enum.map(1..100, fn num ->
+        modnum = Integer.mod(num, 2)
+
+        if modnum == 0 do
+          %PastResult{
+            action: "Cooperate",
+            points: modnum
+          }
+        else
+          %PastResult{
+            action: "Compete",
+            points: modnum + 1
+          }
+        end
+      end)
 
     %Request{
       round_number: 1,
@@ -86,5 +90,4 @@ defmodule Ipdth.Agents.Connection do
       past_results: past_results
     }
   end
-
 end

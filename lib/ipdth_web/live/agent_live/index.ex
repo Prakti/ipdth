@@ -7,9 +7,9 @@ defmodule IpdthWeb.AgentLive.Index do
   @impl true
   def mount(_params, _session, socket) do
     {:ok,
-      socket
-      |> assign(:active_page, "agents")
-      |> stream(:agents, Agents.list_agents())}
+     socket
+     |> assign(:active_page, "agents")
+     |> stream(:agents, Agents.list_agents())}
   end
 
   @impl true
@@ -57,12 +57,15 @@ defmodule IpdthWeb.AgentLive.Index do
   def handle_event("activate", %{"id" => id}, socket) do
     agent = Agents.get_agent!(id)
     user = socket.assigns.current_user
+
     case Agents.activate_agent(agent, user.id) do
       {:ok, _} ->
-        {:noreply, socket
-                   |> stream(:agents, Agents.list_agents())
-                   |> put_flash(:info, "Agent #{agent.name} activated")
-                   |> push_patch(to: ~p"/agents")}
+        {:noreply,
+         socket
+         |> stream(:agents, Agents.list_agents())
+         |> put_flash(:info, "Agent #{agent.name} activated")
+         |> push_patch(to: ~p"/agents")}
+
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Could not activate Agent #{agent.name}")}
     end
@@ -72,12 +75,15 @@ defmodule IpdthWeb.AgentLive.Index do
   def handle_event("deactivate", %{"id" => id}, socket) do
     agent = Agents.get_agent!(id)
     user = socket.assigns.current_user
+
     case Agents.deactivate_agent(agent, user.id) do
       {:ok, _} ->
-        {:noreply, socket
-                   |> stream(:agents, Agents.list_agents())
-                   |> put_flash(:info, "Agent #{agent.name} deactivated")
-                   |> push_patch(to: ~p"/agents")}
+        {:noreply,
+         socket
+         |> stream(:agents, Agents.list_agents())
+         |> put_flash(:info, "Agent #{agent.name} deactivated")
+         |> push_patch(to: ~p"/agents")}
+
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Could not deactivate Agent #{agent.name}")}
     end

@@ -21,7 +21,12 @@
 
 <.back navigate={~p"/tournaments"}>Back to tournaments</.back>
 
-<.modal :if={@live_action == :edit} id="tournament-modal" show on_cancel={JS.patch(~p"/tournaments/#{@tournament}")}>
+<.modal
+  :if={@live_action == :edit}
+  id="tournament-modal"
+  show
+  on_cancel={JS.patch(~p"/tournaments/#{@tournament}")}
+>
   <.live_component
     module={IpdthWeb.TournamentLive.FormComponent}
     id={@tournament.id}

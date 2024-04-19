@@ -21,7 +21,12 @@ defmodule Ipdth.MatchesTest do
     end
 
     test "create_match/1 with valid data creates a match" do
-      valid_attrs = %{start_date: ~U[2024-01-20 20:00:00.000000Z], end_date: ~U[2024-01-20 20:00:00.000000Z], score_a: 42, score_b: 42}
+      valid_attrs = %{
+        start_date: ~U[2024-01-20 20:00:00.000000Z],
+        end_date: ~U[2024-01-20 20:00:00.000000Z],
+        score_a: 42,
+        score_b: 42
+      }
 
       assert {:ok, %Match{} = match} = Matches.create_match(valid_attrs)
       assert match.start_date == ~U[2024-01-20 20:00:00.000000Z]
@@ -36,7 +41,13 @@ defmodule Ipdth.MatchesTest do
 
     test "update_match/2 with valid data updates the match" do
       match = match_fixture()
-      update_attrs = %{start_date: ~U[2024-01-21 20:00:00.000000Z], end_date: ~U[2024-01-21 20:00:00.000000Z], score_a: 43, score_b: 43}
+
+      update_attrs = %{
+        start_date: ~U[2024-01-21 20:00:00.000000Z],
+        end_date: ~U[2024-01-21 20:00:00.000000Z],
+        score_a: 43,
+        score_b: 43
+      }
 
       assert {:ok, %Match{} = match} = Matches.update_match(match, update_attrs)
       assert match.start_date == ~U[2024-01-21 20:00:00.000000Z]

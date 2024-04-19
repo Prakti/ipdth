@@ -6,9 +6,11 @@ defmodule IpdthWeb.MatchLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    socket = socket
-             |> assign(:active_page, "matches")
-             |> stream(:matches, Matches.list_matches())
+    socket =
+      socket
+      |> assign(:active_page, "matches")
+      |> stream(:matches, Matches.list_matches())
+
     {:ok, socket}
   end
 

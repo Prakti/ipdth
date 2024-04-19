@@ -8,7 +8,16 @@ defmodule Ipdth.TournamentsTest do
 
     import Ipdth.TournamentsFixtures
 
-    @invalid_attrs %{name: nil, status: nil, description: nil, start_date: nil, end_date: nil, round_number: nil, random_seed: nil, random_trace: nil}
+    @invalid_attrs %{
+      name: nil,
+      status: nil,
+      description: nil,
+      start_date: nil,
+      end_date: nil,
+      round_number: nil,
+      random_seed: nil,
+      random_trace: nil
+    }
 
     test "list_tournaments/0 returns all tournaments" do
       tournament = tournament_fixture()
@@ -21,7 +30,16 @@ defmodule Ipdth.TournamentsTest do
     end
 
     test "create_tournament/1 with valid data creates a tournament" do
-      valid_attrs = %{name: "some name", status: "some status", description: "some description", start_date: ~U[2024-01-20 12:56:00Z], end_date: ~U[2024-01-20 12:56:00Z], round_number: 42, random_seed: "some random_seed", random_trace: "some random_trace"}
+      valid_attrs = %{
+        name: "some name",
+        status: "some status",
+        description: "some description",
+        start_date: ~U[2024-01-20 12:56:00Z],
+        end_date: ~U[2024-01-20 12:56:00Z],
+        round_number: 42,
+        random_seed: "some random_seed",
+        random_trace: "some random_trace"
+      }
 
       assert {:ok, %Tournament{} = tournament} = Tournaments.create_tournament(valid_attrs)
       assert tournament.name == "some name"
@@ -40,9 +58,21 @@ defmodule Ipdth.TournamentsTest do
 
     test "update_tournament/2 with valid data updates the tournament" do
       tournament = tournament_fixture()
-      update_attrs = %{name: "some updated name", status: "some updated status", description: "some updated description", start_date: ~U[2024-01-21 12:56:00Z], end_date: ~U[2024-01-21 12:56:00Z], round_number: 43, random_seed: "some updated random_seed", random_trace: "some updated random_trace"}
 
-      assert {:ok, %Tournament{} = tournament} = Tournaments.update_tournament(tournament, update_attrs)
+      update_attrs = %{
+        name: "some updated name",
+        status: "some updated status",
+        description: "some updated description",
+        start_date: ~U[2024-01-21 12:56:00Z],
+        end_date: ~U[2024-01-21 12:56:00Z],
+        round_number: 43,
+        random_seed: "some updated random_seed",
+        random_trace: "some updated random_trace"
+      }
+
+      assert {:ok, %Tournament{} = tournament} =
+               Tournaments.update_tournament(tournament, update_attrs)
+
       assert tournament.name == "some updated name"
       assert tournament.status == "some updated status"
       assert tournament.description == "some updated description"
@@ -55,7 +85,10 @@ defmodule Ipdth.TournamentsTest do
 
     test "update_tournament/2 with invalid data returns error changeset" do
       tournament = tournament_fixture()
-      assert {:error, %Ecto.Changeset{}} = Tournaments.update_tournament(tournament, @invalid_attrs)
+
+      assert {:error, %Ecto.Changeset{}} =
+               Tournaments.update_tournament(tournament, @invalid_attrs)
+
       assert tournament == Tournaments.get_tournament!(tournament.id)
     end
 
@@ -89,9 +122,17 @@ defmodule Ipdth.TournamentsTest do
     end
 
     test "create_participation/1 with valid data creates a participation" do
-      valid_attrs = %{status: :signed_up, score: 42, ranking: 42, sign_up: ~U[2024-01-20 18:04:00.000000Z], details: "some details"}
+      valid_attrs = %{
+        status: :signed_up,
+        score: 42,
+        ranking: 42,
+        sign_up: ~U[2024-01-20 18:04:00.000000Z],
+        details: "some details"
+      }
 
-      assert {:ok, %Participation{} = participation} = Tournaments.create_participation(valid_attrs)
+      assert {:ok, %Participation{} = participation} =
+               Tournaments.create_participation(valid_attrs)
+
       assert participation.status == :signed_up
       assert participation.score == 42
       assert participation.ranking == 42
@@ -105,9 +146,18 @@ defmodule Ipdth.TournamentsTest do
 
     test "update_participation/2 with valid data updates the participation" do
       participation = participation_fixture()
-      update_attrs = %{status: :participating, score: 43, ranking: 43, sign_up: ~U[2024-01-21 18:04:00.000000Z], details: "some updated details"}
 
-      assert {:ok, %Participation{} = participation} = Tournaments.update_participation(participation, update_attrs)
+      update_attrs = %{
+        status: :participating,
+        score: 43,
+        ranking: 43,
+        sign_up: ~U[2024-01-21 18:04:00.000000Z],
+        details: "some updated details"
+      }
+
+      assert {:ok, %Participation{} = participation} =
+               Tournaments.update_participation(participation, update_attrs)
+
       assert participation.status == :participating
       assert participation.score == 43
       assert participation.ranking == 43
@@ -117,7 +167,10 @@ defmodule Ipdth.TournamentsTest do
 
     test "update_participation/2 with invalid data returns error changeset" do
       participation = participation_fixture()
-      assert {:error, %Ecto.Changeset{}} = Tournaments.update_participation(participation, @invalid_attrs)
+
+      assert {:error, %Ecto.Changeset{}} =
+               Tournaments.update_participation(participation, @invalid_attrs)
+
       assert participation == Tournaments.get_participation!(participation.id)
     end
 

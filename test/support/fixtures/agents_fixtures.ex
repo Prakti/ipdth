@@ -4,19 +4,18 @@ defmodule Ipdth.AgentsFixtures do
   entities via the `Ipdth.Agents` context.
   """
 
-  alias Ipdth.AccountsFixtures
-
   @doc """
   Generate a agent.
   """
   def agent_fixture(owner, attrs \\ %{}) do
-    agent_attrs = Enum.into(attrs, %{
-      bearer_token: "some bearer_token",
-      description: "some description",
-      name: "some name",
-      status: :active,
-      url: "http://example.com"
-    })
+    agent_attrs =
+      Enum.into(attrs, %{
+        bearer_token: "some bearer_token",
+        description: "some description",
+        name: "some name",
+        status: :active,
+        url: "http://example.com"
+      })
 
     {:ok, agent} = Ipdth.Agents.create_agent(owner.id, agent_attrs)
 
@@ -25,6 +24,7 @@ defmodule Ipdth.AgentsFixtures do
 
   def agent_fixture_and_mock_service(owner) do
     bypass = Bypass.open()
+
     attrs = %{
       url: "http://localhost:#{bypass.port}/decide",
       bearer_token: agent_service_bearer_token()
@@ -49,5 +49,4 @@ defmodule Ipdth.AgentsFixtures do
   def agent_service_bearer_token() do
     "0xBABAF00"
   end
-
 end

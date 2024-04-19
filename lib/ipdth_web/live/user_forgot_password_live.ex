@@ -28,9 +28,11 @@ defmodule IpdthWeb.UserForgotPasswordLive do
   end
 
   def mount(_params, _session, socket) do
-    socket = socket
-             |> assign(form: to_form(%{}, as: "user"))
-             |> assign(active_page: "forgot_password")
+    socket =
+      socket
+      |> assign(form: to_form(%{}, as: "user"))
+      |> assign(active_page: "forgot_password")
+
     {:ok, socket}
   end
 

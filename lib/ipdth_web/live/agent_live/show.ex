@@ -5,7 +5,7 @@ defmodule IpdthWeb.AgentLive.Show do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, :active_page, "agents") }
+    {:ok, assign(socket, :active_page, "agents")}
   end
 
   @impl true

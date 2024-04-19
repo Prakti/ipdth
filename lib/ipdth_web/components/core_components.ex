@@ -24,15 +24,16 @@ defmodule IpdthWeb.CoreComponents do
   """
   attr :color, :string, required: true
   slot :inner_block, required: true
+
   def badge(assigns) do
     ~H"""
-      <div class={[
-         "bg-#{@color}-200 rounded-md px-2 py-1 text-xs",
-         "font-bold text-#{@color}-700 leading-none ring-1 ring-inset",
-         "ring-#{@color}-600/40"
-      ]}>
-        <%= render_slot(@inner_block) %>
-      </div>
+    <div class={[
+      "bg-#{@color}-200 rounded-md px-2 py-1 text-xs",
+      "font-bold text-#{@color}-700 leading-none ring-1 ring-inset",
+      "ring-#{@color}-600/40"
+    ]}>
+      <%= render_slot(@inner_block) %>
+    </div>
     """
   end
 
@@ -55,29 +56,25 @@ defmodule IpdthWeb.CoreComponents do
 
   def dropdown_menu(assigns) do
     ~H"""
-      <div
-        id={@id}
-        phx-remove={hide("#{@id}-container")}
-        class="relative mt-2"
+    <div id={@id} phx-remove={hide("#{@id}-container")} class="relative mt-2">
+      <button class="relative w-full py-2" phx-click={toggle_visibility("##{@id}-container")}>
+        <%= render_slot(@inner_block) %>
+      </button>
+      <.focus_wrap
+        id={"#{@id}-container"}
+        phx-click-away={hide("##{@id}-container")}
+        class="absolute mt2 w-40 rounded bg-white shadow-xl hidden border border-color-zinc-400"
       >
-        <button
-          class="relative w-full py-2"
-          phx-click={toggle_visibility("##{@id}-container")}
-        >
-          <%= render_slot(@inner_block) %>
-        </button>
-        <.focus_wrap
-          id={"#{@id}-container"}
-          phx-click-away={hide("##{@id}-container")}
-          class="absolute mt2 w-40 rounded bg-white shadow-xl hidden border border-color-zinc-400"
-        >
-          <ul class="flex flex-col gap-2 py-2 justify-end items-stretch">
-            <li :for={item <- @menu_items} class="sm:px-6 lg:px-8 hover:bg-amber-500 text-zinc-900 hover:text-white">
-              <%= render_slot(item) %>
-            </li>
-          </ul>
-        </.focus_wrap>
-      </div>
+        <ul class="flex flex-col gap-2 py-2 justify-end items-stretch">
+          <li
+            :for={item <- @menu_items}
+            class="sm:px-6 lg:px-8 hover:bg-amber-500 text-zinc-900 hover:text-white"
+          >
+            <%= render_slot(item) %>
+          </li>
+        </ul>
+      </.focus_wrap>
+    </div>
     """
   end
 
@@ -98,26 +95,23 @@ defmodule IpdthWeb.CoreComponents do
 
   def split_button(assigns) do
     ~H"""
+    <div>
       <div>
-        <div>
-          <span><%= render_slot(@inner_block) %></span>
-          <button
-            class="inline"
-            phx-click={toggle_visibility("##{@id}-container")}
-          >
-            <.icon name="hero-chevron-down" class="h-4 w-4"/>
-          </button>
-        </div>
-        <.focus_wrap
-          id={"#{@id}-container"}
-          phx-click-away={hide("##{@id}-container")}
-          class="absolute hidden z-50 bg-zinc-500 shadow-xl right-0"
-        >
-          <div :for={button <- @buttons}>
-            <%= render_slot(button) %>
-          </div>
-        </.focus_wrap>
+        <span><%= render_slot(@inner_block) %></span>
+        <button class="inline" phx-click={toggle_visibility("##{@id}-container")}>
+          <.icon name="hero-chevron-down" class="h-4 w-4" />
+        </button>
       </div>
+      <.focus_wrap
+        id={"#{@id}-container"}
+        phx-click-away={hide("##{@id}-container")}
+        class="absolute hidden z-50 bg-zinc-500 shadow-xl right-0"
+      >
+        <div :for={button <- @buttons}>
+          <%= render_slot(button) %>
+        </div>
+      </.focus_wrap>
+    </div>
     """
   end
 
@@ -154,7 +148,6 @@ defmodule IpdthWeb.CoreComponents do
     """
   end
 
-
   @doc """
   Renders a navbar.
 
@@ -169,6 +162,7 @@ defmodule IpdthWeb.CoreComponents do
     </.navbar>
   """
   attr :active_page, :string, default: ""
+
   slot :nav_item do
     attr :id, :string, required: true
     attr :route, :string, required: true
@@ -178,7 +172,9 @@ defmodule IpdthWeb.CoreComponents do
     ~H"""
     <nav class="nav text-lg font-semibold">
       <ul :if={@nav_item != []} class="flex items-center">
-        <li :for={item <- @nav_item} class={"#{if @active_page == item[:id],
+        <li
+          :for={item <- @nav_item}
+          class={"#{if @active_page == item[:id],
             do: "cursor-pointer border-b-2 border-amber-500 border-opacity-100 p-4 text-amber-500",
             else: "cursor-pointer border-b-2 border-amber-500 border-opacity-0 p-4 duration-200 hover:border-opacity-100 hover:text-amber-500"}"}
         >
@@ -329,8 +325,7 @@ defmodule IpdthWeb.CoreComponents do
       phx-connected={hide("#client-error")}
       hidden
     >
-      Attempting to reconnect
-      <.icon name="hero-arrow-path" class="ml-1 h-3 w-3 animate-spin" />
+      Attempting to reconnect <.icon name="hero-arrow-path" class="ml-1 h-3 w-3 animate-spin" />
     </.flash>
 
     <.flash
@@ -382,7 +377,6 @@ defmodule IpdthWeb.CoreComponents do
     </.form>
     """
   end
-
 
   @doc """
   Renders an input with label and error messages.
@@ -624,7 +618,9 @@ defmodule IpdthWeb.CoreComponents do
         <thead class="bg-zinc-50 sticky top-0 border-b-2 border-zinc-200">
           <tr>
             <th :for={col <- @col} class="px-6 py-4 font-medium text-zinc-900"><%= col[:label] %></th>
-            <th class="px-6 py-4 font-medium text-zinc-900"><span class="sr-only"><%= gettext("Actions") %></span></th>
+            <th class="px-6 py-4 font-medium text-zinc-900">
+              <span class="sr-only"><%= gettext("Actions") %></span>
+            </th>
           </tr>
         </thead>
         <tbody

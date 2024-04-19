@@ -138,17 +138,21 @@ defmodule Ipdth.Agents do
           agent
           |> Agent.activate()
           |> Repo.update()
+
         {:error, {_type, details}} ->
           # TODO: 2024-04-08 - Save details of errors in a text field on the agent
           agent
           |> Agent.error_backoff()
           |> Repo.update()
+
           {:error, details}
+
         {:error, details} ->
           # TODO: 2024-04-08 - Save details of errors in a text field on the agent
           agent
           |> Agent.error_backoff()
           |> Repo.update()
+
           {:error, details}
       end
     else

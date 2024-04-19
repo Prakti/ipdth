@@ -28,4 +28,10 @@ defmodule Ipdth.AccountsFixtures do
     [_, token | _] = String.split(captured_email.text_body, "[TOKEN]")
     token
   end
+
+  def user_admin_fixture(attrs \\ %{}) do
+    {:ok, user} = user_fixture(attrs) |> Ipdth.Accounts.add_user_role(:user_admin)
+
+    user
+  end
 end

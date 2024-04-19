@@ -17,7 +17,12 @@
 
 <.back navigate={~p"/matches"}>Back to matches</.back>
 
-<.modal :if={@live_action == :edit} id="match-modal" show on_cancel={JS.patch(~p"/matches/#{@match}")}>
+<.modal
+  :if={@live_action == :edit}
+  id="match-modal"
+  show
+  on_cancel={JS.patch(~p"/matches/#{@match}")}
+>
   <.live_component
     module={IpdthWeb.MatchLive.FormComponent}
     id={@match.id}

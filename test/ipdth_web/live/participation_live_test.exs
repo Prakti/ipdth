@@ -4,8 +4,20 @@ defmodule IpdthWeb.ParticipationLiveTest do
   import Phoenix.LiveViewTest
   import Ipdth.TournamentsFixtures
 
-  @create_attrs %{status: :signed_up, score: 42, ranking: 42, sign_up: "2024-01-20T18:04:00.000000Z", details: "some details"}
-  @update_attrs %{status: :participating, score: 43, ranking: 43, sign_up: "2024-01-21T18:04:00.000000Z", details: "some updated details"}
+  @create_attrs %{
+    status: :signed_up,
+    score: 42,
+    ranking: 42,
+    sign_up: "2024-01-20T18:04:00.000000Z",
+    details: "some details"
+  }
+  @update_attrs %{
+    status: :participating,
+    score: 43,
+    ranking: 43,
+    sign_up: "2024-01-21T18:04:00.000000Z",
+    details: "some updated details"
+  }
   @invalid_attrs %{status: nil, score: nil, ranking: nil, sign_up: nil, details: nil}
 
   defp create_participation(_) do
@@ -49,7 +61,9 @@ defmodule IpdthWeb.ParticipationLiveTest do
     test "updates participation in listing", %{conn: conn, participation: participation} do
       {:ok, index_live, _html} = live(conn, ~p"/participations")
 
-      assert index_live |> element("#participations-#{participation.id} a", "Edit") |> render_click() =~
+      assert index_live
+             |> element("#participations-#{participation.id} a", "Edit")
+             |> render_click() =~
                "Edit Participation"
 
       assert_patch(index_live, ~p"/participations/#{participation}/edit")
@@ -72,7 +86,10 @@ defmodule IpdthWeb.ParticipationLiveTest do
     test "deletes participation in listing", %{conn: conn, participation: participation} do
       {:ok, index_live, _html} = live(conn, ~p"/participations")
 
-      assert index_live |> element("#participations-#{participation.id} a", "Delete") |> render_click()
+      assert index_live
+             |> element("#participations-#{participation.id} a", "Delete")
+             |> render_click()
+
       refute has_element?(index_live, "#participations-#{participation.id}")
     end
   end

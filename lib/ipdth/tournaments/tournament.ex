@@ -17,7 +17,7 @@ defmodule Ipdth.Tournaments.Tournament do
     has_many :participations, Participation
     has_many :matches, Match
 
-    timestamps([type: :utc_datetime_usec])
+    timestamps(type: :utc_datetime_usec)
   end
 
   # TODO: 2024-01-21 - Introduce Status model using an Enum
@@ -26,7 +26,16 @@ defmodule Ipdth.Tournaments.Tournament do
   @doc false
   def changeset(tournament, attrs) do
     tournament
-    |> cast(attrs, [:name, :description, :start_date, :end_date, :round_number, :random_seed, :random_trace, :status])
+    |> cast(attrs, [
+      :name,
+      :description,
+      :start_date,
+      :end_date,
+      :round_number,
+      :random_seed,
+      :random_trace,
+      :status
+    ])
     |> validate_required([:name, :start_date, :round_number])
   end
 end

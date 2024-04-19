@@ -2,20 +2,23 @@ defmodule Ipdth.Accounts.User do
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias Hex.API.User
   alias Ipdth.Agents.Agent
+  alias Ipdth.Accounts.User
 
+  @valid_roles [:tournament_admin, :user_admin]
   # TODO: 2024-04-11 - extend schema with :name, :string field (required)
   # TODO: 2024-04-11 - extend schema with timezone and language of user
-  # TODO: 2024-04-12 - extend schema with roles array
 
   schema "users" do
     field :email, :string
     field :password, :string, virtual: true, redact: true
     field :hashed_password, :string, redact: true
     field :confirmed_at, :utc_datetime_usec
+    field :roles, {:array, Ecto.Enum}, values: @valid_roles, default: []
     has_many :agents, Agent, foreign_key: :owner_id
 
-    timestamps([type: :utc_datetime_usec])
+    timestamps(type: :utc_datetime_usec)
   end
 
   @doc """
@@ -162,4 +165,36 @@ defmodule Ipdth.Accounts.User do
       add_error(changeset, :current_password, "is not valid")
     end
   end
+
+  @doc """
+  Adds a role to the user, but only if it's valid.
+  """
+  def add_role(%User{} = user, role) do
+    current_roles = Map.get(user, :roles, [])
+    new_roles = Enum.uniq([role | current_roles])
+
+    user
+    |> change(roles: new_roles)
+    |> validate_subset(:roles, Ecto.Enum.values(User, :roles))
+  end
+
+  @doc """
+  Removes a valid role from the user.
+  """
+  def remove_role(%User{} = user, role) do
+    if Enum.member?(@valid_roles, role) do
+      current_roles = Map.get(user, :roles, [])
+      new_roles = Enum.filter(current_roles, fn existing_role -> existing_role != role end)
+
+      user
+      |> change(roles: new_roles)
+      |> validate_subset(:roles, Ecto.Enum.values(User, :roles))
+    else
+      user
+      |> change()
+      |> add_error(:roles, "role '%{role}' does not exist", role: role)
+    end
+  end
+
+  def get_available_roles(), do: @valid_roles
 end

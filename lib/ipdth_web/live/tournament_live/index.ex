@@ -7,9 +7,9 @@ defmodule IpdthWeb.TournamentLive.Index do
   @impl true
   def mount(_params, _session, socket) do
     {:ok,
-      socket
-      |> assign(:active_page, "tournaments")
-      |> stream(:tournaments, Tournaments.list_tournaments())}
+     socket
+     |> assign(:active_page, "tournaments")
+     |> stream(:tournaments, Tournaments.list_tournaments())}
   end
 
   @impl true

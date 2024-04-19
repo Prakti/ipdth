@@ -33,7 +33,12 @@
   </:action>
 </.table>
 
-<.modal :if={@live_action in [:new, :edit]} id="participation-modal" show on_cancel={JS.patch(~p"/participations")}>
+<.modal
+  :if={@live_action in [:new, :edit]}
+  id="participation-modal"
+  show
+  on_cancel={JS.patch(~p"/participations")}
+>
   <.live_component
     module={IpdthWeb.ParticipationLive.FormComponent}
     id={@participation.id || :new}

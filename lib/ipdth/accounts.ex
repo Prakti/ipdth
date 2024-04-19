@@ -350,4 +350,40 @@ defmodule Ipdth.Accounts do
       {:error, :user, changeset, _} -> {:error, changeset}
     end
   end
+
+  @doc """
+  Add a user role to a user. You can get available roles via `User.get_available_roles()`.
+  Roles are simple Elixir atoms.
+
+  ## Example
+
+      iex> add_user_role(user, :user_admin)
+      {:ok, %User{}}
+
+      iex> add_user_role(user, :invalid)
+      {:error, %Ecto.Changeset{}}
+  """
+  def add_user_role(%User{} = user, role) do
+    user
+    |> User.add_role(role)
+    |> Repo.update()
+  end
+
+  @doc """
+  Removes a role from a user, but only if it's a valid one. We decided against
+  silent failures to avoid confusion. You can get available roles via `User.get_available_roles()`.
+
+  ## Example
+
+      iex> remove_user_role(user, :user_admin)
+      {:ok, %User{}}
+
+      iex> remove_user_role(user, "b0rked")
+      {:error, %Ecto.Changeset{}}
+  """
+  def remove_user_role(%User{} = user, role) do
+    user
+    |> User.remove_role(role)
+    |> Repo.update()
+  end
 end
