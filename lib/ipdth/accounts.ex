@@ -386,4 +386,12 @@ defmodule Ipdth.Accounts do
     |> User.remove_role(role)
     |> Repo.update()
   end
+
+  @doc """
+  List all users of the system.
+  """
+  def list_users() do
+    Repo.all(from u in User)
+  end
+
 end

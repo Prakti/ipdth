@@ -24,7 +24,7 @@ defmodule IpdthWeb.Components.PageHeader do
         <:nav_item id="dashboard" route={~p"/"}>Dashboard</:nav_item>
         <:nav_item id="tournaments" route={~p"/tournaments"}>Tournaments</:nav_item>
         <:nav_item id="agents" route={~p"/agents"}>Agents</:nav_item>
-        <:nav_item id="members" route="">Members</:nav_item>
+        <:nav_item id="members" route={~p"/users"}>Members</:nav_item>
       </.navbar>
       <!-- user profile & menu or login & register functionality -->
       <div class="flex w-3/12 justify-end">

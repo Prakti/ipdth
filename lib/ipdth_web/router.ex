@@ -62,6 +62,7 @@ defmodule IpdthWeb.Router do
       on_mount: [{IpdthWeb.UserAuth, :ensure_authenticated}] do
       live "/users/settings", UserSettingsLive, :edit
       live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
+      live "/users", UserLive.Index, :index
 
       # Agent Managemet for Users
       # live "/my/agents/", MyAgentLive.Index, :index
