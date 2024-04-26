@@ -145,7 +145,7 @@ defmodule Ipdth.Accounts.User do
   If there is no user or the user doesn't have a password, we call
   `Bcrypt.no_user_verify/0` to avoid timing attacks.
   """
-  def valid_password?(%Ipdth.Accounts.User{hashed_password: hashed_password}, password)
+  def valid_password?(%User{hashed_password: hashed_password}, password)
       when is_binary(hashed_password) and byte_size(password) > 0 do
     Bcrypt.verify_pass(password, hashed_password)
   end
@@ -169,29 +169,33 @@ defmodule Ipdth.Accounts.User do
   @doc """
   Adds a role to the user, but only if it's valid.
   """
-  def add_role(%User{} = user, role) do
-    current_roles = Map.get(user, :roles, [])
+  def add_role(user, role) do
+    changeset = change(user)
+
+    current_roles = get_field(changeset, :roles) ||  []
     new_roles = Enum.uniq([role | current_roles])
 
-    user
-    |> change(roles: new_roles)
+    changeset
+    |> put_change(:roles, new_roles)
     |> validate_subset(:roles, Ecto.Enum.values(User, :roles))
   end
 
   @doc """
   Removes a valid role from the user.
   """
-  def remove_role(%User{} = user, role) do
+  def remove_role(user, role) do
+    changeset = change(user)
+
     if Enum.member?(@valid_roles, role) do
-      current_roles = Map.get(user, :roles, [])
+
+      current_roles = get_field(changeset, :roles) || []
       new_roles = Enum.filter(current_roles, fn existing_role -> existing_role != role end)
 
-      user
-      |> change(roles: new_roles)
+      changeset
+      |> put_change(:roles, new_roles)
       |> validate_subset(:roles, Ecto.Enum.values(User, :roles))
     else
-      user
-      |> change()
+      changeset
       |> add_error(:roles, "role '%{role}' does not exist", role: role)
     end
   end

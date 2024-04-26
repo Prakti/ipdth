@@ -8,7 +8,7 @@ defmodule IpdthWeb.UserLive.Index do
     {:ok,
      socket
      |> assign(:active_page, "users")
-     |> stream(:users, Accounts.list_users())}
+     |> stream(:users, Accounts.list_users_with_agent_count_and_status())}
   end
 
   @impl true

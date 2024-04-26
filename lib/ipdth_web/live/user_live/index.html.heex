@@ -4,14 +4,14 @@
 
 <%!-- TODO: 2024-04-22 -- Create user_badge component that matches colors to suser state --%>
 <%!-- TODO: 2024-04-22 -- Create multi-badge component for roles --%>
-<%!-- TODO: 2024-04-22 -- Derive status from confirmed_at --%>
 
 <.table
   id="users"
   rows={@streams.users}
 >
   <:col :let={{_id, user}} label="E-Mail"><%= user.email %></:col>
-  <:col :let={{_id, user}} label="Confirmed At"><%= user.confirmed_at %></:col>
-  <:col :let={{_id, user}} label="Roles"><%= user.roles %></:col>
+  <:col :let={{_id, user}} label="Status"><%= user.status%></:col>
+  <:col :let={{_id, user}} label="Roles"><%= inspect(user.roles) %></:col>
+  <:col :let={{_id, user}} label="#Agents"><%= user.agent_count %></:col>
   <%!-- TODO: 2024-04-22 -- Show Agent count in List --%>
 </.table>

@@ -7,7 +7,21 @@
 #
 
 alias Ipdth.Accounts
+alias Ipdth.Accounts.User
 alias Ipdth.Agents
+alias Ipdth.Repo
+
+
+create_user = fn user_params -> 
+  with {:ok, user} <- Accounts.register_user(user_params) do
+    Accounts.deliver_user_confirmation_instructions(user, fn token ->
+      Accounts.confirm_user(token)
+      "<irrelevant>"
+    end)
+
+    user
+  end
+end
 
 Faker.start()
 
@@ -17,15 +31,8 @@ create_users = fn count ->
       email: Faker.Internet.user_name() <> "@ipdth.org",
       password: "0xBABAF0000000000000"
     }
-
-    with {:ok, user} <- Accounts.register_user(user_params) do
-      Accounts.deliver_user_confirmation_instructions(user, fn token ->
-        Accounts.confirm_user(token)
-        "<irrelevant>"
-      end)
-
-      user
-    end
+    
+    create_user.(user_params)
   end)
 end
 
@@ -50,6 +57,17 @@ create_agents_for_users = fn users, count ->
     {user, agents}
   end)
 end
+
+
+create_user.(%{
+  email: "myself@prakti.org",
+  password: "0xBABAF00000"
+})
+
+genesis_user = Accounts.get_user_by_email("myself@prakti.org")
+               |> User.add_role(:user_admin)
+               |> User.add_role(:tournament_admin)
+               |> Repo.update()
 
 users = create_users.(20)
 users_with_agents = create_agents_for_users.(users, 10)

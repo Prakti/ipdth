@@ -7,6 +7,7 @@ defmodule Ipdth.Accounts do
   alias Ipdth.Repo
 
   alias Ipdth.Accounts.{User, UserToken, UserNotifier}
+  alias Ipdth.Agents.Agent
 
   ## Database getters
 
@@ -355,6 +356,8 @@ defmodule Ipdth.Accounts do
   Add a user role to a user. You can get available roles via `User.get_available_roles()`.
   Roles are simple Elixir atoms.
 
+  # TODO: 2024-04-23 - Check if Requesting Person has 'user_admin' role.
+
   ## Example
 
       iex> add_user_role(user, :user_admin)
@@ -372,6 +375,8 @@ defmodule Ipdth.Accounts do
   @doc """
   Removes a role from a user, but only if it's a valid one. We decided against
   silent failures to avoid confusion. You can get available roles via `User.get_available_roles()`.
+
+  # TODO: 2024-04-23 - Check if Requesting Person has 'user_admin' role.
 
   ## Example
 
@@ -392,6 +397,24 @@ defmodule Ipdth.Accounts do
   """
   def list_users() do
     Repo.all(from u in User)
+  end
+
+  @doc """
+  List all users of the system including their number of agents and whether
+  they are confirmed or not.
+  """
+  def list_users_with_agent_count_and_status do
+    Repo.all(from u in User,
+      left_join: a in Agent, on: a.owner_id == u.id,
+      group_by: u.id,
+      select: %{
+        id: u.id,
+        email: u.email,
+        roles: u.roles,
+        agent_count: count(a.id),
+        status: fragment("CASE WHEN ? < now() THEN 'confirmed' ELSE 'unconfirmed' END", u.confirmed_at)
+       }
+    )
   end
 
 end
