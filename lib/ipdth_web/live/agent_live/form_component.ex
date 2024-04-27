@@ -23,7 +23,6 @@ defmodule IpdthWeb.AgentLive.FormComponent do
         <.input field={@form[:description]} type="text" label="Description" />
         <.input field={@form[:url]} type="text" label="Url" />
         <.input field={@form[:bearer_token]} type="text" label="Bearer token" />
-        <%!-- TODO: 2024-04-11 -- Only show actions if the Agent is owned by the current_user --%>
         <%!-- TODO: 2024-04-11 -- Think about reworking show + edit as separate pages w/o popup--%>
         <:actions>
           <.button phx-disable-with="Saving...">Save Agent</.button>

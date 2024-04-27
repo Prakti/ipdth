@@ -2,22 +2,18 @@
   Listing Users
 </.header>
 
-<%!-- TODO: 2024-04-22 -- Create user_badge component that matches colors to suser state --%>
-<%!-- TODO: 2024-04-22 -- Create multi-badge component for roles --%>
-
 <.table
   id="users"
   rows={@streams.users}
 >
   <:col :let={{_id, user}} label="E-Mail"><%= user.email %></:col>
-  <:col :let={{_id, user}} label="Status">
-    <.badge color={(user.status == "confirmed" && "sky") || "yellow"}><%= user.status%></.badge>
+  <:col :if={@is_user_admin} :let={{_id, user}} label="Status">
+    <.user_status_badge user_status={user.status} />
   </:col>
-  <:col :let={{_id, user}} label="Roles">
+  <:col :if={@is_user_admin} :let={{_id, user}} label="Roles">
     <div class="grid grid-cols-2 gap-4">
-      <.badge :for={role <- user.roles} color="zinc"><%= role %></.badge>
+      <.user_role_badge :for={role <- user.roles} role={role} />
     </div>
   </:col>
   <:col :let={{_id, user}} label="#Agents"><%= user.agent_count %></:col>
-  <%!-- TODO: 2024-04-22 -- Show Agent count in List --%>
 </.table>

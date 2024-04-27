@@ -13,7 +13,7 @@ defmodule IpdthWeb.AgentLive.Show do
     {:noreply,
      socket
      |> assign(:page_title, page_title(socket.assigns.live_action))
-     |> assign(:agent, Agents.get_agent!(id))}
+     |> assign(:agent, Agents.get_agent!(id, [:owner]))}
   end
 
   defp page_title(:show), do: "Show Agent"

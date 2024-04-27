@@ -20,7 +20,7 @@ defmodule IpdthWeb.CoreComponents do
   import IpdthWeb.Gettext
 
   @doc """
-  Renders a badge
+  Renders a generic badge
   """
   attr :color, :string, required: true
   slot :inner_block, required: true
@@ -57,6 +57,49 @@ defmodule IpdthWeb.CoreComponents do
     ]}>
       <%= render_slot(@inner_block) %>
     </div>
+    """
+  end
+
+
+  @doc """
+  Renders the user status as a colored badge.
+  """
+  attr :user_status, :string, required: true
+
+  def user_status_badge(assigns) do
+    ~H"""
+    <.badge color={(@user_status == "confirmed" && "sky") || "yellow"}>
+      <%= @user_status%>
+    </.badge>
+    """
+  end
+
+  @doc """
+  Renders the roles badge of a user.
+  """
+  attr :role, :string, required: true
+
+  def user_role_badge(assigns) do
+    ~H"""
+    <.badge color="zinc"><%= @role %></.badge>
+    """
+  end
+
+  @doc """
+  Renders the status badge of an Agent
+  """
+  attr :status, :atom, required: true
+
+  def agent_status_badge(assigns) do
+    assigns = assign(assigns,  color: case assigns.status do
+      :inactive -> "zinc"
+      :testing -> "yellow"
+      :active -> "green"
+      :error_backoff -> "orange"
+    end)
+
+    ~H"""
+    <.badge color={@color}><%= @status %></.badge>
     """
   end
 
