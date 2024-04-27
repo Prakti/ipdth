@@ -140,7 +140,7 @@ defmodule Ipdth.Agents.ConnectionTest do
       agent = agent_fixture(owner, %{url: "http://localhost:4000/"})
 
       assert {:error, details} = Ipdth.Agents.Connection.test(agent)
-      IO.inspect(details)
+      assert %Mint.TransportError{reason: :econnrefused} = details
     end
 
     @tag silence_logger: true

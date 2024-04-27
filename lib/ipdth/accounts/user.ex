@@ -98,6 +98,17 @@ defmodule Ipdth.Accounts.User do
   end
 
   @doc """
+  Creates the changeset for the genesis user.
+  """
+  def genesis_user_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:email, :hashed_password])
+    |> put_change(:roles, @valid_roles)
+    |> validate_email([])
+    |> confirm_changeset()
+  end
+
+  @doc """
   A user changeset for changing the email.
 
   It requires the email to change otherwise an error is added.

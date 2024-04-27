@@ -80,8 +80,8 @@ defmodule Ipdth.Agents do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_agent(%Agent{} = agent, user_id, attrs) do
-    if agent.owner_id == user_id do
+  def update_agent(%Agent{} = agent, actor_id, attrs) do
+    if agent.owner_id == actor_id do
       agent
       |> Agent.update(attrs)
       |> Repo.update()
@@ -102,8 +102,8 @@ defmodule Ipdth.Agents do
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_agent(%Agent{} = agent, user_id) do
-    if agent.owner_id == user_id do
+  def delete_agent(%Agent{} = agent, actor_id) do
+    if agent.owner_id == actor_id do
       Repo.delete(agent)
     else
       {:error, :not_authorized}
@@ -131,8 +131,8 @@ defmodule Ipdth.Agents do
       iex> activate_agent(agent)
       {:ok, %Agent{}}
   """
-  def activate_agent(%Agent{} = agent, user_id) do
-    if agent.owner_id == user_id do
+  def activate_agent(%Agent{} = agent, actor_id) do
+    if agent.owner_id == actor_id do
       case Connection.test(agent) do
         :ok ->
           agent
@@ -168,8 +168,8 @@ defmodule Ipdth.Agents do
       iex> activate_agent(agent)
       {:ok, %Agent{}}
   """
-  def deactivate_agent(%Agent{} = agent, user_id) do
-    if agent.owner_id == user_id do
+  def deactivate_agent(%Agent{} = agent, actor_id) do
+    if agent.owner_id == actor_id do
       agent
       |> Agent.deactivate()
       |> Repo.update()

@@ -509,24 +509,24 @@ defmodule Ipdth.AccountsTest do
 
   describe "add_user_role/2" do
     setup do
-      %{user: user_fixture()}
+      %{user: user_fixture(), admin: admin_user_fixture()}
     end
 
-    property "adds a valid role to the user", %{user: user} do
+    property "adds a valid role to the user", %{user: user, admin: admin} do
       check all(role <- user_role_gen()) do
-        assert {:ok, %User{roles: roles}} = Accounts.add_user_role(user, role)
+        assert {:ok, %User{roles: roles}} = Accounts.add_user_role(user, role, admin.id)
         assert roles == [role]
       end
     end
 
-    property "fails to add an invalid role to the user", %{user: user} do
+    property "fails to add an invalid role to the user", %{user: user, admin: admin} do
       valid_roles = User.get_available_roles()
 
       check all(invalid_role <- term(), not Enum.member?(valid_roles, invalid_role)) do
         assert {:error,
                 %Ecto.Changeset{
                   errors: errors
-                }} = Accounts.add_user_role(user, invalid_role)
+                }} = Accounts.add_user_role(user, invalid_role, admin.id)
 
         assert [
                  roles: {
@@ -540,10 +540,10 @@ defmodule Ipdth.AccountsTest do
       end
     end
 
-    property "is idempotent", %{user: user} do
+    property "is idempotent", %{user: user, admin: admin} do
       check all(role <- user_role_gen()) do
-        assert {:ok, user_with_role} = Accounts.add_user_role(user, role)
-        assert {:ok, %User{roles: roles}} = Accounts.add_user_role(user_with_role, role)
+        assert {:ok, user_with_role} = Accounts.add_user_role(user, role, admin.id)
+        assert {:ok, %User{roles: roles}} = Accounts.add_user_role(user_with_role, role, admin.id)
         assert roles == [role]
       end
     end
@@ -553,58 +553,77 @@ defmodule Ipdth.AccountsTest do
     setup do
       %{
         user: user_fixture(),
-        user_admin: user_admin_fixture()
+        admin: admin_user_fixture()
       }
     end
 
-    test "removes an existing role from the user", %{user_admin: user_admin} do
-      assert {:ok, %User{roles: roles}} = Accounts.remove_user_role(user_admin, :user_admin)
+    test "removes an existing role from the user", %{user: user, admin: admin} do
+      assert {:ok, user_admin} = Accounts.add_user_role(user, :user_admin, admin.id)
+      assert user_admin.roles == [:user_admin]
+
+      assert {:ok, %User{roles: roles}} = Accounts.remove_user_role(user_admin, :user_admin, admin.id)
       assert roles == []
     end
 
-    test "is idempotent", %{user_admin: user_admin} do
-      assert {:ok, user_without_role} = Accounts.remove_user_role(user_admin, :user_admin)
+    test "is idempotent", %{user: user, admin: admin} do
+      assert {:ok, user_admin} = Accounts.add_user_role(user, :user_admin, admin.id)
+      assert user_admin.roles == [:user_admin]
 
       assert {:ok, %User{roles: roles}} =
-               Accounts.remove_user_role(user_without_role, :user_admin)
+               Accounts.remove_user_role(user_admin, :user_admin, admin.id)
+      assert roles == []
+      assert {:ok, %User{roles: roles}} =
+               Accounts.remove_user_role(user, :user_admin, admin.id)
 
       assert roles == []
     end
 
-    test "does nothing if a role has not been assigned to the user", %{user_admin: user_admin} do
-      assert {:ok, %User{roles: roles}} = Accounts.remove_user_role(user_admin, :tournament_admin)
+    test "does nothing if a role has not been assigned to the user", %{user: user, admin: admin} do
+      assert {:ok, user_admin} =
+                Accounts.add_user_role(user, :user_admin, admin.id)
+      assert user_admin.roles == [:user_admin]
+
+      assert {:ok, %User{roles: roles}} =
+                Accounts.remove_user_role(user_admin, :tournament_admin, admin.id)
       assert roles == [:user_admin]
     end
 
-    property "can remove a role from a user that has been added before", %{user: user} do
+    property "can remove a role from a user that has been added before", %{user: user, admin: admin} do
       check all(role <- user_role_gen()) do
-        assert {:ok, %User{} = user_with_role} = Accounts.add_user_role(user, role)
+        assert {:ok, %User{} = user_with_role} =
+                  Accounts.add_user_role(user, role, admin.id)
         assert user_with_role.roles == [role]
 
-        assert {:ok, %User{roles: roles}} = Accounts.remove_user_role(user_with_role, role)
+        assert {:ok, %User{roles: roles}} =
+                  Accounts.remove_user_role(user_with_role, role, admin.id)
         assert roles == []
       end
     end
 
-    property "is idempotent with respect to all roles", %{user: user} do
+    property "is idempotent with respect to all roles", %{user: user, admin: admin} do
       check all(role <- user_role_gen()) do
-        assert {:ok, %User{} = user_with_role} = Accounts.add_user_role(user, role)
+        assert {:ok, %User{} = user_with_role} =
+                  Accounts.add_user_role(user, role, admin.id)
         assert user_with_role.roles == [role]
 
-        assert {:ok, user_without_role} = Accounts.remove_user_role(user_with_role, role)
-        assert {:ok, %User{roles: roles}} = Accounts.remove_user_role(user_without_role, role)
+        assert {:ok, user_without_role} =
+                  Accounts.remove_user_role(user_with_role, role, admin.id)
+        assert {:ok, %User{roles: roles}}=
+                  Accounts.remove_user_role(user_without_role, role, admin.id)
         assert roles == []
       end
     end
 
-    property "returns and error for invalid data", %{user_admin: user_admin} do
+    property "returns and error for invalid data", %{user: user, admin: admin} do
       valid_roles = User.get_available_roles()
+
+      {:ok, user_admin} = Accounts.add_user_role(user, :user_admin, admin.id)
 
       check all(invalid_role <- term(), not Enum.member?(valid_roles, invalid_role)) do
         assert {:error,
                 %Ecto.Changeset{
                   errors: errors
-                }} = Accounts.remove_user_role(user_admin, invalid_role)
+                }} = Accounts.remove_user_role(user_admin, invalid_role, admin.id)
 
         assert [roles: {"role '%{role}' does not exist", [role: ^invalid_role]}] = errors
 

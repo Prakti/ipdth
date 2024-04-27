@@ -356,8 +356,6 @@ defmodule Ipdth.Accounts do
   Add a user role to a user. You can get available roles via `User.get_available_roles()`.
   Roles are simple Elixir atoms.
 
-  # TODO: 2024-04-23 - Check if Requesting Person has 'user_admin' role.
-
   ## Example
 
       iex> add_user_role(user, :user_admin)
@@ -366,17 +364,20 @@ defmodule Ipdth.Accounts do
       iex> add_user_role(user, :invalid)
       {:error, %Ecto.Changeset{}}
   """
-  def add_user_role(%User{} = user, role) do
-    user
-    |> User.add_role(role)
-    |> Repo.update()
+  def add_user_role(%User{} = user, role, actor_id) do
+    actor = get_user!(actor_id)
+    if Enum.member?(actor.roles, :user_admin) do
+      user
+      |> User.add_role(role)
+      |> Repo.update()
+    else
+      {:error, :not_authorized}
+    end
   end
 
   @doc """
   Removes a role from a user, but only if it's a valid one. We decided against
   silent failures to avoid confusion. You can get available roles via `User.get_available_roles()`.
-
-  # TODO: 2024-04-23 - Check if Requesting Person has 'user_admin' role.
 
   ## Example
 
@@ -386,11 +387,32 @@ defmodule Ipdth.Accounts do
       iex> remove_user_role(user, "b0rked")
       {:error, %Ecto.Changeset{}}
   """
-  def remove_user_role(%User{} = user, role) do
-    user
-    |> User.remove_role(role)
-    |> Repo.update()
+  def remove_user_role(%User{} = user, role, actor_id) do
+    actor = get_user!(actor_id)
+    if Enum.member?(actor.roles, :user_admin) do
+      user
+      |> User.remove_role(role)
+      |> Repo.update()
+    else
+      {:error, :not_authorized}
+    end
   end
+
+  @doc """
+  Convenience function to seed an initial admin user.
+  You need to provide a map containing an "email" and "hashed_password".
+  The password must be hashed using bcrypt.
+  You can use `Bcrypt.hash_pwd_salt/1` on the iex console to obtain the hash.
+
+  The email of this user will not be verified, so you need to be extra careful
+  when using this function.
+  """
+  def create_genesis_user(attrs) do
+    %User{}
+    |> User.genesis_user_changeset(attrs)
+    |> Repo.insert()
+  end
+
 
   @doc """
   List all users of the system.

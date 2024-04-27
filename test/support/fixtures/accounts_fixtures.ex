@@ -14,6 +14,15 @@ defmodule Ipdth.AccountsFixtures do
     })
   end
 
+  def admin_user_fixture() do
+    {:ok, admin_user} = Ipdth.Accounts.create_genesis_user(%{
+      "email" => "admin@ipdth.org",
+      "hashed_password" => "$2b$12$bXskhdRKbOOLc3vOJmn/s.4gXebk3jE/3.Z14TVgm6s4hhfxF0KRK"
+    })
+
+    admin_user
+  end
+
   def user_fixture(attrs \\ %{}) do
     {:ok, user} =
       attrs
@@ -29,9 +38,4 @@ defmodule Ipdth.AccountsFixtures do
     token
   end
 
-  def user_admin_fixture(attrs \\ %{}) do
-    {:ok, user} = user_fixture(attrs) |> Ipdth.Accounts.add_user_role(:user_admin)
-
-    user
-  end
 end
