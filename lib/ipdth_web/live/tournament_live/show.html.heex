@@ -11,8 +11,8 @@
 <.list>
   <:item title="Name"><%= @tournament.name %></:item>
   <:item title="Description"><%= @tournament.description %></:item>
-  <:item title="Start date"><%= @tournament.start_date %></:item>
-  <:item title="End date"><%= @tournament.end_date %></:item>
+  <:item title="Start date"><%= Calendar.strftime(@tournament.start_date, "%Y-%m-%d %H:%M:%S") %></:item>
+  <:item title="End date"><%= @tournament.end_date && Calendar.strftime(@tournament.end_date, "%Y-%m-%d %H:%M:%S") %></:item>
   <:item title="Round number"><%= @tournament.round_number %></:item>
   <:item title="Random seed"><%= @tournament.random_seed %></:item>
   <:item title="Random trace"><%= @tournament.random_trace %></:item>

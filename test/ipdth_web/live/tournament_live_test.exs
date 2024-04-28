@@ -6,33 +6,24 @@ defmodule IpdthWeb.TournamentLiveTest do
 
   @create_attrs %{
     name: "some name",
-    status: "some status",
     description: "some description",
     start_date: "2024-01-20T12:56:00Z",
-    end_date: "2024-01-20T12:56:00Z",
     round_number: 42,
     random_seed: "some random_seed",
-    random_trace: "some random_trace"
   }
   @update_attrs %{
     name: "some updated name",
-    status: "some updated status",
     description: "some updated description",
     start_date: "2024-01-21T12:56:00Z",
-    end_date: "2024-01-21T12:56:00Z",
     round_number: 43,
     random_seed: "some updated random_seed",
-    random_trace: "some updated random_trace"
   }
   @invalid_attrs %{
     name: nil,
-    status: nil,
     description: nil,
     start_date: nil,
-    end_date: nil,
     round_number: nil,
     random_seed: nil,
-    random_trace: nil
   }
 
   defp create_tournament(_) do

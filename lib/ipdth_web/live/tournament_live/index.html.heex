@@ -24,11 +24,9 @@
     <%= Calendar.strftime(tournament.start_date, "%Y-%m-%d %H:%M:%S") %>
   </:col>
   <:col :let={{_id, tournament}} label="End date">
-    <%= Calendar.strftime(tournament.end_date, "%Y-%m-%d %H:%M:%S") %>
+    <%= tournament.end_date && Calendar.strftime(tournament.end_date, "%Y-%m-%d %H:%M:%S") %>
   </:col>
-  <:col :let={{_id, tournament}} label="Round number"><%= tournament.round_number %></:col>
-  <:col :let={{_id, tournament}} label="Random seed"><%= tournament.random_seed %></:col>
-  <:col :let={{_id, tournament}} label="Random trace"><%= tournament.random_trace %></:col>
+  <:col :let={{_id, tournament}} label="Number of Rounds"><%= tournament.round_number %></:col>
   <:action :let={{_id, tournament}}>
     <div class="sr-only">
       <.link navigate={~p"/tournaments/#{tournament}"}>Show</.link>

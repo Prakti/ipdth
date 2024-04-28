@@ -13,10 +13,8 @@ defmodule Ipdth.TournamentsTest do
       status: nil,
       description: nil,
       start_date: nil,
-      end_date: nil,
       round_number: nil,
       random_seed: nil,
-      random_trace: nil
     }
 
     test "list_tournaments/0 returns all tournaments" do
@@ -32,24 +30,19 @@ defmodule Ipdth.TournamentsTest do
     test "create_tournament/1 with valid data creates a tournament" do
       valid_attrs = %{
         name: "some name",
-        status: "some status",
         description: "some description",
         start_date: ~U[2024-01-20 12:56:00Z],
-        end_date: ~U[2024-01-20 12:56:00Z],
         round_number: 42,
         random_seed: "some random_seed",
-        random_trace: "some random_trace"
       }
 
       assert {:ok, %Tournament{} = tournament} = Tournaments.create_tournament(valid_attrs)
       assert tournament.name == "some name"
-      assert tournament.status == "some status"
+      assert tournament.status == :created
       assert tournament.description == "some description"
       assert tournament.start_date == ~U[2024-01-20 12:56:00.000000Z]
-      assert tournament.end_date == ~U[2024-01-20 12:56:00.000000Z]
       assert tournament.round_number == 42
       assert tournament.random_seed == "some random_seed"
-      assert tournament.random_trace == "some random_trace"
     end
 
     test "create_tournament/1 with invalid data returns error changeset" do
@@ -57,33 +50,30 @@ defmodule Ipdth.TournamentsTest do
     end
 
     test "update_tournament/2 with valid data updates the tournament" do
+      # TODO: 2024-04-28 - test update_tournament against status model
       tournament = tournament_fixture()
 
       update_attrs = %{
         name: "some updated name",
-        status: "some updated status",
         description: "some updated description",
         start_date: ~U[2024-01-21 12:56:00Z],
-        end_date: ~U[2024-01-21 12:56:00Z],
         round_number: 43,
         random_seed: "some updated random_seed",
-        random_trace: "some updated random_trace"
       }
 
       assert {:ok, %Tournament{} = tournament} =
                Tournaments.update_tournament(tournament, update_attrs)
 
       assert tournament.name == "some updated name"
-      assert tournament.status == "some updated status"
+      assert tournament.status == :created
       assert tournament.description == "some updated description"
       assert tournament.start_date == ~U[2024-01-21 12:56:00.000000Z]
-      assert tournament.end_date == ~U[2024-01-21 12:56:00.000000Z]
       assert tournament.round_number == 43
       assert tournament.random_seed == "some updated random_seed"
-      assert tournament.random_trace == "some updated random_trace"
     end
 
     test "update_tournament/2 with invalid data returns error changeset" do
+      # TODO: 2024-04-28 - test update_tournament against status model
       tournament = tournament_fixture()
 
       assert {:error, %Ecto.Changeset{}} =

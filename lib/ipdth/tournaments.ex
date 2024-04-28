@@ -51,7 +51,7 @@ defmodule Ipdth.Tournaments do
   """
   def create_tournament(attrs \\ %{}) do
     %Tournament{}
-    |> Tournament.changeset(attrs)
+    |> Tournament.new(attrs)
     |> Repo.insert()
   end
 
