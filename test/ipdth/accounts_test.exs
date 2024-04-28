@@ -597,6 +597,9 @@ defmodule Ipdth.AccountsTest do
         assert {:ok, %User{roles: roles}} =
                   Accounts.remove_user_role(user_with_role, role, admin.id)
         assert roles == []
+
+        user = Accounts.get_user!(user_with_role.id)
+        assert user.roles == []
       end
     end
 

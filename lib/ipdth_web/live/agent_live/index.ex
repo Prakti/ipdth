@@ -35,9 +35,6 @@ defmodule IpdthWeb.AgentLive.Index do
     |> assign(:agent, nil)
   end
 
-  # TODO: 2024-04-05 - Ensure only onwers can trigger actions on agents
-  # TODO: 2024-04-05 - Ensure only onwers can see action buttons in all views of agents
-
   @impl true
   def handle_info({IpdthWeb.AgentLive.FormComponent, {:saved, agent}}, socket) do
     agent = Agents.load_owner(agent)

@@ -181,6 +181,7 @@ defmodule Ipdth.Accounts.User do
   Adds a role to the user, but only if it's valid.
   """
   def add_role(user, role) do
+    role = ensure_role_is_atom(role)
     changeset = change(user)
 
     current_roles = get_field(changeset, :roles) ||  []
@@ -195,10 +196,10 @@ defmodule Ipdth.Accounts.User do
   Removes a valid role from the user.
   """
   def remove_role(user, role) do
+    role = ensure_role_is_atom(role)
     changeset = change(user)
 
     if Enum.member?(@valid_roles, role) do
-
       current_roles = get_field(changeset, :roles) || []
       new_roles = Enum.filter(current_roles, fn existing_role -> existing_role != role end)
 
@@ -212,4 +213,18 @@ defmodule Ipdth.Accounts.User do
   end
 
   def get_available_roles(), do: @valid_roles
+
+  @doc """
+  Sometimes we get the string repesentation of a role.
+  We can use this to find the corresponding role atom from all the valid
+  roles.
+
+  Note: simply converting from string to atom is discouraged, as this could
+  blow up memory.
+  """
+  def ensure_role_is_atom(maybe_role) do
+    Enum.find(@valid_roles, maybe_role, fn valid_role ->
+      to_string(valid_role) == maybe_role
+    end)
+  end
 end

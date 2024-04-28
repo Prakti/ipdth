@@ -16,4 +16,27 @@
     </div>
   </:col>
   <:col :let={{_id, user}} label="#Agents"><%= user.agent_count %></:col>
+  <:action :let={{_id, user}}>
+    <.link :if={@is_user_admin} patch={~p"/users/#{user.id}/edit_roles"}>
+      Edit Roles
+    </.link>
+  </:action>
 </.table>
+
+<.modal
+  :if={@live_action in [:edit_roles]}
+  id="role-editor-modal"
+  show
+  on_cancel={JS.patch(~p"/users")}
+>
+  <h2 class="mb-6 text-lg font-semibold leading-8 text-zinc-800">Editing Roles of <%= @user_to_edit.email %></h2>
+  <div>
+    <div :for={{role, has_role} <- @roles_mapping} class="flex items-center mb-4">
+      <input class="w-5 h-5 rounded text-sky-600 focus:ring-sky-500 border-sky-300"
+             type="checkbox" id={role} name={role} checked={has_role}
+             phx-click={JS.push("toggle_role", value: %{role: role})}
+      />
+      <label for={role} class="ms-3 cursor-pointer text-zinc-800"><%= role %></label>
+    </div>
+  </div>
+</.modal>

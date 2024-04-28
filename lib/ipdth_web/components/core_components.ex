@@ -129,7 +129,7 @@ defmodule IpdthWeb.CoreComponents do
       <.focus_wrap
         id={"#{@id}-container"}
         phx-click-away={hide("##{@id}-container")}
-        class="absolute mt2 w-40 rounded bg-white shadow-xl hidden border border-color-zinc-400"
+        class="absolute mt2 w-40 rounded bg-white shadow-xl hidden border border-color-zinc-400 z-50"
       >
         <ul class="flex flex-col gap-2 py-2 justify-end items-stretch">
           <li
@@ -161,21 +161,48 @@ defmodule IpdthWeb.CoreComponents do
 
   def split_button(assigns) do
     ~H"""
-    <div>
-      <div>
-        <span><%= render_slot(@inner_block) %></span>
-        <button class="inline" phx-click={toggle_visibility("##{@id}-container")}>
-          <.icon name="hero-chevron-down" class="h-4 w-4" />
+    <div id={@id} phx-remove={hide("#{@id}-container")} class="relative w-fit mt-2">
+      <div class="relative">
+        <button class={[
+          "rounded-l-md bg-amber-500  py-1 px-3",
+          "text-sm font-semibold leading-6 text-white ",
+          "border-b-2 border-amber-600 shadow border-r-2",
+          "hover:border-amber-500 hover:bg-amber-400",
+          "active:border-amber-600 active:bg-amber-600 active:shadow-inner",
+        ]}>
+          <%= render_slot(@inner_block) %>
+        </button><button class={[
+            "rounded-r-md bg-amber-500  py-1 px-1",
+            "text-sm font-semibold leading-6 text-white ",
+            "border-b-2 border-amber-600 shadow",
+            "hover:border-amber-500 hover:bg-amber-400",
+            "active:border-amber-600 active:bg-amber-600 active:shadow-inner",
+          ]}
+          phx-click={toggle_visibility("##{@id}-container")}
+        >
+          <.icon name="hero-chevron-down" class="w-5 h-5" />
         </button>
       </div>
       <.focus_wrap
         id={"#{@id}-container"}
         phx-click-away={hide("##{@id}-container")}
-        class="absolute hidden z-50 bg-zinc-500 shadow-xl right-0"
+        class={[
+          "absolute right-0 mt-1 w-fit rounded bg-white shadow-xl hidden border z-50",
+          "border-b-2 border-amber-500"
+        ]}
       >
-        <div :for={button <- @buttons}>
-          <%= render_slot(button) %>
-        </div>
+        <ul class="flex flex-col justify-end items-stretch">
+          <li
+            :for={button <- @buttons}
+            class={[
+              "px-6 py-2 first:rounded-t last:rounded-b hover:bg-amber-400 text-white",
+              "last:border-amber-600 last:hover:border-amber-500",
+              "bg-amber-500 active:bg-amber-600 cursor-pointer"
+            ]}
+          >
+            <%= render_slot(button) %>
+          </li>
+        </ul>
       </.focus_wrap>
     </div>
     """
@@ -645,10 +672,7 @@ defmodule IpdthWeb.CoreComponents do
   @doc ~S"""
   Renders a table with generic styling.
 
-  TODO: 2024-02-03 - Create split button component and use for actions
-  TODO: 2024-04-03 - Introduce :primary_action for split button
-  TODO: 2024-04-03 - Introduce :secondary_action for split button
-  TODO: 2024-04-03 - Introduce :hidden_action for split button
+  TODO: 2024-04-28 - Rethink display of table-actions
 
   ## Examples
 
@@ -670,6 +694,7 @@ defmodule IpdthWeb.CoreComponents do
     attr :label, :string
   end
 
+  slot :primary_action, doc: "the slot for the primary action of the column"
   slot :action, doc: "the slot for showing user actions in the last table column"
 
   def table(assigns) do
@@ -694,7 +719,7 @@ defmodule IpdthWeb.CoreComponents do
           phx-update={match?(%Phoenix.LiveView.LiveStream{}, @rows) && "stream"}
           class="divide-y divide-zinc-100"
         >
-          <tr :for={row <- @rows} id={@row_id && @row_id.(row)} class="hover:bg-zinc-50">
+          <tr :for={row <- @rows} id={@row_id && @row_id.(row)} class="hover:bg-zinc-50 group">
             <td
               :for={{col, _i} <- Enum.with_index(@col)}
               phx-click={@row_click && @row_click.(row)}
@@ -702,11 +727,14 @@ defmodule IpdthWeb.CoreComponents do
             >
               <%= render_slot(col, @row_item.(row)) %>
             </td>
-            <td :if={@action != []} class="">
-              <div class="">
+            <td  class="">
+              <div :if={@action != []} class="group-hover:visible invisible">
                 <span :for={action <- @action} class="">
                   <%= render_slot(action, @row_item.(row)) %>
                 </span>
+              </div>
+              <div :if={@action == []} class="group-hover:visible">
+                <.button><%= render_slot(@primary_action, @row_item.(row)) %></.button>
               </div>
             </td>
           </tr>

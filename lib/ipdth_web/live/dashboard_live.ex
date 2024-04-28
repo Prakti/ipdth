@@ -32,6 +32,20 @@ defmodule IpdthWeb.DashboardLive do
         <.badge color="fuchsia"> Fuchsia </.badge>
         <.badge color="pink"> Pink </.badge>
         <.badge color="rose"> Rose </.badge>
+        <.split_button id="test-split-button">
+          Foo
+          <:buttons> Bar </:buttons>
+          <:buttons> Bar </:buttons>
+          <:buttons> Bar </:buttons>
+          <:buttons> Bar </:buttons>
+        </.split_button>
+        <.dropdown_menu id="test-dropdown-menu">
+          Foo <.icon name="hero-chevron-down" class="h-4 w-4" />
+          <:menu_items> Bar </:menu_items>
+          <:menu_items> Bar </:menu_items>
+          <:menu_items> Bar </:menu_items>
+          <:menu_items> Bar </:menu_items>
+        </.dropdown_menu>
       </div>
       <h2>This is the user dashboard for <%= @current_user.email %></h2>
       <div class="p-5 grid grid-cols-2 gap-4">
