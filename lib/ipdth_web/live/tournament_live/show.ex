@@ -2,10 +2,15 @@ defmodule IpdthWeb.TournamentLive.Show do
   use IpdthWeb, :live_view
 
   alias Ipdth.Tournaments
+  alias Ipdth.Accounts
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, :active_page, "tournaments")}
+    current_user = socket.assigns.current_user
+
+    {:ok, socket
+          |> assign(:active_page, "tournaments")
+          |> assign(:user_is_tournament_admin, Accounts.has_role?(current_user.id, :tournament_admin))}
   end
 
   @impl true

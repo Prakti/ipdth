@@ -1,6 +1,7 @@
 defmodule IpdthWeb.TournamentLive.Index do
   use IpdthWeb, :live_view
 
+  alias Ipdth.Accounts
   alias Ipdth.Tournaments
   alias Ipdth.Tournaments.Tournament
 
@@ -11,6 +12,7 @@ defmodule IpdthWeb.TournamentLive.Index do
     {:ok,
      socket
      |> assign(:active_page, "tournaments")
+     |> assign(:user_is_tournament_admin, Accounts.has_role?(current_user.id, :tournament_admin))
      |> stream(:tournaments, Tournaments.list_tournaments(current_user.id))}
   end
 

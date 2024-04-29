@@ -1,7 +1,7 @@
 <.header class="">
   Listing Tournaments
   <:actions>
-    <.link patch={~p"/tournaments/new"}>
+    <.link :if={@user_is_tournament_admin} patch={~p"/tournaments/new"}>
       <.button>New Tournament</.button>
     </.link>
   </:actions>
@@ -31,10 +31,11 @@
     <div class="sr-only">
       <.link navigate={~p"/tournaments/#{tournament}"}>Show</.link>
     </div>
-    <.link patch={~p"/tournaments/#{tournament}/edit"}>Edit</.link>
+    <.link :if={@user_is_tournament_admin}
+           patch={~p"/tournaments/#{tournament}/edit"}>Edit</.link>
   </:action>
   <:action :let={{id, tournament}}>
-    <.link
+    <.link :if={@user_is_tournament_admin}
       phx-click={JS.push("delete", value: %{id: tournament.id}) |> hide("##{id}")}
       data-confirm="Are you sure?"
     >
@@ -44,7 +45,7 @@
 </.table>
 
 <.modal
-  :if={@live_action in [:new, :edit]}
+  :if={@live_action in [:new, :edit] && @user_is_tournament_admin}
   id="tournament-modal"
   show
   on_cancel={JS.patch(~p"/tournaments")}

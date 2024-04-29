@@ -1,8 +1,12 @@
 <.header>
-  Tournament <%= @tournament.id %>
-  <:subtitle>This is a tournament record from your database.</:subtitle>
+  Tournament - <%= @tournament.name %>
+  <:subtitle>(#<%= @tournament.id %>)</:subtitle>
   <:actions>
-    <.link patch={~p"/tournaments/#{@tournament}/show/edit"} phx-click={JS.push_focus()}>
+    <.link
+      :if={@user_is_tournament_admin}
+      patch={~p"/tournaments/#{@tournament}/show/edit"}
+      phx-click={JS.push_focus()}
+    >
       <.button>Edit tournament</.button>
     </.link>
   </:actions>
@@ -22,7 +26,7 @@
 <.back navigate={~p"/tournaments"}>Back to tournaments</.back>
 
 <.modal
-  :if={@live_action == :edit}
+  :if={@live_action == :edit && @user_is_tournament_admin}
   id="tournament-modal"
   show
   on_cancel={JS.patch(~p"/tournaments/#{@tournament}")}

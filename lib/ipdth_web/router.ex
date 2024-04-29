@@ -77,11 +77,9 @@ defmodule IpdthWeb.Router do
 
       # Tournament Management - Global View
       # TODO: 2024-01-21 - Create permission for managing tournaments
-      live "/tournaments", TournamentLive.Index, :index
       live "/tournaments/new", TournamentLive.Index, :new
       live "/tournaments/:id/edit", TournamentLive.Index, :edit
 
-      live "/tournaments/:id", TournamentLive.Show, :show
       live "/tournaments/:id/show/edit", TournamentLive.Show, :edit
 
       # Tourmanent Participation Management - Global View
@@ -112,13 +110,21 @@ defmodule IpdthWeb.Router do
 
     live_session :current_user,
       on_mount: [{IpdthWeb.UserAuth, :mount_current_user}] do
+      # Dashboard for Anon User
+      live "/", DashboardLive
+
       # Global List and View of Agents
       live "/agents", AgentLive.Index, :index
       live "/agents/:id", AgentLive.Show, :show
 
+      # Global List and View of Tournaments
+      live "/tournaments", TournamentLive.Index, :index
+      live "/tournaments/:id", TournamentLive.Show, :show
+
+      # Global List and View of Users
       live "/users", UserLive.Index, :index
 
-      live "/", DashboardLive
+      # User Confirmation URLs for Signup and Password or E-Mail Change
       live "/users/confirm/:token", UserConfirmationLive, :edit
       live "/users/confirm", UserConfirmationInstructionsLive, :new
     end
