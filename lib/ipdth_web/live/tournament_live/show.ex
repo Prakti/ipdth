@@ -10,7 +10,7 @@ defmodule IpdthWeb.TournamentLive.Show do
 
     {:ok, socket
           |> assign(:active_page, "tournaments")
-          |> assign(:user_is_tournament_admin, Accounts.has_role?(current_user.id, :tournament_admin))}
+          |> assign(:user_is_tournament_admin, tournament_admin?(current_user))}
   end
 
   @impl true
@@ -20,9 +20,18 @@ defmodule IpdthWeb.TournamentLive.Show do
     {:noreply,
      socket
      |> assign(:page_title, page_title(socket.assigns.live_action))
-     |> assign(:tournament, Tournaments.get_tournament!(id, current_user.id))}
+     |> assign(:tournament, get_tournament!(id, current_user))}
   end
 
   defp page_title(:show), do: "Show Tournament"
   defp page_title(:edit), do: "Edit Tournament"
+
+  # TODO: 2024-04-29 -- Try to DRY this up! Duplicate in index.ex
+  defp tournament_admin?(nil), do: false
+  defp tournament_admin?(user) do
+    Accounts.has_role?(user.id, :tournament_admin)
+  end
+
+  defp get_tournament!(id, nil), do: Tournaments.get_tournament!(id)
+  defp get_tournament!(id, user), do: Tournaments.get_tournament!(id, user.id)
 end

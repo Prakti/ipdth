@@ -2,15 +2,15 @@
   <%= @agent.name %>
   <:subtitle><%= @agent.description %></:subtitle>
   <:actions>
-    <.link :if={@current_user.id == @agent.owner_id} patch={~p"/agents/#{@agent}/show/edit"} phx-click={JS.push_focus()}>
+    <.link :if={@check_ownership.(@agent)} patch={~p"/agents/#{@agent}/show/edit"} phx-click={JS.push_focus()}>
       <.button>Edit agent</.button>
     </.link>
   </:actions>
 </.header>
 
 <.list>
-  <:item :if={@current_user.id == @agent.owner_id} title="Url"><span class="font-mono"><%= @agent.url %></span></:item>
-  <:item :if={@current_user.id == @agent.owner_id} title="Bearer token"><span class="font-mono"><%= @agent.bearer_token %></span></:item>
+  <:item :if={@check_ownership.(@agent)} title="Url"><span class="font-mono"><%= @agent.url %></span></:item>
+  <:item :if={@check_ownership.(@agent)} title="Bearer token"><span class="font-mono"><%= @agent.bearer_token %></span></:item>
   <:item title="Status"><.agent_status_badge status={@agent.status} /></:item>
   <:item title="Owner"><%= @agent.owner.email %></:item>
   <:item title="Agent ID"><%= @agent.id %></:item>
@@ -19,7 +19,7 @@
 <.back navigate={~p"/agents"}>Back to agents</.back>
 
 <.modal
-  :if={@live_action == :edit}
+  :if={@live_action == :edit && @check_ownership.(@agent)}
   id="agent-modal"
   show
   on_cancel={JS.patch(~p"/agents/#{@agent}")}

@@ -11,7 +11,7 @@ defmodule IpdthWeb.UserLive.Index do
     {:ok,
      socket
      |> assign(:active_page, "users")
-     |> assign(:is_user_admin, Enum.member?(current_user.roles, :user_admin))
+     |> assign(:is_user_admin, user_admin?(current_user))
      |> stream(:users, Accounts.list_users_with_agent_count_and_status())}
   end
 
@@ -76,6 +76,11 @@ defmodule IpdthWeb.UserLive.Index do
         Logger.warning(details)
         {:noreply, put_flash(socket, :error, "Could not remove role")}
     end
+  end
+
+  defp user_admin?(nil), do: false
+  defp user_admin?(user) do
+    Enum.member?(user.roles, :user_admin)
   end
 
 end

@@ -9,7 +9,11 @@ defmodule IpdthWeb.AgentLive.Index do
     {:ok,
      socket
      |> assign(:active_page, "agents")
-     |> stream(:agents, Agents.list_agents())}
+     |> stream(:agents, Agents.list_agents())
+     |> assign(:check_ownership, fn agent ->
+       current_user = socket.assigns.current_user
+       current_user && agent.owner_id == current_user.id
+     end)}
   end
 
   @impl true

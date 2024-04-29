@@ -1,7 +1,7 @@
 <.header>
   Listing Agents
   <:actions>
-    <.link patch={~p"/agents/new"}>
+    <.link :if={@current_user} patch={~p"/agents/new"}>
       <.button>New Agent</.button>
     </.link>
   </:actions>
@@ -22,13 +22,13 @@
   </:col>
   <:action :let={{_id, agent}}>
     <.link
-      :if={agent.status != :active && agent.owner.id == @current_user.id}
+      :if={agent.status != :active && @check_ownership.(agent)}
       phx-click={JS.push("activate", value: %{id: agent.id})}
     >
       Activate
     </.link>
     <.link
-      :if={agent.status == :active && agent.owner.id == @current_user.id}
+      :if={agent.status == :active && @check_ownership.(agent)}
       phx-click={JS.push("deactivate", value: %{id: agent.id})}
     >
       Deactivate
@@ -38,13 +38,13 @@
     <div class="sr-only">
       <.link navigate={~p"/agents/#{agent}"}>Show</.link>
     </div>
-    <.link :if={agent.owner.id == @current_user.id} patch={~p"/agents/#{agent}/edit"}>
+    <.link :if={@check_ownership.(agent)} patch={~p"/agents/#{agent}/edit"}>
       Edit
     </.link>
   </:action>
   <:action :let={{id, agent}}>
     <.link
-      :if={agent.owner.id == @current_user.id}
+      :if={@check_ownership.(agent)}
       phx-click={JS.push("delete", value: %{id: agent.id}) |> hide("##{id}")}
       data-confirm="Are you sure?"
     >

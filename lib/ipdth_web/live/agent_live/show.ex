@@ -5,7 +5,12 @@ defmodule IpdthWeb.AgentLive.Show do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, :active_page, "agents")}
+    {:ok, socket
+          |> assign(:active_page, "agents")
+          |> assign(:check_ownership, fn agent ->
+            current_user = socket.assigns.current_user
+            current_user && agent.owner_id == current_user.id
+          end)}
   end
 
   @impl true

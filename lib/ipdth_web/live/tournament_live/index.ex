@@ -12,8 +12,8 @@ defmodule IpdthWeb.TournamentLive.Index do
     {:ok,
      socket
      |> assign(:active_page, "tournaments")
-     |> assign(:user_is_tournament_admin, Accounts.has_role?(current_user.id, :tournament_admin))
-     |> stream(:tournaments, Tournaments.list_tournaments(current_user.id))}
+     |> assign(:user_is_tournament_admin, tournament_admin?(current_user))
+     |> stream(:tournaments, list_tournaments(current_user))}
   end
 
   @impl true
@@ -58,5 +58,18 @@ defmodule IpdthWeb.TournamentLive.Index do
       # TODO 2024-04-28 -- Show error flash about missing permission
       {:noreply, socket}
     end
+  end
+
+  defp tournament_admin?(nil), do: false
+  defp tournament_admin?(user) do
+    Accounts.has_role?(user.id, :tournament_admin)
+  end
+
+  defp list_tournaments(nil) do
+    Tournaments.list_tournaments()
+  end
+
+  defp list_tournaments(user) do
+    Tournaments.list_tournaments(user.id)
   end
 end
