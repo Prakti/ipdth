@@ -10,10 +10,12 @@ defmodule IpdthWeb.TournamentLive.Show do
 
   @impl true
   def handle_params(%{"id" => id}, _, socket) do
+    current_user = socket.assigns.current_user
+
     {:noreply,
      socket
      |> assign(:page_title, page_title(socket.assigns.live_action))
-     |> assign(:tournament, Tournaments.get_tournament!(id))}
+     |> assign(:tournament, Tournaments.get_tournament!(id, current_user.id))}
   end
 
   defp page_title(:show), do: "Show Tournament"

@@ -22,8 +22,6 @@ defmodule Ipdth.Tournaments.Tournament do
     timestamps(type: :utc_datetime_usec)
   end
 
-  # TODO: 2024-01-21 - Introduce Status model using an Enum
-  # TODO: 2024-01-21 - Set status automatically on create
   # TODO: 2024-04-28 - Tournament Notes Idea: type: comment, change, note: text
 
   @doc false
@@ -54,10 +52,6 @@ defmodule Ipdth.Tournaments.Tournament do
     tournament
     |> cast(attrs, [:name, :description])
     |> validate_required([:name, :start_date, :round_number])
-  end
-
-  def update(_tournament, _attrs) do
-    {:error, :tournament_editing_locked}
   end
 
   def new(tournament, attrs) do

@@ -6,10 +6,12 @@ defmodule IpdthWeb.TournamentLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
+    current_user = socket.assigns.current_user
+
     {:ok,
      socket
      |> assign(:active_page, "tournaments")
-     |> stream(:tournaments, Tournaments.list_tournaments())}
+     |> stream(:tournaments, Tournaments.list_tournaments(current_user.id))}
   end
 
   @impl true
@@ -18,9 +20,11 @@ defmodule IpdthWeb.TournamentLive.Index do
   end
 
   defp apply_action(socket, :edit, %{"id" => id}) do
+    current_user = socket.assigns.current_user
+
     socket
     |> assign(:page_title, "Edit Tournament")
-    |> assign(:tournament, Tournaments.get_tournament!(id))
+    |> assign(:tournament, Tournaments.get_tournament!(id, current_user.id))
   end
 
   defp apply_action(socket, :new, _params) do
@@ -42,9 +46,15 @@ defmodule IpdthWeb.TournamentLive.Index do
 
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
-    tournament = Tournaments.get_tournament!(id)
-    {:ok, _} = Tournaments.delete_tournament(tournament)
+    current_user = socket.assigns.current_user
+    tournament = Tournaments.get_tournament!(id, current_user.id)
 
-    {:noreply, stream_delete(socket, :tournaments, tournament)}
+    if current_user do
+      {:ok, _} = Tournaments.delete_tournament(tournament, current_user.id)
+      {:noreply, stream_delete(socket, :tournaments, tournament)}
+    else
+      # TODO 2024-04-28 -- Show error flash about missing permission
+      {:noreply, socket}
+    end
   end
 end

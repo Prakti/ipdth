@@ -7,6 +7,7 @@ defmodule Ipdth.TournamentsTest do
     alias Ipdth.Tournaments.Tournament
 
     import Ipdth.TournamentsFixtures
+    import Ipdth.AccountsFixtures
 
     @invalid_attrs %{
       name: nil,
@@ -17,17 +18,43 @@ defmodule Ipdth.TournamentsTest do
       random_seed: nil,
     }
 
-    test "list_tournaments/0 returns all tournaments" do
-      tournament = tournament_fixture()
-      assert Tournaments.list_tournaments() == [tournament]
+    test "list_tournaments/0 returns all tournaments for admins" do
+      admin = admin_user_fixture()
+      tournament = tournament_fixture(admin.id)
+      assert Tournaments.list_tournaments(admin.id) == [tournament]
     end
 
-    test "get_tournament!/1 returns the tournament with given id" do
-      tournament = tournament_fixture()
-      assert Tournaments.get_tournament!(tournament.id) == tournament
+    test "list_tournaments/0 returns no tournaments in status :created for anonymous users" do
+      assert Tournaments.list_tournaments() == []
     end
 
-    test "create_tournament/1 with valid data creates a tournament" do
+    test "list_tournaments/0 returns no tournaments in status :created for normal users" do
+      user = user_fixture()
+      assert Tournaments.list_tournaments(user.id) == []
+    end
+
+    test "get_tournament!/1 returns the tournament with given id for an admin" do
+      admin = admin_user_fixture()
+      tournament = tournament_fixture(admin.id)
+      assert Tournaments.get_tournament!(tournament.id, admin.id) == tournament
+    end
+
+    test "get_tournament!/1 does not return the tournament with given id for a normal user" do
+      admin = admin_user_fixture()
+      tournament = tournament_fixture(admin.id)
+      user = user_fixture()
+      assert nil == Tournaments.get_tournament!(tournament.id, user.id)
+    end
+
+    test "get_tournament!/1 does not return the tournament with given id for a anonymous user" do
+      admin = admin_user_fixture()
+      tournament = tournament_fixture(admin.id)
+      assert nil == Tournaments.get_tournament!(tournament.id)
+    end
+
+    test "create_tournament/1 as an admin with valid data creates a tournament" do
+      admin = admin_user_fixture()
+
       valid_attrs = %{
         name: "some name",
         description: "some description",
@@ -36,7 +63,7 @@ defmodule Ipdth.TournamentsTest do
         random_seed: "some random_seed",
       }
 
-      assert {:ok, %Tournament{} = tournament} = Tournaments.create_tournament(valid_attrs)
+      assert {:ok, %Tournament{} = tournament} = Tournaments.create_tournament(valid_attrs, admin.id)
       assert tournament.name == "some name"
       assert tournament.status == :created
       assert tournament.description == "some description"
@@ -45,13 +72,30 @@ defmodule Ipdth.TournamentsTest do
       assert tournament.random_seed == "some random_seed"
     end
 
-    test "create_tournament/1 with invalid data returns error changeset" do
-      assert {:error, %Ecto.Changeset{}} = Tournaments.create_tournament(@invalid_attrs)
+    test "create_tournament/1 as a normal user fails with :not_authorized" do
+      user = user_fixture()
+
+      valid_attrs = %{
+        name: "some name",
+        description: "some description",
+        start_date: ~U[2024-01-20 12:56:00Z],
+        round_number: 42,
+        random_seed: "some random_seed",
+      }
+
+      assert {:error, :not_authorized} = Tournaments.create_tournament(valid_attrs, user.id)
     end
 
-    test "update_tournament/2 with valid data updates the tournament" do
-      # TODO: 2024-04-28 - test update_tournament against status model
-      tournament = tournament_fixture()
+    test "create_tournament/1 with invalid data as an admin returns error changeset" do
+      admin = admin_user_fixture()
+      assert {:error, %Ecto.Changeset{}} = Tournaments.create_tournament(@invalid_attrs, admin.id)
+    end
+
+    # TODO: 2024-04-28 - test update_tournament against status model
+
+    test "update_tournament/2 as an admin with valid data updates the tournament" do
+      admin = admin_user_fixture()
+      tournament = tournament_fixture(admin.id)
 
       update_attrs = %{
         name: "some updated name",
@@ -62,7 +106,7 @@ defmodule Ipdth.TournamentsTest do
       }
 
       assert {:ok, %Tournament{} = tournament} =
-               Tournaments.update_tournament(tournament, update_attrs)
+               Tournaments.update_tournament(tournament, update_attrs, admin.id)
 
       assert tournament.name == "some updated name"
       assert tournament.status == :created
@@ -72,24 +116,50 @@ defmodule Ipdth.TournamentsTest do
       assert tournament.random_seed == "some updated random_seed"
     end
 
-    test "update_tournament/2 with invalid data returns error changeset" do
-      # TODO: 2024-04-28 - test update_tournament against status model
-      tournament = tournament_fixture()
+    test "update_tournament/2 as a normal user with valid data fails with :not_authorized" do
+      admin = admin_user_fixture()
+      tournament = tournament_fixture(admin.id)
+      user = user_fixture()
 
-      assert {:error, %Ecto.Changeset{}} =
-               Tournaments.update_tournament(tournament, @invalid_attrs)
+      update_attrs = %{
+        name: "some updated name",
+        description: "some updated description",
+        start_date: ~U[2024-01-21 12:56:00Z],
+        round_number: 43,
+        random_seed: "some updated random_seed",
+      }
 
-      assert tournament == Tournaments.get_tournament!(tournament.id)
+      assert {:error, :not_authorized} = Tournaments.update_tournament(tournament, update_attrs, user.id)
     end
 
-    test "delete_tournament/1 deletes the tournament" do
-      tournament = tournament_fixture()
-      assert {:ok, %Tournament{}} = Tournaments.delete_tournament(tournament)
-      assert_raise Ecto.NoResultsError, fn -> Tournaments.get_tournament!(tournament.id) end
+    test "update_tournament/2 with invalid data returns error changeset" do
+      admin = admin_user_fixture()
+      tournament = tournament_fixture(admin.id)
+
+      assert {:error, %Ecto.Changeset{}} =
+               Tournaments.update_tournament(tournament, @invalid_attrs, admin.id)
+
+      assert tournament == Tournaments.get_tournament!(tournament.id, admin.id)
+    end
+
+    test "delete_tournament/1 as an admin deletes the tournament" do
+      admin = admin_user_fixture()
+      tournament = tournament_fixture(admin.id)
+      assert {:ok, %Tournament{}} = Tournaments.delete_tournament(tournament, admin.id)
+      assert_raise Ecto.NoResultsError, fn -> Tournaments.get_tournament!(tournament.id, admin.id) end
+    end
+
+    test "delete_tournament/1 as a normal user fails with :not_authorized" do
+      admin = admin_user_fixture()
+      tournament = tournament_fixture(admin.id)
+      user = user_fixture()
+      assert {:error, :not_authorized} = Tournaments.delete_tournament(tournament, user.id)
+      assert tournament == Tournaments.get_tournament!(tournament.id, admin.id)
     end
 
     test "change_tournament/1 returns a tournament changeset" do
-      tournament = tournament_fixture()
+      admin = admin_user_fixture()
+      tournament = tournament_fixture(admin.id)
       assert %Ecto.Changeset{} = Tournaments.change_tournament(tournament)
     end
   end

@@ -5,6 +5,7 @@ defmodule Ipdth.AccountsFixtures do
   """
 
   def unique_user_email, do: "user#{System.unique_integer()}@example.com"
+  def unique_admin_email, do: "admin#{System.unique_integer()}@ipdth.com"
   def valid_user_password, do: "hello world!"
 
   def valid_user_attributes(attrs \\ %{}) do
@@ -16,7 +17,7 @@ defmodule Ipdth.AccountsFixtures do
 
   def admin_user_fixture() do
     {:ok, admin_user} = Ipdth.Accounts.create_genesis_user(%{
-      "email" => "admin@ipdth.org",
+      "email" => unique_admin_email(),
       "hashed_password" => "$2b$12$bXskhdRKbOOLc3vOJmn/s.4gXebk3jE/3.Z14TVgm6s4hhfxF0KRK"
     })
 

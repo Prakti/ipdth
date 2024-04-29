@@ -3,6 +3,7 @@ defmodule IpdthWeb.TournamentLiveTest do
 
   import Phoenix.LiveViewTest
   import Ipdth.TournamentsFixtures
+  import Ipdth.AccountsFixtures
 
   @create_attrs %{
     name: "some name",
@@ -27,12 +28,15 @@ defmodule IpdthWeb.TournamentLiveTest do
   }
 
   defp create_tournament(_) do
-    tournament = tournament_fixture()
-    %{tournament: tournament}
+    admin = admin_user_fixture()
+    tournament = tournament_fixture(admin.id)
+    %{admin: admin, tournament: tournament}
   end
 
-  describe "Index" do
-    setup [:create_tournament, :register_and_log_in_user]
+  # TODO: 20204-04-29 -- Test with normal user!
+  # TODO: 20204-04-29 -- Test with anonymous user!
+  describe "Index (with admin user)" do
+    setup [:create_tournament, :register_and_log_in_admin]
 
     test "lists all tournaments", %{conn: conn, tournament: tournament} do
       {:ok, _index_live, html} = live(conn, ~p"/tournaments")
@@ -95,8 +99,10 @@ defmodule IpdthWeb.TournamentLiveTest do
     end
   end
 
-  describe "Show" do
-    setup [:create_tournament, :register_and_log_in_user]
+  # TODO: 20204-04-29 -- Test with normal user!
+  # TODO: 20204-04-29 -- Test with anonymous user!
+  describe "Show (with admin user)" do
+    setup [:create_tournament, :register_and_log_in_admin]
 
     test "displays tournament", %{conn: conn, tournament: tournament} do
       {:ok, _show_live, html} = live(conn, ~p"/tournaments/#{tournament}")

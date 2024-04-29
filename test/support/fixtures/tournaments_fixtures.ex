@@ -7,7 +7,7 @@ defmodule Ipdth.TournamentsFixtures do
   @doc """
   Generate a tournament.
   """
-  def tournament_fixture(attrs \\ %{}) do
+  def tournament_fixture(admin_id, attrs \\ %{}) do
     {:ok, tournament} =
       attrs
       |> Enum.into(%{
@@ -17,7 +17,7 @@ defmodule Ipdth.TournamentsFixtures do
         round_number: 42,
         start_date: ~U[2024-01-20 12:56:00Z],
       })
-      |> Ipdth.Tournaments.create_tournament()
+      |> Ipdth.Tournaments.create_tournament(admin_id)
 
     tournament
   end

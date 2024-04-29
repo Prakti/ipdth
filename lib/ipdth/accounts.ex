@@ -366,6 +366,7 @@ defmodule Ipdth.Accounts do
   """
   def add_user_role(%User{} = user, role, actor_id) do
     actor = get_user!(actor_id)
+    # TODO: 2024-08-28 - Replace by has_role?(actor_id)
     if Enum.member?(actor.roles, :user_admin) do
       user
       |> User.add_role(role)
@@ -389,6 +390,7 @@ defmodule Ipdth.Accounts do
   """
   def remove_user_role(%User{} = user, role, actor_id) do
     actor = get_user!(actor_id)
+    # TODO: 2024-08-28 - Replace by has_role?(actor_id)
     if Enum.member?(actor.roles, :user_admin) do
       user
       |> User.remove_role(role)
@@ -437,6 +439,14 @@ defmodule Ipdth.Accounts do
         status: fragment("CASE WHEN ? < now() THEN 'confirmed' ELSE 'unconfirmed' END", u.confirmed_at)
        }
     )
+  end
+
+  @doc """
+  Check if a user has a certain role. Fetches a user by id first.
+  """
+  def has_role?(user_id, role) do
+    user = get_user!(user_id)
+    Enum.member?(user.roles, role)
   end
 
 end

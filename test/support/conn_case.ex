@@ -50,6 +50,20 @@ defmodule IpdthWeb.ConnCase do
   end
 
   @doc """
+  Setup helper that registers and logs in an admin user.
+
+      setup :register_and_log_in_admin
+
+  It stores an updated connection and a registered admin in the
+  test context.
+  """
+  def register_and_log_in_admin(%{conn: conn}) do
+    admin = Ipdth.AccountsFixtures.admin_user_fixture()
+    %{conn: log_in_user(conn, admin), user: admin}
+  end
+
+
+  @doc """
   Logs the given `user` into the `conn`.
 
   It returns an updated `conn`.

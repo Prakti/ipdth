@@ -7,6 +7,7 @@ defmodule Ipdth.Tournaments do
   alias Ipdth.Repo
 
   alias Ipdth.Tournaments.Tournament
+  alias Ipdth.Accounts
 
   @doc """
   Returns the list of tournaments.
@@ -17,8 +18,16 @@ defmodule Ipdth.Tournaments do
       [%Tournament{}, ...]
 
   """
-  def list_tournaments do
-    Repo.all(Tournament)
+  def list_tournaments() do
+    Repo.all(from t in Tournament, where: t.status != ^:created)
+  end
+
+  def list_tournaments(actor_id) do
+    if Accounts.has_role?(actor_id, :tournament_admin)do
+      Repo.all(Tournament)
+    else
+      list_tournaments()
+    end
   end
 
   @doc """
@@ -35,7 +44,17 @@ defmodule Ipdth.Tournaments do
       ** (Ecto.NoResultsError)
 
   """
-  def get_tournament!(id), do: Repo.get!(Tournament, id)
+  def get_tournament!(id) do
+    Repo.one(from t in Tournament, where: t.id == ^id and t.status != ^:created)
+  end
+
+  def get_tournament!(id, actor_id) do
+    if Accounts.has_role?(actor_id, :tournament_admin) do
+      Repo.get!(Tournament, id)
+    else
+      get_tournament!(id)
+    end
+  end
 
   @doc """
   Creates a tournament.
@@ -49,10 +68,14 @@ defmodule Ipdth.Tournaments do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_tournament(attrs \\ %{}) do
-    %Tournament{}
-    |> Tournament.new(attrs)
-    |> Repo.insert()
+  def create_tournament(attrs \\ %{}, actor_id) do
+    if Accounts.has_role?(actor_id, :tournament_admin) do
+      %Tournament{}
+      |> Tournament.new(attrs)
+      |> Repo.insert()
+    else
+      {:error, :not_authorized}
+    end
   end
 
   @doc """
@@ -67,10 +90,18 @@ defmodule Ipdth.Tournaments do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_tournament(%Tournament{} = tournament, attrs) do
-    tournament
-    |> Tournament.changeset(attrs)
-    |> Repo.update()
+  def update_tournament(%Tournament{} = tournament, attrs, actor_id) do
+    if Accounts.has_role?(actor_id, :tournament_admin) do
+      if Enum.member?([:created, :published], tournament.status) do
+        tournament
+        |> Tournament.changeset(attrs)
+        |> Repo.update()
+      else
+        {:error, :tournament_editing_locked}
+      end
+    else
+      {:error, :not_authorized}
+    end
   end
 
   @doc """
@@ -85,8 +116,12 @@ defmodule Ipdth.Tournaments do
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_tournament(%Tournament{} = tournament) do
-    Repo.delete(tournament)
+  def delete_tournament(%Tournament{} = tournament, actor_id) do
+    if Accounts.has_role?(actor_id, :tournament_admin) do
+      Repo.delete(tournament)
+    else
+      {:error, :not_authorized}
+    end
   end
 
   @doc """
