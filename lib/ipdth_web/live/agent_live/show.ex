@@ -1,6 +1,8 @@
 defmodule IpdthWeb.AgentLive.Show do
   use IpdthWeb, :live_view
 
+  import IpdthWeb.AuthZ
+
   alias Ipdth.Agents
 
   @impl true
@@ -8,8 +10,7 @@ defmodule IpdthWeb.AgentLive.Show do
     {:ok, socket
           |> assign(:active_page, "agents")
           |> assign(:check_ownership, fn agent ->
-            current_user = socket.assigns.current_user
-            current_user && agent.owner_id == current_user.id
+            agent_owner?(socket.assigns.current_user, agent)
           end)}
   end
 

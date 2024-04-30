@@ -1,6 +1,8 @@
 defmodule IpdthWeb.AgentLive.Index do
   use IpdthWeb, :live_view
 
+  import IpdthWeb.AuthZ
+
   alias Ipdth.Agents
   alias Ipdth.Agents.Agent
 
@@ -11,8 +13,7 @@ defmodule IpdthWeb.AgentLive.Index do
      |> assign(:active_page, "agents")
      |> stream(:agents, Agents.list_agents())
      |> assign(:check_ownership, fn agent ->
-       current_user = socket.assigns.current_user
-       current_user && agent.owner_id == current_user.id
+       agent_owner?(socket.assigns.current_user, agent)
      end)}
   end
 

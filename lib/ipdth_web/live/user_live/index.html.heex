@@ -10,7 +10,7 @@
   <:col :if={@is_user_admin} :let={{_id, user}} label="Status">
     <.user_status_badge user_status={user.status} />
   </:col>
-  <:col :if={user_admin?(@current_user)} :let={{_id, user}} label="Roles">
+  <:col :if={@is_user_admin} :let={{_id, user}} label="Roles">
     <div class="grid grid-cols-2 gap-4">
       <.user_role_badge :for={role <- user.roles} role={role} />
     </div>

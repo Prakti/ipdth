@@ -3,6 +3,8 @@ defmodule IpdthWeb.UserLive.Index do
 
   require Logger
 
+  import IpdthWeb.AuthZ
+
   alias Ipdth.Accounts
 
   @impl true
@@ -76,11 +78,6 @@ defmodule IpdthWeb.UserLive.Index do
         Logger.warning(details)
         {:noreply, put_flash(socket, :error, "Could not remove role")}
     end
-  end
-
-  defp user_admin?(nil), do: false
-  defp user_admin?(user) do
-    Enum.member?(user.roles, :user_admin)
   end
 
 end

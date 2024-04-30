@@ -1,8 +1,9 @@
 defmodule IpdthWeb.TournamentLive.Show do
   use IpdthWeb, :live_view
 
+  import IpdthWeb.AuthZ
+
   alias Ipdth.Tournaments
-  alias Ipdth.Accounts
 
   @impl true
   def mount(_params, _session, socket) do
@@ -25,12 +26,6 @@ defmodule IpdthWeb.TournamentLive.Show do
 
   defp page_title(:show), do: "Show Tournament"
   defp page_title(:edit), do: "Edit Tournament"
-
-  # TODO: 2024-04-29 -- Try to DRY this up! Duplicate in index.ex
-  defp tournament_admin?(nil), do: false
-  defp tournament_admin?(user) do
-    Accounts.has_role?(user.id, :tournament_admin)
-  end
 
   defp get_tournament!(id, nil), do: Tournaments.get_tournament!(id)
   defp get_tournament!(id, user), do: Tournaments.get_tournament!(id, user.id)

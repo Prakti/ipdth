@@ -1,7 +1,8 @@
 defmodule IpdthWeb.TournamentLive.Index do
   use IpdthWeb, :live_view
 
-  alias Ipdth.Accounts
+  import IpdthWeb.AuthZ
+
   alias Ipdth.Tournaments
   alias Ipdth.Tournaments.Tournament
 
@@ -58,11 +59,6 @@ defmodule IpdthWeb.TournamentLive.Index do
       # TODO 2024-04-28 -- Show error flash about missing permission
       {:noreply, socket}
     end
-  end
-
-  defp tournament_admin?(nil), do: false
-  defp tournament_admin?(user) do
-    Accounts.has_role?(user.id, :tournament_admin)
   end
 
   defp list_tournaments(nil) do
