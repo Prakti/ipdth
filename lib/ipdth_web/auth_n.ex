@@ -1,4 +1,4 @@
-defmodule IpdthWeb.UserAuth do
+defmodule IpdthWeb.AuthN do
   use IpdthWeb, :verified_routes
 
   import Plug.Conn
@@ -133,13 +133,13 @@ defmodule IpdthWeb.UserAuth do
       defmodule IpdthWeb.PageLive do
         use IpdthWeb, :live_view
 
-        on_mount {IpdthWeb.UserAuth, :mount_current_user}
+        on_mount {IpdthWeb.AuthN, :mount_current_user}
         ...
       end
 
   Or use the `live_session` of your router to invoke the on_mount callback:
 
-      live_session :authenticated, on_mount: [{IpdthWeb.UserAuth, :ensure_authenticated}] do
+      live_session :authenticated, on_mount: [{IpdthWeb.AuthN, :ensure_authenticated}] do
         live "/profile", ProfileLive, :index
       end
   """
