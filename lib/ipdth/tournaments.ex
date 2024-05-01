@@ -105,6 +105,27 @@ defmodule Ipdth.Tournaments do
   end
 
   @doc """
+  Publish a tournament (:created -> :published)
+
+  Once published only it's name and description may be changed.
+  TODO: 2024-04-30 - Write Test for publish_tournament!
+  """
+  def publish_tournament(%Tournament{status: :created} = tournament, actor_id) do
+    if Accounts.has_role?(actor_id, :tournament_admin) do
+      tournament
+      |> Tournament.publish()
+      |> Repo.update()
+    else
+      {:error, :not_authorized}
+    end
+  end
+
+  def publish_tournament(%Tournament{}, _) do
+    {:error, :already_published}
+  end
+
+
+  @doc """
   Deletes a tournament.
 
   ## Examples

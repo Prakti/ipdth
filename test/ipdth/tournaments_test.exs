@@ -91,6 +91,30 @@ defmodule Ipdth.TournamentsTest do
       assert {:error, %Ecto.Changeset{}} = Tournaments.create_tournament(@invalid_attrs, admin.id)
     end
 
+    test "publish_tournament/2 as an admin publishes the tournament" do
+      admin = admin_user_fixture()
+      tournament = tournament_fixture(admin.id)
+      user = user_fixture()
+
+      # normal and anon user cannot see created tournament!
+      assert nil == Tournaments.get_tournament!(tournament.id, user.id)
+      assert nil == Tournaments.get_tournament!(tournament.id)
+
+      assert {:ok, tournament} = Tournaments.publish_tournament(tournament, admin.id)
+
+      # normal and anon user can see published tournament!
+      assert tournament == Tournaments.get_tournament!(tournament.id, user.id)
+      assert tournament == Tournaments.get_tournament!(tournament.id)
+    end
+
+    test "publish_tournament/2 as a normal user fails" do
+      admin = admin_user_fixture()
+      tournament = tournament_fixture(admin.id)
+      user = user_fixture()
+
+      assert {:error, :not_authorized} = Tournaments.publish_tournament(tournament, user.id)
+    end
+
     # TODO: 2024-04-28 - test update_tournament against status model
 
     test "update_tournament/2 as an admin with valid data updates the tournament" do

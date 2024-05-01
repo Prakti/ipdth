@@ -9,7 +9,7 @@ defmodule IpdthWeb.TournamentLive.FormComponent do
     <div>
       <.header>
         <%= @title %>
-        <:subtitle></:subtitle>
+        <:subtitle>(<%= @id %>)</:subtitle>
       </.header>
 
       <.simple_form
