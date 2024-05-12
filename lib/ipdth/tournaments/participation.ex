@@ -23,4 +23,14 @@ defmodule Ipdth.Tournaments.Participation do
     |> cast(attrs, [:score, :ranking, :sign_up, :status, :details])
     |> validate_required([:score, :ranking, :sign_up, :status, :details])
   end
+
+  def sign_up(participation, tournament, agent) do
+    change(
+      participation,
+      tournament_id: tournament.id,
+      agent_id: agent.id,
+      sign_up: DateTime.utc_now(),
+      status: :signed_up
+    )
+  end
 end

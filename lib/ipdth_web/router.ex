@@ -74,6 +74,7 @@ defmodule IpdthWeb.Router do
       live "/agents/new", AgentLive.Index, :new
       live "/agents/:id/edit", AgentLive.Index, :edit
       live "/agents/:id/show/edit", AgentLive.Show, :edit
+      live "/agents/:id/show/signup", AgentLive.Signup, :signup
 
       # Tournament Management - Global View
       # TODO: 2024-01-21 - Create permission for managing tournaments
@@ -85,13 +86,6 @@ defmodule IpdthWeb.Router do
       # Tourmanent Participation Management - Global View
       # TODO: 2024-01-21 - Remove this in favour of Embedded views in Agent
       # TODO: 2024-01-21 - Remove this in favour of Embedded views in Tournament
-
-      live "/participations", ParticipationLive.Index, :index
-      live "/participations/new", ParticipationLive.Index, :new
-      live "/participations/:id/edit", ParticipationLive.Index, :edit
-
-      live "/participations/:id", ParticipationLive.Show, :show
-      live "/participations/:id/show/edit", ParticipationLive.Show, :edit
 
       # Match Management - Global View
       live "/matches", MatchLive.Index, :index

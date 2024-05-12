@@ -2,13 +2,14 @@ defmodule Ipdth.TournamentsTest do
   use Ipdth.DataCase
 
   alias Ipdth.Tournaments
+  alias Ipdth.Tournaments.Tournament
+  alias Ipdth.Tournaments.Participation
+
+  import Ipdth.TournamentsFixtures
+  import Ipdth.AccountsFixtures
+  import Ipdth.AgentsFixtures
 
   describe "tournaments" do
-    alias Ipdth.Tournaments.Tournament
-
-    import Ipdth.TournamentsFixtures
-    import Ipdth.AccountsFixtures
-
     @invalid_attrs %{
       name: nil,
       status: nil,
@@ -189,84 +190,45 @@ defmodule Ipdth.TournamentsTest do
   end
 
   describe "participations" do
-    alias Ipdth.Tournaments.Participation
+    test "sign_up/3 with valid tournament and agent creates a participation with status :signed_up" do
+      admin = admin_user_fixture()
+      tournament = published_tournament_fixture(admin.id)
+      user = user_fixture()
+      agent = activated_agent_fixture(user)
 
-    import Ipdth.TournamentsFixtures
+      tournament_id = tournament.id
+      agent_id = agent.id
 
-    @invalid_attrs %{status: nil, score: nil, ranking: nil, sign_up: nil, details: nil}
-
-    test "list_participations/0 returns all participations" do
-      participation = participation_fixture()
-      assert Tournaments.list_participations() == [participation]
-    end
-
-    test "get_participation!/1 returns the participation with given id" do
-      participation = participation_fixture()
-      assert Tournaments.get_participation!(participation.id) == participation
-    end
-
-    test "create_participation/1 with valid data creates a participation" do
-      valid_attrs = %{
+      assert {:ok, %Participation{
         status: :signed_up,
-        score: 42,
-        ranking: 42,
-        sign_up: ~U[2024-01-20 18:04:00.000000Z],
-        details: "some details"
-      }
-
-      assert {:ok, %Participation{} = participation} =
-               Tournaments.create_participation(valid_attrs)
-
-      assert participation.status == :signed_up
-      assert participation.score == 42
-      assert participation.ranking == 42
-      assert participation.sign_up == ~U[2024-01-20 18:04:00.000000Z]
-      assert participation.details == "some details"
+        tournament_id: ^tournament_id,
+        agent_id: ^agent_id,
+      }} = Tournaments.sign_up(tournament, agent, user.id)
     end
 
-    test "create_participation/1 with invalid data returns error changeset" do
-      assert {:error, %Ecto.Changeset{}} = Tournaments.create_participation(@invalid_attrs)
+    test "sign_off/3 with valid tournament and agent creates a participation with status :signed_up" do
+      admin = admin_user_fixture()
+      tournament = published_tournament_fixture(admin.id)
+      user = user_fixture()
+      agent = activated_agent_fixture(user)
+
+      tournament_id = tournament.id
+      agent_id = agent.id
+
+      assert {:ok, %Participation{
+        status: :signed_up,
+        tournament_id: ^tournament_id,
+        agent_id: ^agent_id,
+      }} = Tournaments.sign_up(tournament, agent, user.id)
+
+      assert {:ok, %Participation{
+        status: :signed_up,
+        tournament_id: ^tournament_id,
+        agent_id: ^agent_id,
+      }} = Tournaments.sign_off(tournament, agent, user.id)
+
+      assert nil == Tournaments.get_participation(agent.id, tournament.id)
     end
 
-    test "update_participation/2 with valid data updates the participation" do
-      participation = participation_fixture()
-
-      update_attrs = %{
-        status: :participating,
-        score: 43,
-        ranking: 43,
-        sign_up: ~U[2024-01-21 18:04:00.000000Z],
-        details: "some updated details"
-      }
-
-      assert {:ok, %Participation{} = participation} =
-               Tournaments.update_participation(participation, update_attrs)
-
-      assert participation.status == :participating
-      assert participation.score == 43
-      assert participation.ranking == 43
-      assert participation.sign_up == ~U[2024-01-21 18:04:00.000000Z]
-      assert participation.details == "some updated details"
-    end
-
-    test "update_participation/2 with invalid data returns error changeset" do
-      participation = participation_fixture()
-
-      assert {:error, %Ecto.Changeset{}} =
-               Tournaments.update_participation(participation, @invalid_attrs)
-
-      assert participation == Tournaments.get_participation!(participation.id)
-    end
-
-    test "delete_participation/1 deletes the participation" do
-      participation = participation_fixture()
-      assert {:ok, %Participation{}} = Tournaments.delete_participation(participation)
-      assert_raise Ecto.NoResultsError, fn -> Tournaments.get_participation!(participation.id) end
-    end
-
-    test "change_participation/1 returns a participation changeset" do
-      participation = participation_fixture()
-      assert %Ecto.Changeset{} = Tournaments.change_participation(participation)
-    end
   end
 end

@@ -4,6 +4,7 @@ defmodule Ipdth.Accounts.User do
 
   alias Hex.API.User
   alias Ipdth.Agents.Agent
+  alias Ipdth.Tournaments.Tournament
   alias Ipdth.Accounts.User
 
   @valid_roles [:tournament_admin, :user_admin]
@@ -17,6 +18,7 @@ defmodule Ipdth.Accounts.User do
     field :confirmed_at, :utc_datetime_usec
     field :roles, {:array, Ecto.Enum}, values: @valid_roles, default: []
     has_many :agents, Agent, foreign_key: :owner_id
+    has_many :tournaments, Tournament, foreign_key: :creator_id
 
     timestamps(type: :utc_datetime_usec)
   end

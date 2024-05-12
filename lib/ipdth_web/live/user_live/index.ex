@@ -58,7 +58,7 @@ defmodule IpdthWeb.UserLive.Index do
           |> stream(:users, Accounts.list_users_with_agent_count_and_status())}
       {:error, details} ->
         Logger.warning(details)
-      {:noreply, put_flash(socket, :error, "Could not add role")}
+        {:noreply, put_flash(socket, :error, "Could not add role")}
     end
   end
 

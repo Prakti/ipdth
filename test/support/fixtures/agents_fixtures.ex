@@ -22,6 +22,20 @@ defmodule Ipdth.AgentsFixtures do
     agent
   end
 
+  def activated_agent_fixture(owner) do
+    %{agent: inactive_agent, bypass: bypass} = agent_fixture_and_mock_service(owner)
+
+    Bypass.expect_once(bypass, "POST", "/decide", fn conn ->
+      conn
+      |> Plug.Conn.merge_resp_headers([{"content-type", "application/json"}])
+      |> Plug.Conn.resp(200, agent_service_success_response())
+    end)
+
+    {:ok, agent} = Ipdth.Agents.activate_agent(inactive_agent, owner.id)
+
+    agent
+  end
+
   def agent_fixture_and_mock_service(owner) do
     bypass = Bypass.open()
 

@@ -6,7 +6,9 @@ defmodule Ipdth.Tournaments do
   import Ecto.Query, warn: false
   alias Ipdth.Repo
 
+  alias Ipdth.Tournaments.Participation
   alias Ipdth.Tournaments.Tournament
+  alias Ipdth.Agents.Agent
   alias Ipdth.Accounts
 
   @doc """
@@ -28,6 +30,23 @@ defmodule Ipdth.Tournaments do
     else
       list_tournaments()
     end
+  end
+
+  # TODO: 2024-05-12 - Write test for this query
+  def list_tournaments_for_signup(agent_id) do
+    query = from t in Tournament,
+            left_join: p in Participation, on: p.tournament_id == t.id and p.agent_id == ^agent_id,
+            where: t.status == :published,
+            select: %{
+              id: t.id,
+              name: t.name,
+              description: t.description,
+              start_date: t.start_date,
+              round_number: t.round_number,
+              signed_up: not is_nil(p.id)
+            }
+
+    Repo.all(query)
   end
 
   @doc """
@@ -71,7 +90,7 @@ defmodule Ipdth.Tournaments do
   def create_tournament(attrs \\ %{}, actor_id) do
     if Accounts.has_role?(actor_id, :tournament_admin) do
       %Tournament{}
-      |> Tournament.new(attrs)
+      |> Tournament.new(attrs, actor_id)
       |> Repo.insert()
     else
       {:error, :not_authorized}
@@ -94,7 +113,7 @@ defmodule Ipdth.Tournaments do
     if Accounts.has_role?(actor_id, :tournament_admin) do
       if Enum.member?([:created, :published], tournament.status) do
         tournament
-        |> Tournament.changeset(attrs)
+        |> Tournament.update(attrs, actor_id)
         |> Repo.update()
       else
         {:error, :tournament_editing_locked}
@@ -113,14 +132,14 @@ defmodule Ipdth.Tournaments do
   def publish_tournament(%Tournament{status: :created} = tournament, actor_id) do
     if Accounts.has_role?(actor_id, :tournament_admin) do
       tournament
-      |> Tournament.publish()
+      |> Tournament.publish(actor_id)
       |> Repo.update()
     else
       {:error, :not_authorized}
     end
   end
 
-  def publish_tournament(%Tournament{}, _) do
+  def publish_tournament(%Tournament{}, _actor_id) do
     {:error, :already_published}
   end
 
@@ -158,7 +177,6 @@ defmodule Ipdth.Tournaments do
     Tournament.changeset(tournament, attrs)
   end
 
-  alias Ipdth.Tournaments.Participation
 
   @doc """
   Returns the list of participations.
@@ -189,68 +207,64 @@ defmodule Ipdth.Tournaments do
   """
   def get_participation!(id), do: Repo.get!(Participation, id)
 
-  @doc """
-  Creates a participation.
-
-  ## Examples
-
-      iex> create_participation(%{field: value})
-      {:ok, %Participation{}}
-
-      iex> create_participation(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def create_participation(attrs \\ %{}) do
-    %Participation{}
-    |> Participation.changeset(attrs)
-    |> Repo.insert()
+  def get_participation(agent_id, tournament_id) do
+    Repo.one(from p in Participation,
+             where: p.agent_id == ^agent_id and p.tournament_id == ^tournament_id,
+             limit: 1)
   end
 
   @doc """
-  Updates a participation.
+  Sign an Agent up for a tournament.
 
   ## Examples
 
-      iex> update_participation(participation, %{field: new_value})
-      {:ok, %Participation{}}
-
-      iex> update_participation(participation, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
+      iex> sign_up(tournament, agent)
+      {:ok, %Participation}
   """
-  def update_participation(%Participation{} = participation, attrs) do
-    participation
-    |> Participation.changeset(attrs)
-    |> Repo.update()
+  def sign_up(%Tournament{status: :published} = tournament, %Agent{status: :active} = agent, actor_id) do
+    # TODO: 2024-05-12 - Put uniqueness constraint on the participation table for {agent_id, tournament_id}
+    if agent.owner_id == actor_id do
+      with {:ok, {:ok, participation}} <- find_or_create_participation(agent, tournament) do
+        {:ok, participation}
+      else
+        {:error, details} ->
+          {:error, details}
+      end
+    else
+      {:error, :not_authorized}
+    end
   end
 
-  @doc """
-  Deletes a participation.
-
-  ## Examples
-
-      iex> delete_participation(participation)
-      {:ok, %Participation{}}
-
-      iex> delete_participation(participation)
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def delete_participation(%Participation{} = participation) do
-    Repo.delete(participation)
+  def sign_up(%Tournament{}, %Agent{}) do
+    {:error, :wrong_tournament_or_agent}
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking participation changes.
+  defp find_or_create_participation(agent, tournament) do
+    Repo.transaction(fn ->
+      participation = get_participation(agent.id, tournament.id)
 
-  ## Examples
-
-      iex> change_participation(participation)
-      %Ecto.Changeset{data: %Participation{}}
-
-  """
-  def change_participation(%Participation{} = participation, attrs \\ %{}) do
-    Participation.changeset(participation, attrs)
+      if participation do
+        {:ok, participation}
+      else
+        %Participation{}
+        |> Participation.sign_up(tournament, agent)
+        |> Repo.insert()
+      end
+    end)
   end
+
+  def sign_off(%Tournament{} = tournament, %Agent{} = agent, actor_id) do
+    if agent.owner_id == actor_id do
+      participation = get_participation(agent.id, tournament.id)
+
+      if participation do
+        Repo.delete(participation)
+      else
+        {:ok, participation}
+      end
+    else
+      {:error, :not_authorized}
+    end
+  end
+
 end

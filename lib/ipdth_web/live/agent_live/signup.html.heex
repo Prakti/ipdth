@@ -1,0 +1,27 @@
+<.header>
+  Tournament Signup for: <%= @agent.name %>
+</.header>
+
+<div class="mt-4 w-fit flex flex-row gap-2"><span>Agent Status:</span><.agent_status_badge status={@agent.status} /></div>
+
+<.back navigate={~p"/agents/#{@agent}"}>Back to agent</.back>
+
+<.table
+  id="tournaments"
+  rows={@streams.tournaments}
+>
+  <:col :let={{_id, tournament}} label="Name"><%= tournament.name %></:col>
+  <:col :let={{_id, tournament}} label="Description"><%= tournament.description %></:col>
+  <:col :let={{_id, tournament}} label="Start date">
+    <%= Calendar.strftime(tournament.start_date, "%Y-%m-%d %H:%M:%S") %>
+  </:col>
+  <:col :let={{_id, tournament}} label="Number of Rounds"><%= tournament.round_number %></:col>
+  <:col :let={{_id, tournament}} label="Signed Up">
+    <input class="w-5 h-5 rounded text-sky-600 focus:ring-sky-500 border-sky-300"
+           type="checkbox" id={"tournament-#{tournament.id}-signup"}
+           name={"tournament-#{tournament.id}-signup"}
+           checked={tournament.signed_up}
+           phx-click={JS.push("toggle_signup", value: %{tournament_id: tournament.id})}
+    />
+  </:col>
+</.table>

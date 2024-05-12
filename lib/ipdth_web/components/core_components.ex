@@ -694,7 +694,6 @@ defmodule IpdthWeb.CoreComponents do
     attr :label, :string
   end
 
-  slot :primary_action, doc: "the slot for the primary action of the column"
   slot :action, doc: "the slot for showing user actions in the last table column"
 
   def table(assigns) do
@@ -732,9 +731,6 @@ defmodule IpdthWeb.CoreComponents do
                 <span :for={action <- @action} class="">
                   <%= render_slot(action, @row_item.(row)) %>
                 </span>
-              </div>
-              <div :if={@action == []} class="group-hover:visible">
-                <.button><%= render_slot(@primary_action, @row_item.(row)) %></.button>
               </div>
             </td>
           </tr>

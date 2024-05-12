@@ -24,4 +24,5 @@ defmodule IpdthWeb.AgentLive.Show do
 
   defp page_title(:show), do: "Show Agent"
   defp page_title(:edit), do: "Edit Agent"
+  defp page_title(:signup), do: "Sign-Up Agent"
 end
