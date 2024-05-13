@@ -6,13 +6,12 @@
 # data seeded into the app.
 #
 
+alias Ipdth.Tournaments
 alias Ipdth.Accounts
-alias Ipdth.Accounts.User
 alias Ipdth.Agents
-alias Ipdth.Repo
 
 
-create_user = fn user_params -> 
+create_user = fn user_params ->
   with {:ok, user} <- Accounts.register_user(user_params) do
     Accounts.deliver_user_confirmation_instructions(user, fn token ->
       Accounts.confirm_user(token)
@@ -58,12 +57,79 @@ create_agents_for_users = fn users, count ->
   end)
 end
 
+create_tournaments = fn admin, count ->
+  Enum.map(1..count, fn _ ->
+    tournament_attrs = %{
+      name: Faker.Fruit.En.fruit() <> " " <> Faker.Nato.callsign(),
+      description: Faker.Lorem.paragraph() |> String.slice(0, 254),
+      start_date: Faker.DateTime.forward(100),
+      round_number: Faker.random_between(50, 200),
+      random_seed: Faker.String.base64(20)
+    }
 
-genesis_user = Accounts.create_genesis_user(%{
+    with {:ok, tournament} = Tournaments.create_tournament(tournament_attrs, admin.id) do
+      tournament
+    end
+  end)
+end
+
+publish_tournaments = fn admin, tournaments, count ->
+  Enum.take_random(tournaments, count) |> Enum.map(fn tournament ->
+    with {:ok, published_tournament} = Tournaments.publish_tournament(tournament, admin.id) do
+      published_tournament
+    end
+  end)
+end
+
+sign_up_agents = fn user, agents, published_tournaments ->
+  tournament_count = div(length(published_tournaments), 2)
+  agent_count = div(length(agents), 2)
+
+  Enum.take_random(agents, agent_count)
+  |> Enum.map(fn agent ->
+    Enum.take_random(published_tournaments, tournament_count)
+    |> Enum.map(fn tournament ->
+      Tournaments.sign_up(tournament, agent, user.id)
+    end)
+  end)
+end
+
+sign_up_all_agents = fn users_with_agents, published_tournaments ->
+  Enum.each(users_with_agents, fn {user, agents} ->
+    sign_up_agents.(user, agents, published_tournaments)
+  end)
+end
+
+
+###
+# Generate Users
+###
+{:ok, genesis_user} = Accounts.create_genesis_user(%{
   "email" => "myself@prakti.org",
   "hashed_password" => "$2b$12$E2hj2p9qfkX5jer5KESlF.9lTxbUgqXV1uwn3s69XmtJLs4HNtN/K"
 })
-create_agents_for_user.(genesis_user, 10)
-
 users = create_users.(20)
+
+
+###
+# Generate Agents
+###
+admin_agents = create_agents_for_user.(genesis_user, 10)
 users_with_agents = create_agents_for_users.(users, 10)
+
+
+###
+# Generate Tournaments
+###
+tournaments = create_tournaments.(genesis_user, 50)
+published_tournaments = publish_tournaments.(genesis_user, tournaments, 25)
+
+
+###
+# Sign Up Agents to Tournament
+###
+
+sign_up_agents.(genesis_user, admin_agents, published_tournaments)
+sign_up_all_agents.(users_with_agents, published_tournaments)
+
+
