@@ -9,6 +9,8 @@ defmodule Ipdth.Agents do
   alias Ipdth.Agents.Agent
   alias Ipdth.Agents.Connection
 
+  alias Ipdth.Tournaments.Participation
+
   @doc """
   Returns the list of agents.
 
@@ -20,6 +22,31 @@ defmodule Ipdth.Agents do
   """
   def list_agents do
     Repo.all(from a in Agent, preload: :owner)
+  end
+
+  @doc """
+  Returns a list of all agents owned by a user. Owning User is preloaded
+  (mostly needed for AuthZ checks).
+
+  ## Examples
+
+      iex> list_agents_by_user(user_id)
+      [%Agent{}, ...]
+
+  """
+  def list_agents_for_signup(user_id, tournament_id) do
+    query = from a in Agent,
+            left_join: p in Participation, on: p.tournament_id == ^tournament_id and p.agent_id == a.id,
+            where: a.owner_id == ^user_id,
+            select: %{
+              id: a.id,
+              name: a.name,
+              description: a.description,
+              status: a.status,
+              signed_up: not is_nil(p.id)
+            }
+
+    Repo.all(query)
   end
 
   @doc """

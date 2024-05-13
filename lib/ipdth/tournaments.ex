@@ -221,7 +221,7 @@ defmodule Ipdth.Tournaments do
       iex> sign_up(tournament, agent)
       {:ok, %Participation}
   """
-  def sign_up(%Tournament{status: :published} = tournament, %Agent{status: :active} = agent, actor_id) do
+  def sign_up(%Tournament{status: :published} = tournament, %Agent{} = agent, actor_id) do
     # TODO: 2024-05-12 - Put uniqueness constraint on the participation table for {agent_id, tournament_id}
     if agent.owner_id == actor_id do
       with {:ok, {:ok, participation}} <- find_or_create_participation(agent, tournament) do

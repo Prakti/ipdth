@@ -80,8 +80,8 @@ defmodule IpdthWeb.Router do
       # TODO: 2024-01-21 - Create permission for managing tournaments
       live "/tournaments/new", TournamentLive.Index, :new
       live "/tournaments/:id/edit", TournamentLive.Index, :edit
-
       live "/tournaments/:id/show/edit", TournamentLive.Show, :edit
+      live "/tournaments/:id/show/signup", TournamentLive.Signup, :edit
 
       # Tourmanent Participation Management - Global View
       # TODO: 2024-01-21 - Remove this in favour of Embedded views in Agent

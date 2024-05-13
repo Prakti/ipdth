@@ -3,6 +3,14 @@
   <:subtitle>(#<%= @tournament.id %>)</:subtitle>
   <:actions>
     <.link
+      :if={@tournament.status == :published}
+      patch={~p"/tournaments/#{@tournament}/show/signup"} phx-click={JS.push_focus()}
+    >
+      <.button>Sing up agents</.button>
+    </.link>
+  </:actions>
+  <:actions>
+    <.link
       :if={@user_is_tournament_admin}
       patch={~p"/tournaments/#{@tournament}/show/edit"}
       phx-click={JS.push_focus()}

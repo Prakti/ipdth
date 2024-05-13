@@ -38,6 +38,7 @@ defmodule IpdthWeb.AgentLive.Signup do
     end
   end
 
+  @impl true
   def handle_event("toggle_signup", %{"tournament_id" => tournament_id}, socket) do
     agent = socket.assigns.agent
     actor = socket.assigns.current_user
