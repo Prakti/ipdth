@@ -6,6 +6,8 @@ defmodule Ipdth.Agents do
   import Ecto.Query, warn: false
   alias Ipdth.Repo
 
+  alias Ipdth.Accounts.User
+
   alias Ipdth.Agents.Agent
   alias Ipdth.Agents.Connection
 
@@ -89,15 +91,16 @@ defmodule Ipdth.Agents do
       ]
   """
   def list_agents_by_tournament(tournament_id) do
-    Repo.all(
-      from p in Participation,
-        join: a in Agent,
-        on: p.agent_id == a.id,
+    query =
+      from a in Agent,
+        join: p in Participation,
+        on: a.id == p.agent_id,
         join: u in User,
         on: u.id == a.owner_id,
         where: p.tournament_id == ^tournament_id,
-        preload: [agent: {a, owner: u}]
-    )
+        preload: [owner: u]
+
+    Repo.all(query)
   end
 
   @doc """

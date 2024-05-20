@@ -7,7 +7,7 @@
       patch={~p"/tournaments/#{@tournament}/show/signup"}
       phx-click={JS.push_focus()}
     >
-      <.button>Sing up agents</.button>
+      <.button>Sign up agents</.button>
     </.link>
   </:actions>
   <:actions>
@@ -41,6 +41,39 @@
   <:item title="Random trace"><%= @tournament.random_trace %></:item>
   <:item title="Status"><%= @tournament.status %></:item>
 </.list>
+
+<.header :if={not @empty_agents?} class="mt-20">Signed-Up Agents</.header>
+
+<.header :if={@empty_agents? && @tournament.status != :created} class="mt-20">
+  No Agents have Signed Up Yet!
+</.header>
+
+<.header :if={@tournament.status == :created} class="mt-20">
+  Publish this tournament to enable Sign Up of Agents!
+</.header>
+
+<.table
+  :if={not @empty_agents?}
+  id="agents"
+  rows={@streams.agents}
+  row_click={fn {_id, agent} -> JS.navigate(~p"/agents/#{agent}") end}
+>
+  <:col :let={{_id, agent}} label="Name">
+    <span class="font-semibold"><%= agent.name %></span>
+  </:col>
+  <:col :let={{_id, agent}} label="Status">
+    <.agent_status_badge status={agent.status} />
+  </:col>
+  <:col :let={{_id, agent}} label="Owner"><%= agent.owner.email %></:col>
+  <:col :let={{_id, agent}} label="Description">
+    <%= agent.description %>
+  </:col>
+  <:action :let={{_id, agent}}>
+    <div class="sr-only">
+      <.link navigate={~p"/agents/#{agent}"}>Show</.link>
+    </div>
+  </:action>
+</.table>
 
 <.back navigate={~p"/tournaments"}>Back to tournaments</.back>
 

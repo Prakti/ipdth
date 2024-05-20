@@ -4,25 +4,25 @@ defmodule IpdthWeb.TournamentLive.Show do
   import IpdthWeb.AuthZ
 
   alias Ipdth.Tournaments
+  alias Ipdth.Agents
 
   @impl true
   def mount(_params, _session, socket) do
-    current_user = socket.assigns.current_user
-
-    {:ok,
-     socket
-     |> assign(:active_page, "tournaments")
-     |> assign(:user_is_tournament_admin, tournament_admin?(current_user))}
+    {:ok, socket |> assign(:active_page, "tournaments")}
   end
 
   @impl true
   def handle_params(%{"id" => id}, _, socket) do
     current_user = socket.assigns.current_user
+    agents = Agents.list_agents_by_tournament(id)
 
     {:noreply,
      socket
      |> assign(:page_title, page_title(socket.assigns.live_action))
-     |> assign(:tournament, get_tournament!(id, current_user))}
+     |> assign(:tournament, get_tournament!(id, current_user))
+     |> assign(:user_is_tournament_admin, tournament_admin?(current_user))
+     |> assign(:empty_agents?, Enum.empty?(agents))
+     |> stream(:agents, agents)}
   end
 
   @impl true
