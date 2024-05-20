@@ -19,6 +19,30 @@ defmodule IpdthWeb.CoreComponents do
   alias Phoenix.LiveView.JS
   import IpdthWeb.Gettext
 
+  @badge_styles %{
+      "gray" => "bg-gray-100 text-gray-700 ring-gray-600/40",
+      "zinc" => "bg-zinc-100 text-zinc-700 ring-zinc-600/40",
+      "neutral" => "bg-neutral-100 text-neutral-700 ring-neutral-600/40",
+      "stone" => "bg-stone-100 text-stone-700 ring-stone-600/40",
+      "red" => "bg-red-100 text-red-700 ring-red-600/40",
+      "orange" => "bg-orange-100 text-orange-700 ring-orange-600/40",
+      "amber" => "bg-amber-100 text-amber-700 ring-amber-600/40",
+      "yellow" => "bg-yellow-100 text-yellow-700 ring-yellow-600/40",
+      "lime" => "bg-lime-100 text-lime-700 ring-lime-600/40",
+      "green" => "bg-green-100 text-green-700 ring-green-600/40",
+      "emerald" => "bg-emerald-100 text-emerald-700 ring-emerald-600/40",
+      "teal" => "bg-teal-100 text-teal-700 ring-teal-600/40",
+      "cyan" => "bg-cyan-100 text-cyan-700 ring-cyan-600/40",
+      "sky" => "bg-sky-100 text-sky-700 ring-sky-600/40",
+      "blue" => "bg-blue-100 text-blue-700 ring-blue-600/40",
+      "indigo" => "bg-indigo-100 text-indigo-700 ring-indigo-600/40",
+      "violet" => "bg-violet-100 text-violet-700 ring-violet-600/40",
+      "purple" => "bg-purple-100 text-purple-700 ring-purple-600/40",
+      "fuchsia" => "bg-fuchsia-100 text-fuchsia-700 ring-fuchsia-600/40",
+      "pink" => "bg-pink-100 text-pink-700 ring-pink-600/40",
+      "rose" => "bg-rose-100 text-rose-700 ring-rose-600/40"
+  }
+
   @doc """
   Renders a generic badge
   """
@@ -26,29 +50,8 @@ defmodule IpdthWeb.CoreComponents do
   slot :inner_block, required: true
 
   def badge(assigns) do
-    assigns = assign(assigns,  coloring: case assigns.color do
-      "gray" -> "bg-gray-100 text-gray-700 ring-gray-600/40"
-      "zinc" -> "bg-zinc-100 text-zinc-700 ring-zinc-600/40"
-      "neutral" -> "bg-neutral-100 text-neutral-700 ring-neutral-600/40"
-      "stone" -> "bg-stone-100 text-stone-700 ring-stone-600/40"
-      "red" -> "bg-red-100 text-red-700 ring-red-600/40"
-      "orange" -> "bg-orange-100 text-orange-700 ring-orange-600/40"
-      "amber" -> "bg-amber-100 text-amber-700 ring-amber-600/40"
-      "yellow" -> "bg-yellow-100 text-yellow-700 ring-yellow-600/40"
-      "lime" -> "bg-lime-100 text-lime-700 ring-lime-600/40"
-      "green" -> "bg-green-100 text-green-700 ring-green-600/40"
-      "emerald" -> "bg-emerald-100 text-emerald-700 ring-emerald-600/40"
-      "teal" -> "bg-teal-100 text-teal-700 ring-teal-600/40"
-      "cyan" -> "bg-cyan-100 text-cyan-700 ring-cyan-600/40"
-      "sky" -> "bg-sky-100 text-sky-700 ring-sky-600/40"
-      "blue" -> "bg-blue-100 text-blue-700 ring-blue-600/40"
-      "indigo" -> "bg-indigo-100 text-indigo-700 ring-indigo-600/40"
-      "violet" -> "bg-violet-100 text-violet-700 ring-violet-600/40"
-      "purple" -> "bg-purple-100 text-purple-700 ring-purple-600/40"
-      "fuchsia" -> "bg-fuchsia-100 text-fuchsia-700 ring-fuchsia-600/40"
-      "pink" -> "bg-pink-100 text-pink-700 ring-pink-600/40"
-      "rose" -> "bg-rose-100 text-rose-700 ring-rose-600/40"
-    end)
+    color = assigns.color || "gray"
+    assigns = assign(assigns,  coloring: @badge_styles[color])
     ~H"""
     <div class={[
       "rounded-md px-2.5 py-1.5 text-xs",

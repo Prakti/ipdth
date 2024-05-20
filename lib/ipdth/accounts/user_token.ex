@@ -1,4 +1,10 @@
 defmodule Ipdth.Accounts.UserToken do
+  @moduledoc """
+  Databas Entity representing a security token used for critical operations
+  on user accounts: sign up, password reset, email reset, session
+  representation.
+  """
+
   use Ecto.Schema
   import Ecto.Query
   alias Ipdth.Accounts.UserToken

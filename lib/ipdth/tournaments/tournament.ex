@@ -1,4 +1,9 @@
 defmodule Ipdth.Tournaments.Tournament do
+  @moduledoc """
+  Database Entity representing tournaments. Has relationships to participating
+  Agents, Users (creator and last editor) and the Matches performed within the
+  scope of the tournament.
+  """
   use Ecto.Schema
   import Ecto.Changeset
 

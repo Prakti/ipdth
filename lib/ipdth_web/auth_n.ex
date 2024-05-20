@@ -1,4 +1,12 @@
 defmodule IpdthWeb.AuthN do
+  @moduledoc """
+  Module handling all Authentication functionality:
+
+  - log_in and log_out
+  - session renewal
+  - resolution of the authenticated user
+  - helpers for rounter and live_views
+  """
   use IpdthWeb, :verified_routes
 
   import Plug.Conn

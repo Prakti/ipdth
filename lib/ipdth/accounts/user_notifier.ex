@@ -1,4 +1,9 @@
 defmodule Ipdth.Accounts.UserNotifier do
+  @moduledoc """
+  Sends notifications to a User using E-Mail. 
+  Stubbed for development purposes.
+  """
+
   import Swoosh.Email
 
   alias Ipdth.Mailer

@@ -1,15 +1,32 @@
 defmodule Ipdth.Agents.Connection do
+  @moduledoc """
+  Module modeling the connection to an Agent and handling the communication
+  with an Agent.
+  """
+
   defmodule Request do
+    @moduledoc """
+    Struct representing the Request sent to an Agent.
+    """
+
     @derive Jason.Encoder
     defstruct round_number: -1, past_results: [], match_info: %{}
   end
 
   defmodule PastResult do
+    @moduledoc """
+    Struct representing a past result from a round.
+    """
+
     @derive Jason.Encoder
     defstruct action: "", points: 0
   end
 
   defmodule MatchInfo do
+    @moduledoc """
+    Struct representing information around a match.
+    """
+
     @derive Jason.Encoder
     defstruct type: "Test Match", tournament_id: "", match_id: ""
   end

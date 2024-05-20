@@ -1,4 +1,9 @@
 defmodule Ipdth.Agents.Agent do
+  @moduledoc """
+  Database Entity representing an Agent. Has relationships to User (owner) and
+  Tournament Participation.
+  """
+
   use Ecto.Schema
   import Ecto.Changeset
 

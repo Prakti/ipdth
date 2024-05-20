@@ -1,4 +1,10 @@
 defmodule Ipdth.Matches.Match do
+  @moduledoc """
+  Database Entity of one Match in a Tournament. Embeds multiple Rounds.
+  Has relationships to the two competing Agents and the tournament the Match
+  is part of.
+  """
+
   use Ecto.Schema
   import Ecto.Changeset
 

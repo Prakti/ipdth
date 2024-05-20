@@ -1,4 +1,8 @@
 defmodule Ipdth.Matches.Round do
+  @moduledoc """
+  Database Entity of one Round of a Tournament. Is embedded in a Match
+  """
+
   use Ecto.Schema
   import Ecto.Changeset
   alias Ipdth.Matches.Round

@@ -25,13 +25,31 @@ defmodule Ipdth.Agents do
   end
 
   @doc """
-  Returns a list of all agents owned by a user. Owning User is preloaded
-  (mostly needed for AuthZ checks).
+  Lists agents that are associated with a specific user and tournament.
+  Used for signing up a user's Agent to a given tournamen.t
+  It shows both agents that are signed up for the tournament and those that are not.
+
+  ## Parameters
+  - `user_id`: The ID of the user who owns the agents. This is used to filter agents such that only those owned by the given user are considered.
+  - `tournament_id`: The ID of the tournament. This is used to determine which agents are signed up for this specific tournament.
+
+  ## Returns
+  Returns a list of agents, where each agent is represented as a map. Each map includes:
+  - `id`: The ID of the agent.
+  - `name`: The name of the agent.
+  - `description`: A description of the agent.
+  - `status`: The status of the agent.
+  - `signed_up`: A boolean indicating whether the agent is signed up for the specified tournament.
+
+  Each agent's participation status in the given tournament is determined and reflected in the `signed_up` field.
 
   ## Examples
 
-      iex> list_agents_by_user(user_id)
-      [%Agent{}, ...]
+      iex> MyApp.list_agents_for_signup(1, 2)
+      [
+        %{id: 4, name: "Agent A", description: "Experienced", status: "active", signed_up: true},
+        %{id: 5, name: "Agent B", description: "Novice", status: "active", signed_up: false}
+      ]
 
   """
   def list_agents_for_signup(user_id, tournament_id) do
@@ -47,6 +65,35 @@ defmodule Ipdth.Agents do
             }
 
     Repo.all(query)
+  end
+
+  @doc """
+  Fetches all agents participating in a specified tournament, along with their owners.
+
+  ## Parameters
+  - tournament_id: The ID of the tournament.
+
+  ## Returns
+  - A list of `%Agent{}` structs with the owner preloaded.
+
+  ## Examples
+      iex> MyApp.Tournaments.list_agents_by_tournament(1)
+      [
+        %Agent{
+          id: 1,
+          name: "Agent 1",
+          owner: %User{id: 1, name: "User 1"}
+        }
+      ]
+  """
+  def list_agents_by_tournament(tournament_id) do
+    Repo.all(
+      from p in Participation,
+        join: a in Agent, on: p.agent_id == a.id,
+        join: u in User, on: u.id == a.owner_id,
+        where: p.tournament_id == ^tournament_id,
+        preload: [agent: {a, owner: u}]
+    )
   end
 
   @doc """

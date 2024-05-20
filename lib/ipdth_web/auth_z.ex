@@ -55,7 +55,7 @@ defmodule IpdthWeb.AuthZ do
     user_id == owner_id
   end
 
-  def agent_owner?(_,_) do
+  def agent_owner?(_, _) do
     false
   end
 

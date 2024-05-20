@@ -1,4 +1,10 @@
 defmodule Ipdth.Tournaments.Participation do
+  @moduledoc """
+  Database Entity for modeling a many-to-many relationhsip between Agents and
+  Tournaments. Also stores additional metadata regarding an Agent's
+  participation at a tournament, like score and ranking.
+  """
+
   use Ecto.Schema
   import Ecto.Changeset
 
