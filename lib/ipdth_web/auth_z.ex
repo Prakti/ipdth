@@ -41,7 +41,6 @@ defmodule IpdthWeb.AuthZ do
     false
   end
 
-
   @doc """
   Check whether the given user or user_id is the owner of a given Agent
   For robustness reasons, this returns `false` for invalid input like `nil`
@@ -58,5 +57,4 @@ defmodule IpdthWeb.AuthZ do
   def agent_owner?(_, _) do
     false
   end
-
 end

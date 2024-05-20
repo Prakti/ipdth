@@ -11,40 +11,40 @@ defmodule IpdthWeb.DashboardLive do
     ~H"""
     <%= if @current_user do %>
       <div class="p-5 grid grid-cols-4 gap-4">
-        <.badge color="gray"> Gray </.badge>
-        <.badge color="zinc"> Zinc </.badge>
-        <.badge color="neutral"> Neutral </.badge>
-        <.badge color="stone"> Stone </.badge>
-        <.badge color="red"> Red </.badge>
-        <.badge color="orange"> Orange </.badge>
-        <.badge color="amber"> Amber </.badge>
-        <.badge color="yellow"> Yellow </.badge>
-        <.badge color="lime"> Lime </.badge>
-        <.badge color="green"> Green </.badge>
-        <.badge color="emerald"> Emerald </.badge>
-        <.badge color="teal"> Teal </.badge>
-        <.badge color="cyan"> Cyan </.badge>
-        <.badge color="sky"> Sky </.badge>
-        <.badge color="blue"> Blue </.badge>
-        <.badge color="indigo"> Indigo </.badge>
-        <.badge color="violet"> Violet </.badge>
-        <.badge color="purple"> Purple </.badge>
-        <.badge color="fuchsia"> Fuchsia </.badge>
-        <.badge color="pink"> Pink </.badge>
-        <.badge color="rose"> Rose </.badge>
+        <.badge color="gray">Gray</.badge>
+        <.badge color="zinc">Zinc</.badge>
+        <.badge color="neutral">Neutral</.badge>
+        <.badge color="stone">Stone</.badge>
+        <.badge color="red">Red</.badge>
+        <.badge color="orange">Orange</.badge>
+        <.badge color="amber">Amber</.badge>
+        <.badge color="yellow">Yellow</.badge>
+        <.badge color="lime">Lime</.badge>
+        <.badge color="green">Green</.badge>
+        <.badge color="emerald">Emerald</.badge>
+        <.badge color="teal">Teal</.badge>
+        <.badge color="cyan">Cyan</.badge>
+        <.badge color="sky">Sky</.badge>
+        <.badge color="blue">Blue</.badge>
+        <.badge color="indigo">Indigo</.badge>
+        <.badge color="violet">Violet</.badge>
+        <.badge color="purple">Purple</.badge>
+        <.badge color="fuchsia">Fuchsia</.badge>
+        <.badge color="pink">Pink</.badge>
+        <.badge color="rose">Rose</.badge>
         <.split_button id="test-split-button">
           Foo
-          <:buttons> Bar </:buttons>
-          <:buttons> Bar </:buttons>
-          <:buttons> Bar </:buttons>
-          <:buttons> Bar </:buttons>
+          <:buttons>Bar</:buttons>
+          <:buttons>Bar</:buttons>
+          <:buttons>Bar</:buttons>
+          <:buttons>Bar</:buttons>
         </.split_button>
         <.dropdown_menu id="test-dropdown-menu">
           Foo <.icon name="hero-chevron-down" class="h-4 w-4" />
-          <:menu_items> Bar </:menu_items>
-          <:menu_items> Bar </:menu_items>
-          <:menu_items> Bar </:menu_items>
-          <:menu_items> Bar </:menu_items>
+          <:menu_items>Bar</:menu_items>
+          <:menu_items>Bar</:menu_items>
+          <:menu_items>Bar</:menu_items>
+          <:menu_items>Bar</:menu_items>
         </.dropdown_menu>
       </div>
       <h2>This is the user dashboard for <%= @current_user.email %></h2>

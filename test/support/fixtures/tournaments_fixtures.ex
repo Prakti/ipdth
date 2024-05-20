@@ -15,7 +15,7 @@ defmodule Ipdth.TournamentsFixtures do
         name: "some name",
         random_seed: "some random_seed",
         round_number: 42,
-        start_date: ~U[2024-01-20 12:56:00Z],
+        start_date: ~U[2024-01-20 12:56:00Z]
       })
       |> Ipdth.Tournaments.create_tournament(admin_id)
 
@@ -29,5 +29,4 @@ defmodule Ipdth.TournamentsFixtures do
 
     tournament
   end
-
 end

@@ -191,7 +191,7 @@ defmodule Ipdth.Accounts.User do
     role = ensure_role_is_atom(role)
     changeset = change(user)
 
-    current_roles = get_field(changeset, :roles) ||  []
+    current_roles = get_field(changeset, :roles) || []
     new_roles = Enum.uniq([role | current_roles])
 
     changeset

@@ -2,15 +2,12 @@
   Listing Users
 </.header>
 
-<.table
-  id="users"
-  rows={@streams.users}
->
+<.table id="users" rows={@streams.users}>
   <:col :let={{_id, user}} label="E-Mail"><%= user.email %></:col>
-  <:col :if={@is_user_admin} :let={{_id, user}} label="Status">
+  <:col :let={{_id, user}} :if={@is_user_admin} label="Status">
     <.user_status_badge user_status={user.status} />
   </:col>
-  <:col :if={@is_user_admin} :let={{_id, user}} label="Roles">
+  <:col :let={{_id, user}} :if={@is_user_admin} label="Roles">
     <div class="grid grid-cols-2 gap-4">
       <.user_role_badge :for={role <- user.roles} role={role} />
     </div>
@@ -29,12 +26,18 @@
   show
   on_cancel={JS.patch(~p"/users")}
 >
-  <h2 class="mb-6 text-lg font-semibold leading-8 text-zinc-800">Editing Roles of <%= @user_to_edit.email %></h2>
+  <h2 class="mb-6 text-lg font-semibold leading-8 text-zinc-800">
+    Editing Roles of <%= @user_to_edit.email %>
+  </h2>
   <div>
     <div :for={{role, has_role} <- @roles_mapping} class="flex items-center mb-4">
-      <input class="w-5 h-5 rounded text-sky-600 focus:ring-sky-500 border-sky-300"
-             type="checkbox" id={role} name={role} checked={has_role}
-             phx-click={JS.push("toggle_role", value: %{role: role})}
+      <input
+        class="w-5 h-5 rounded text-sky-600 focus:ring-sky-500 border-sky-300"
+        type="checkbox"
+        id={role}
+        name={role}
+        checked={has_role}
+        phx-click={JS.push("toggle_role", value: %{role: role})}
       />
       <label for={role} class="ms-3 cursor-pointer text-zinc-800"><%= role %></label>
     </div>

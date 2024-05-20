@@ -9,9 +9,10 @@ defmodule IpdthWeb.TournamentLive.Show do
   def mount(_params, _session, socket) do
     current_user = socket.assigns.current_user
 
-    {:ok, socket
-          |> assign(:active_page, "tournaments")
-          |> assign(:user_is_tournament_admin, tournament_admin?(current_user))}
+    {:ok,
+     socket
+     |> assign(:active_page, "tournaments")
+     |> assign(:user_is_tournament_admin, tournament_admin?(current_user))}
   end
 
   @impl true

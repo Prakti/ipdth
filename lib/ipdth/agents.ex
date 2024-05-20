@@ -53,16 +53,18 @@ defmodule Ipdth.Agents do
 
   """
   def list_agents_for_signup(user_id, tournament_id) do
-    query = from a in Agent,
-            left_join: p in Participation, on: p.tournament_id == ^tournament_id and p.agent_id == a.id,
-            where: a.owner_id == ^user_id,
-            select: %{
-              id: a.id,
-              name: a.name,
-              description: a.description,
-              status: a.status,
-              signed_up: not is_nil(p.id)
-            }
+    query =
+      from a in Agent,
+        left_join: p in Participation,
+        on: p.tournament_id == ^tournament_id and p.agent_id == a.id,
+        where: a.owner_id == ^user_id,
+        select: %{
+          id: a.id,
+          name: a.name,
+          description: a.description,
+          status: a.status,
+          signed_up: not is_nil(p.id)
+        }
 
     Repo.all(query)
   end
@@ -89,8 +91,10 @@ defmodule Ipdth.Agents do
   def list_agents_by_tournament(tournament_id) do
     Repo.all(
       from p in Participation,
-        join: a in Agent, on: p.agent_id == a.id,
-        join: u in User, on: u.id == a.owner_id,
+        join: a in Agent,
+        on: p.agent_id == a.id,
+        join: u in User,
+        on: u.id == a.owner_id,
         where: p.tournament_id == ^tournament_id,
         preload: [agent: {a, owner: u}]
     )

@@ -415,12 +415,11 @@ defmodule Ipdth.Accounts do
     |> Repo.insert()
   end
 
-
   @doc """
   List all users of the system.
   """
   def list_users() do
-    Repo.all(from u in User)
+    Repo.all(from(u in User))
   end
 
   @doc """
@@ -428,16 +427,22 @@ defmodule Ipdth.Accounts do
   they are confirmed or not.
   """
   def list_users_with_agent_count_and_status do
-    Repo.all(from u in User,
-      left_join: a in Agent, on: a.owner_id == u.id,
-      group_by: u.id,
-      select: %{
-        id: u.id,
-        email: u.email,
-        roles: u.roles,
-        agent_count: count(a.id),
-        status: fragment("CASE WHEN ? < now() THEN 'confirmed' ELSE 'unconfirmed' END", u.confirmed_at)
-       }
+    Repo.all(
+      from u in User,
+        left_join: a in Agent,
+        on: a.owner_id == u.id,
+        group_by: u.id,
+        select: %{
+          id: u.id,
+          email: u.email,
+          roles: u.roles,
+          agent_count: count(a.id),
+          status:
+            fragment(
+              "CASE WHEN ? < now() THEN 'confirmed' ELSE 'unconfirmed' END",
+              u.confirmed_at
+            )
+        }
     )
   end
 
@@ -448,5 +453,4 @@ defmodule Ipdth.Accounts do
     user = get_user!(user_id)
     Enum.member?(user.roles, role)
   end
-
 end

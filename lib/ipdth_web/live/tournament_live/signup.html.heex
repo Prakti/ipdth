@@ -2,25 +2,27 @@
   Agent Signup for Tournament: <%= @tournament.name %>
 </.header>
 
-<div class="mt-4 w-fit flex flex-row gap-2"><span>Tournament Status:</span><.badge color="green"><%= @tournament.status %></.badge></div>
+<div class="mt-4 w-fit flex flex-row gap-2">
+  <span>Tournament Status:</span>
+  <.badge color="green"><%= @tournament.status %></.badge>
+</div>
 
 <.back navigate={~p"/tournaments/#{@tournament}"}>Back to tournament</.back>
 
-<.table
-  id="agents"
-  rows={@streams.agents}
->
+<.table id="agents" rows={@streams.agents}>
   <:col :let={{_id, agent}} label="Name"><%= agent.name %></:col>
   <:col :let={{_id, agent}} label="Description"><%= agent.description %></:col>
   <:col :let={{_id, agent}} label="Status">
     <.agent_status_badge status={agent.status} />
   </:col>
   <:col :let={{_id, agent}} label="Signed Up">
-    <input class="w-5 h-5 rounded text-sky-600 focus:ring-sky-500 border-sky-300"
-           type="checkbox" id={"agent-#{agent.id}-signup"}
-           name={"agent-#{agent.id}-signup"}
-           checked={agent.signed_up}
-           phx-click={JS.push("toggle_signup", value: %{agent_id: agent.id})}
+    <input
+      class="w-5 h-5 rounded text-sky-600 focus:ring-sky-500 border-sky-300"
+      type="checkbox"
+      id={"agent-#{agent.id}-signup"}
+      name={"agent-#{agent.id}-signup"}
+      checked={agent.signed_up}
+      phx-click={JS.push("toggle_signup", value: %{agent_id: agent.id})}
     />
   </:col>
 </.table>

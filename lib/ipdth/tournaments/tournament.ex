@@ -53,6 +53,7 @@ defmodule Ipdth.Tournaments.Tournament do
     |> cast(attrs, [:name, :description, :start_date, :round_number, :random_seed])
     |> put_change(:last_modified_by_id, actor_id)
     |> validate_required([:name, :start_date, :round_number])
+
     # TODO: 2024-08-28 - We need a 'signup_deadline' field
     # TODO: 2024-08-28 - We need a validator ensuring that 'signup_deadline' is earlier than start_date
   end
@@ -95,5 +96,4 @@ defmodule Ipdth.Tournaments.Tournament do
     change(tournament, status: :finished, last_modified_by_id: actor_id)
     # TODO: 2024-04-28 - Set the end date on finish
   end
-
 end

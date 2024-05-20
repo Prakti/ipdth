@@ -16,7 +16,7 @@ defmodule Ipdth.TournamentsTest do
       description: nil,
       start_date: nil,
       round_number: nil,
-      random_seed: nil,
+      random_seed: nil
     }
 
     test "list_tournaments/0 returns all tournaments for admins" do
@@ -61,10 +61,12 @@ defmodule Ipdth.TournamentsTest do
         description: "some description",
         start_date: ~U[2024-01-20 12:56:00Z],
         round_number: 42,
-        random_seed: "some random_seed",
+        random_seed: "some random_seed"
       }
 
-      assert {:ok, %Tournament{} = tournament} = Tournaments.create_tournament(valid_attrs, admin.id)
+      assert {:ok, %Tournament{} = tournament} =
+               Tournaments.create_tournament(valid_attrs, admin.id)
+
       assert tournament.name == "some name"
       assert tournament.status == :created
       assert tournament.description == "some description"
@@ -81,7 +83,7 @@ defmodule Ipdth.TournamentsTest do
         description: "some description",
         start_date: ~U[2024-01-20 12:56:00Z],
         round_number: 42,
-        random_seed: "some random_seed",
+        random_seed: "some random_seed"
       }
 
       assert {:error, :not_authorized} = Tournaments.create_tournament(valid_attrs, user.id)
@@ -127,7 +129,7 @@ defmodule Ipdth.TournamentsTest do
         description: "some updated description",
         start_date: ~U[2024-01-21 12:56:00Z],
         round_number: 43,
-        random_seed: "some updated random_seed",
+        random_seed: "some updated random_seed"
       }
 
       assert {:ok, %Tournament{} = tournament} =
@@ -151,10 +153,11 @@ defmodule Ipdth.TournamentsTest do
         description: "some updated description",
         start_date: ~U[2024-01-21 12:56:00Z],
         round_number: 43,
-        random_seed: "some updated random_seed",
+        random_seed: "some updated random_seed"
       }
 
-      assert {:error, :not_authorized} = Tournaments.update_tournament(tournament, update_attrs, user.id)
+      assert {:error, :not_authorized} =
+               Tournaments.update_tournament(tournament, update_attrs, user.id)
     end
 
     test "update_tournament/2 with invalid data returns error changeset" do
@@ -171,7 +174,10 @@ defmodule Ipdth.TournamentsTest do
       admin = admin_user_fixture()
       tournament = tournament_fixture(admin.id)
       assert {:ok, %Tournament{}} = Tournaments.delete_tournament(tournament, admin.id)
-      assert_raise Ecto.NoResultsError, fn -> Tournaments.get_tournament!(tournament.id, admin.id) end
+
+      assert_raise Ecto.NoResultsError, fn ->
+        Tournaments.get_tournament!(tournament.id, admin.id)
+      end
     end
 
     test "delete_tournament/1 as a normal user fails with :not_authorized" do
@@ -199,11 +205,12 @@ defmodule Ipdth.TournamentsTest do
       tournament_id = tournament.id
       agent_id = agent.id
 
-      assert {:ok, %Participation{
-        status: :signed_up,
-        tournament_id: ^tournament_id,
-        agent_id: ^agent_id,
-      }} = Tournaments.sign_up(tournament, agent, user.id)
+      assert {:ok,
+              %Participation{
+                status: :signed_up,
+                tournament_id: ^tournament_id,
+                agent_id: ^agent_id
+              }} = Tournaments.sign_up(tournament, agent, user.id)
     end
 
     test "sign_off/3 with valid tournament and agent creates a participation with status :signed_up" do
@@ -215,20 +222,21 @@ defmodule Ipdth.TournamentsTest do
       tournament_id = tournament.id
       agent_id = agent.id
 
-      assert {:ok, %Participation{
-        status: :signed_up,
-        tournament_id: ^tournament_id,
-        agent_id: ^agent_id,
-      }} = Tournaments.sign_up(tournament, agent, user.id)
+      assert {:ok,
+              %Participation{
+                status: :signed_up,
+                tournament_id: ^tournament_id,
+                agent_id: ^agent_id
+              }} = Tournaments.sign_up(tournament, agent, user.id)
 
-      assert {:ok, %Participation{
-        status: :signed_up,
-        tournament_id: ^tournament_id,
-        agent_id: ^agent_id,
-      }} = Tournaments.sign_off(tournament, agent, user.id)
+      assert {:ok,
+              %Participation{
+                status: :signed_up,
+                tournament_id: ^tournament_id,
+                agent_id: ^agent_id
+              }} = Tournaments.sign_off(tournament, agent, user.id)
 
       assert nil == Tournaments.get_participation(agent.id, tournament.id)
     end
-
   end
 end

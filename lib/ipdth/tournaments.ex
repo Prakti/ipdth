@@ -25,7 +25,7 @@ defmodule Ipdth.Tournaments do
   end
 
   def list_tournaments(actor_id) do
-    if Accounts.has_role?(actor_id, :tournament_admin)do
+    if Accounts.has_role?(actor_id, :tournament_admin) do
       Repo.all(Tournament)
     else
       list_tournaments()
@@ -34,17 +34,19 @@ defmodule Ipdth.Tournaments do
 
   # TODO: 2024-05-12 - Write test for this query
   def list_tournaments_for_signup(agent_id) do
-    query = from t in Tournament,
-            left_join: p in Participation, on: p.tournament_id == t.id and p.agent_id == ^agent_id,
-            where: t.status == :published,
-            select: %{
-              id: t.id,
-              name: t.name,
-              description: t.description,
-              start_date: t.start_date,
-              round_number: t.round_number,
-              signed_up: not is_nil(p.id)
-            }
+    query =
+      from t in Tournament,
+        left_join: p in Participation,
+        on: p.tournament_id == t.id and p.agent_id == ^agent_id,
+        where: t.status == :published,
+        select: %{
+          id: t.id,
+          name: t.name,
+          description: t.description,
+          start_date: t.start_date,
+          round_number: t.round_number,
+          signed_up: not is_nil(p.id)
+        }
 
     Repo.all(query)
   end
@@ -143,7 +145,6 @@ defmodule Ipdth.Tournaments do
     {:error, :already_published}
   end
 
-
   @doc """
   Deletes a tournament.
 
@@ -177,7 +178,6 @@ defmodule Ipdth.Tournaments do
     Tournament.changeset(tournament, attrs)
   end
 
-
   @doc """
   Returns the list of participations.
 
@@ -208,9 +208,11 @@ defmodule Ipdth.Tournaments do
   def get_participation!(id), do: Repo.get!(Participation, id)
 
   def get_participation(agent_id, tournament_id) do
-    Repo.one(from p in Participation,
-             where: p.agent_id == ^agent_id and p.tournament_id == ^tournament_id,
-             limit: 1)
+    Repo.one(
+      from p in Participation,
+        where: p.agent_id == ^agent_id and p.tournament_id == ^tournament_id,
+        limit: 1
+    )
   end
 
   @doc """
@@ -227,6 +229,7 @@ defmodule Ipdth.Tournaments do
       case find_or_create_participation(agent, tournament) do
         {:ok, {:ok, participation}} ->
           {:ok, participation}
+
         {:error, details} ->
           {:error, details}
       end
@@ -266,5 +269,4 @@ defmodule Ipdth.Tournaments do
       {:error, :not_authorized}
     end
   end
-
 end

@@ -58,6 +58,7 @@ defmodule IpdthWeb.TournamentLive.FormComponent do
 
   defp save_tournament(socket, :edit, tournament_params) do
     user = socket.assigns.current_user
+
     case Tournaments.update_tournament(socket.assigns.tournament, tournament_params, user.id) do
       {:ok, tournament} ->
         notify_parent({:saved, tournament})
@@ -74,6 +75,7 @@ defmodule IpdthWeb.TournamentLive.FormComponent do
 
   defp save_tournament(socket, :new, tournament_params) do
     user = socket.assigns.current_user
+
     case Tournaments.create_tournament(tournament_params, user.id) do
       {:ok, tournament} ->
         notify_parent({:saved, tournament})

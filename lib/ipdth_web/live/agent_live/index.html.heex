@@ -12,13 +12,15 @@
   rows={@streams.agents}
   row_click={fn {_id, agent} -> JS.navigate(~p"/agents/#{agent}") end}
 >
-  <:col :let={{_id, agent}} label="Name"><span class="font-semibold"><%= agent.name %></span></:col>
+  <:col :let={{_id, agent}} label="Name">
+    <span class="font-semibold"><%= agent.name %></span>
+  </:col>
   <:col :let={{_id, agent}} label="Status">
     <.agent_status_badge status={agent.status} />
   </:col>
   <:col :let={{_id, agent}} label="Owner"><%= agent.owner.email %></:col>
   <:col :let={{_id, agent}} label="Description">
-   <%= agent.description %>
+    <%= agent.description %>
   </:col>
   <:action :let={{_id, agent}}>
     <.link

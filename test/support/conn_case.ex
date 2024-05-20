@@ -62,7 +62,6 @@ defmodule IpdthWeb.ConnCase do
     %{conn: log_in_user(conn, admin), user: admin}
   end
 
-
   @doc """
   Logs the given `user` into the `conn`.
 

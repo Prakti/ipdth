@@ -10,7 +10,6 @@ alias Ipdth.Tournaments
 alias Ipdth.Accounts
 alias Ipdth.Agents
 
-
 create_user = fn user_params ->
   with {:ok, user} <- Accounts.register_user(user_params) do
     Accounts.deliver_user_confirmation_instructions(user, fn token ->
@@ -74,7 +73,8 @@ create_tournaments = fn admin, count ->
 end
 
 publish_tournaments = fn admin, tournaments, count ->
-  Enum.take_random(tournaments, count) |> Enum.map(fn tournament ->
+  Enum.take_random(tournaments, count)
+  |> Enum.map(fn tournament ->
     with {:ok, published_tournament} = Tournaments.publish_tournament(tournament, admin.id) do
       published_tournament
     end
@@ -100,16 +100,16 @@ sign_up_all_agents = fn users_with_agents, published_tournaments ->
   end)
 end
 
-
 ###
 # Generate Users
 ###
-{:ok, genesis_user} = Accounts.create_genesis_user(%{
-  "email" => "myself@prakti.org",
-  "hashed_password" => "$2b$12$E2hj2p9qfkX5jer5KESlF.9lTxbUgqXV1uwn3s69XmtJLs4HNtN/K"
-})
-users = create_users.(20)
+{:ok, genesis_user} =
+  Accounts.create_genesis_user(%{
+    "email" => "myself@prakti.org",
+    "hashed_password" => "$2b$12$E2hj2p9qfkX5jer5KESlF.9lTxbUgqXV1uwn3s69XmtJLs4HNtN/K"
+  })
 
+users = create_users.(20)
 
 ###
 # Generate Agents
@@ -117,13 +117,11 @@ users = create_users.(20)
 admin_agents = create_agents_for_user.(genesis_user, 10)
 users_with_agents = create_agents_for_users.(users, 10)
 
-
 ###
 # Generate Tournaments
 ###
 tournaments = create_tournaments.(genesis_user, 50)
 published_tournaments = publish_tournaments.(genesis_user, tournaments, 25)
-
 
 ###
 # Sign Up Agents to Tournament
@@ -131,5 +129,3 @@ published_tournaments = publish_tournaments.(genesis_user, tournaments, 25)
 
 sign_up_agents.(genesis_user, admin_agents, published_tournaments)
 sign_up_all_agents.(users_with_agents, published_tournaments)
-
-

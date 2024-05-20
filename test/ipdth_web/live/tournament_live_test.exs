@@ -10,21 +10,21 @@ defmodule IpdthWeb.TournamentLiveTest do
     description: "some description",
     start_date: "2024-01-20T12:56:00Z",
     round_number: 42,
-    random_seed: "some random_seed",
+    random_seed: "some random_seed"
   }
   @update_attrs %{
     name: "some updated name",
     description: "some updated description",
     start_date: "2024-01-21T12:56:00Z",
     round_number: 43,
-    random_seed: "some updated random_seed",
+    random_seed: "some updated random_seed"
   }
   @invalid_attrs %{
     name: nil,
     description: nil,
     start_date: nil,
     round_number: nil,
-    random_seed: nil,
+    random_seed: nil
   }
 
   defp create_tournament(_) do

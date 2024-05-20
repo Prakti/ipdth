@@ -16,10 +16,11 @@ defmodule Ipdth.AccountsFixtures do
   end
 
   def admin_user_fixture() do
-    {:ok, admin_user} = Ipdth.Accounts.create_genesis_user(%{
-      "email" => unique_admin_email(),
-      "hashed_password" => "$2b$12$bXskhdRKbOOLc3vOJmn/s.4gXebk3jE/3.Z14TVgm6s4hhfxF0KRK"
-    })
+    {:ok, admin_user} =
+      Ipdth.Accounts.create_genesis_user(%{
+        "email" => unique_admin_email(),
+        "hashed_password" => "$2b$12$bXskhdRKbOOLc3vOJmn/s.4gXebk3jE/3.Z14TVgm6s4hhfxF0KRK"
+      })
 
     admin_user
   end
@@ -38,5 +39,4 @@ defmodule Ipdth.AccountsFixtures do
     [_, token | _] = String.split(captured_email.text_body, "[TOKEN]")
     token
   end
-
 end
