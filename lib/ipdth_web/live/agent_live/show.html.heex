@@ -33,6 +33,37 @@
   <:item title="Agent ID"><%= @agent.id %></:item>
 </.list>
 
+<.header :if={not @signed_up_for_tournaments?} class="mt-20">
+  Currently Not Signed Up for any Tournaments
+</.header>
+
+<.header :if={@signed_up_for_tournaments?} class="mt-20">Signed Up for Tournaments</.header>
+
+<.table
+  :if={@signed_up_for_tournaments?}
+  id="tournaments"
+  rows={@streams.tournaments}
+  row_click={fn {_id, tournament} -> JS.navigate(~p"/tournaments/#{tournament}") end}
+>
+  <:col :let={{_id, tournament}} label="Name"><%= tournament.name %></:col>
+  <:col :let={{_id, tournament}} label="Description"><%= tournament.description %></:col>
+  <:col :let={{_id, tournament}} label="Status">
+    <.badge color="green"><%= tournament.status %></.badge>
+  </:col>
+  <:col :let={{_id, tournament}} label="Start date">
+    <%= Calendar.strftime(tournament.start_date, "%Y-%m-%d %H:%M:%S") %>
+  </:col>
+  <:col :let={{_id, tournament}} label="End date">
+    <%= tournament.end_date && Calendar.strftime(tournament.end_date, "%Y-%m-%d %H:%M:%S") %>
+  </:col>
+  <:col :let={{_id, tournament}} label="Number of Rounds"><%= tournament.round_number %></:col>
+  <:action :let={{_id, tournament}}>
+    <div class="sr-only">
+      <.link navigate={~p"/tournaments/#{tournament}"}>Show</.link>
+    </div>
+  </:action>
+</.table>
+
 <.back navigate={~p"/agents"}>Back to agents</.back>
 
 <.modal

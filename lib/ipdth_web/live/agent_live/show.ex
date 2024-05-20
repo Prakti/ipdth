@@ -4,6 +4,7 @@ defmodule IpdthWeb.AgentLive.Show do
   import IpdthWeb.AuthZ
 
   alias Ipdth.Agents
+  alias Ipdth.Tournaments
 
   @impl true
   def mount(_params, _session, socket) do
@@ -17,9 +18,13 @@ defmodule IpdthWeb.AgentLive.Show do
 
   @impl true
   def handle_params(%{"id" => id}, _, socket) do
+    tournaments = Tournaments.list_signed_up_tournaments_by_agent(id)
+
     {:noreply,
      socket
      |> assign(:page_title, page_title(socket.assigns.live_action))
+     |> assign(:signed_up_for_tournaments?, not Enum.empty?(tournaments))
+     |> stream(:tournaments, tournaments)
      |> assign(:agent, Agents.get_agent!(id, [:owner]))}
   end
 

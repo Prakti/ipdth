@@ -32,8 +32,37 @@ defmodule Ipdth.Tournaments do
     end
   end
 
-  # TODO: 2024-05-12 - Write test for this query
+  @doc """
+  Lists published tournaments along with a flag indicating whether a given agent is already signed up.
+
+  This function retrieves all tournaments that have a status of 'published' and determines if the specified agent
+  is already participating in each tournament. It returns a list of tournament details, each enhanced with a `signed_up`
+  boolean flag that is `true` if the agent is already signed up, otherwise `false`.
+
+  ## Parameters
+  - agent_id: The ID of the agent for whom to check tournament signups. This is an integer representing the unique identifier of the agent in the database.
+
+  ## Returns
+  - A list of maps, where each map contains the following keys:
+    - :id - The ID of the tournament.
+    - :name - The name of the tournament.
+    - :description - A description of the tournament.
+    - :start_date - The start date of the tournament.
+    - :round_number - The current round number of the tournament.
+    - :signed_up - A boolean indicating whether the agent is signed up for the tournament.
+
+  ## Example
+  ```elixir
+  Tournaments.list_tournaments_for_signup(1)
+  # Returns:
+  [
+    %{id: 2, name: "Open Championship", description: "Annual open chess tournament.", start_date: ~D[2023-06-15], round_number: 1, signed_up: false},
+    %{id: 3, name: "Regional Qualifier", description: "Qualifier for the national finals.", start_date: ~D[2023-07-20], round_number: 2, signed_up: true}
+  ]
+  ´´´
+  """
   def list_tournaments_for_signup(agent_id) do
+    # TODO: 2024-05-12 - Write test for this query
     query =
       from t in Tournament,
         left_join: p in Participation,
@@ -47,6 +76,37 @@ defmodule Ipdth.Tournaments do
           round_number: t.round_number,
           signed_up: not is_nil(p.id)
         }
+
+    Repo.all(query)
+  end
+
+  @doc """
+  Lists all tournaments in which a specific agent has signed up.
+
+  This function retrieves a list of tournaments where the specified agent has a 'signed_up' status in their participation. It executes a query joining the `Tournament`, `Participation`, and `Agent` schemas to filter out only those tournaments where the `agent_id` matches and the participation status is `:signed_up`.
+
+  ## Parameters
+  - `agent_id`: The ID of the agent for whom signed up tournaments are being queried.
+
+  ## Returns
+  - A list of `Tournament` structs, each preloaded with associated `Participation` records that match the agent ID and signed-up status.
+
+  ## Examples
+      # Get all signed-up tournaments for agent with ID 1
+      iex> MyProject.list_signed_up_tournaments_by_agent(1)
+      [%Tournament{...}, ...]
+
+  """
+  def list_signed_up_tournaments_by_agent(agent_id) do
+    query =
+      from t in Tournament,
+        join: p in Participation,
+        on: t.id == p.tournament_id,
+        join: a in Agent,
+        on: a.id == p.agent_id,
+        where: p.agent_id == ^agent_id,
+        where: p.status == :signed_up,
+        preload: [participations: p]
 
     Repo.all(query)
   end
