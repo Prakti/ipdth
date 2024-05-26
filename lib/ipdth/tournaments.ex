@@ -24,6 +24,7 @@ defmodule Ipdth.Tournaments do
     Repo.all(from t in Tournament, where: t.status != ^:created)
   end
 
+
   def list_tournaments(actor_id) do
     if Accounts.has_role?(actor_id, :tournament_admin) do
       Repo.all(Tournament)
@@ -52,14 +53,11 @@ defmodule Ipdth.Tournaments do
     - :signed_up - A boolean indicating whether the agent is signed up for the tournament.
 
   ## Example
-  ```elixir
-  Tournaments.list_tournaments_for_signup(1)
-  # Returns:
-  [
-    %{id: 2, name: "Open Championship", description: "Annual open chess tournament.", start_date: ~D[2023-06-15], round_number: 1, signed_up: false},
-    %{id: 3, name: "Regional Qualifier", description: "Qualifier for the national finals.", start_date: ~D[2023-07-20], round_number: 2, signed_up: true}
-  ]
-  ´´´
+      iex> Tournaments.list_tournaments_for_signup(1)
+      [
+        %{id: 2, name: "Open Championship", description: "Annual open chess tournament.", start_date: ~D[2023-06-15], round_number: 1, signed_up: false},
+        %{id: 3, name: "Regional Qualifier", description: "Qualifier for the national finals.", start_date: ~D[2023-07-20], round_number: 2, signed_up: true}
+      ]
   """
   def list_tournaments_for_signup(agent_id) do
     # TODO: 2024-05-12 - Write test for this query
@@ -107,6 +105,31 @@ defmodule Ipdth.Tournaments do
         where: p.agent_id == ^agent_id,
         where: p.status == :signed_up,
         preload: [participations: p]
+
+    Repo.all(query)
+  end
+
+  @doc """
+  Fetches a list of published tournaments that are due or overdue as of the given timestamp.
+
+  ## Parameters
+
+    - `timestamp`: A `DateTime` struct representing the current time. Tournaments with a start date earlier than or equal to this timestamp will be considered due or overdue.
+
+  ## Returns
+
+    - A list of `%Tournament{}` structs that are published and have a start date earlier than or equal to the provided timestamp.
+
+  ## Examples
+      iex> current_time = DateTime.utc_now()
+      iex> list_due_and_overdue_tournaments(current_time)
+      [%Tournament{status: :published, start_date: ~U[2023-05-21 15:30:00Z]}, ...]
+  """
+  def list_due_and_overdue_tournaments(%DateTime{} = timestamp) do
+    query =
+      from t in Tournament,
+        where: t.status == :published,
+        where: t.start_date <= ^timestamp
 
     Repo.all(query)
   end
