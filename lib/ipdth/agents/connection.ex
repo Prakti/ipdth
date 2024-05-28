@@ -31,8 +31,21 @@ defmodule Ipdth.Agents.Connection do
     defstruct type: "Test Match", tournament_id: "", match_id: ""
   end
 
-  def decide(_agent, _decision_request) do
-    # TODO: 2024-03-17 - Implement
+  def decide(agent, decision_request) do
+    auth = {:bearer, agent.bearer_token}
+    req = Req.new(json: decision_request, auth: auth, url: agent.url)
+
+    with {:ok, response} <- Req.post(req) do
+      case response.status do
+        200 -> interpret_decision(response)
+        # TODO: 2024-05-26 - Read config values for backoff and retried
+        # TODO: 2024-05-26 - Put backoff-control and retries here
+        # TODO: 2024-05-26 - Use Sleep and tail-recursion
+        401 -> {:error, fill_error_details(:auth_error, response)}
+        500 -> {:error, fill_error_details(:server_error, response)}
+        _ -> {:error, fill_error_details(:undefined_error, response)}
+      end
+    end
   end
 
   def test(agent) do
@@ -45,7 +58,7 @@ defmodule Ipdth.Agents.Connection do
 
         with {:ok, response} <- Req.post(req) do
           case response.status do
-            200 -> validate_body(response, test_request)
+            200 -> validate_body(response)
             401 -> {:error, fill_error_details(:auth_error, response)}
             500 -> {:error, fill_error_details(:server_error, response)}
             _ -> {:error, fill_error_details(:undefined_error, response)}
@@ -68,7 +81,17 @@ defmodule Ipdth.Agents.Connection do
     end
   end
 
-  def validate_body(response, _test_request) do
+  def interpret_decision(response) do
+    json = response.body
+
+    case json["action"] do
+      "Cooperate" -> {:ok, :cooperate}
+      "cooperate" -> {:ok, :cooperate}
+      _ -> {:ok, :compete}
+    end
+  end
+
+  def validate_body(response) do
     json = response.body
 
     if json["action"] != nil do

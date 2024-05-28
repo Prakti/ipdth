@@ -5,6 +5,8 @@ defmodule Ipdth.Agents.ConnectionTest do
   import Ipdth.AgentsFixtures
   import Ipdth.AccountsFixtures
 
+  alias Ipdth.Agents.Connection.{PastResult, Request, MatchInfo}
+
   setup tags do
     if tags[:silence_logger] do
       # Store the current log level
@@ -58,7 +60,7 @@ defmodule Ipdth.Agents.ConnectionTest do
 
   def http_status_code_gen() do
     ranges = [
-      # Common successful responses
+      # Common success responses
       200..206,
       # Common redirection messages
       301,
@@ -96,6 +98,69 @@ defmodule Ipdth.Agents.ConnectionTest do
       range -> Enum.to_list(range)
     end)
     |> StreamData.member_of()
+  end
+
+  def create_test_request() do
+    past_results =
+      Enum.map(1..100, fn num ->
+        modnum = Integer.mod(num, 2)
+
+        if modnum == 0 do
+          %PastResult{
+            action: "Cooperate",
+            points: modnum
+          }
+        else
+          %PastResult{
+            action: "Compete",
+            points: modnum + 1
+          }
+        end
+      end)
+
+    %Request{
+      round_number: 1,
+      match_info: %MatchInfo{},
+      past_results: past_results
+    }
+  end
+
+  describe "Connection.decide/2" do
+    test "returns {:ok, decision} if the connected agent responds correctly" do
+      owner = user_fixture()
+      %{agent: agent, bypass: bypass} = agent_fixture_and_mock_service(owner)
+
+      # Setup Bypass for a success case
+      Bypass.expect_once(bypass, "POST", "/decide", fn conn ->
+        assert "POST" == conn.method
+
+        # Ensure that our client sends correct Headers
+        req_headers = conn.req_headers
+
+        assert Enum.find(req_headers, fn header ->
+                 header == {"content-type", "application/json"}
+               end)
+
+        assert Enum.find(req_headers, fn header ->
+                 header == {"authorization", "Bearer " <> agent_service_bearer_token()}
+               end)
+
+        assert Enum.find(req_headers, fn header -> header == {"accept", "application/json"} end)
+
+        conn = Plug.run(conn, [{Plug.Parsers, [parsers: [:json], json_decoder: Jason]}])
+        req_body = conn.body_params
+
+        dataset = validate_req_body(req_body)
+        assert dataset.valid?
+
+        conn
+        |> Plug.Conn.merge_resp_headers([{"content-type", "application/json"}])
+        |> Plug.Conn.resp(200, agent_service_success_response())
+      end)
+
+      assert {:ok, decision} = Ipdth.Agents.Connection.decide(agent, create_test_request())
+      assert decision == :cooperate or decision == :compete
+    end
   end
 
   describe "Connection test/1" do
