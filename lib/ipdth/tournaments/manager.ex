@@ -11,7 +11,7 @@ defmodule Ipdth.Tournaments.Manager do
     start_link(manual_mode)
   end
 
-  def start_link(manual_mode) when is_boolean(manual_mode)do
+  def start_link(manual_mode) when is_boolean(manual_mode) do
     GenServer.start_link(__MODULE__, %{manual_mode: manual_mode}, name: __MODULE__)
   end
 
@@ -35,6 +35,7 @@ defmodule Ipdth.Tournaments.Manager do
       # TODO: 2024-05-20 - Determine when the next check for due tournaments should happen
       # TODO: 2024-05-20 - Schedule the next check for due tournaments
     end
+
     {:ok, state}
   end
 
@@ -55,10 +56,12 @@ defmodule Ipdth.Tournaments.Manager do
   @impl true
   def handle_info({:check_and_and_start_tournaments, timestamp}, state) do
     check_and_start_tournaments(timestamp)
+
     unless state.manual_mode do
       # TODO: 2024-05-20 - Determine when the next check for due tournaments should happen
       # TODO: 2024-05-20 - Schedule the next check for due tournaments
     end
+
     {:noreply, state}
   end
 
@@ -83,7 +86,7 @@ defmodule Ipdth.Tournaments.Manager do
     # TODO: 2024-05-21 - Hand over the tournament to a tournament runner
     # TODO: 2024-05-20 - Move the database functionality into the Tournaments Context and a TournamentRunner
     #
-    #Repo.transaction(fn ->
+    # Repo.transaction(fn ->
     #  tournament
     #  |> Ecto.Changeset.change(status: :running)
     #  |> Repo.update!()
@@ -93,34 +96,32 @@ defmodule Ipdth.Tournaments.Manager do
     #  |> Repo.update_all(set: [status: :participating])
     #
     #  create_round_robin_schedule(tournament)
-    #end)
+    # end)
   end
 
   defp next_check_interval() do
     # TODO: 2024-05-20 - Move the query into the Tournaments Context
 
-    #next_tournament =
+    # next_tournament =
     #  Tournament
     #  |> where([t], t.status == "scheduled" and t.start_date > ^now)
     #  |> order_by(asc: :start_date)
     #  |> limit(1)
     #  |> Repo.one()
 
-    #case next_tournament do
+    # case next_tournament do
     #  nil -> @max_interval
     #  %Tournament{start_date: start_date} ->
     #    DateTime.diff(start_date, now, :millisecond)
     #    |> max(0) # Ensure non-negative interval
-    #end
+    # end
   end
-
-
 
   defp create_round_robin_schedule(_tournament) do
     # TODO: 2024-05-20 - Move this functionalty into the Tournaments Context
     #
-    #agents = Repo.all(from p in Participation, where: p.tournament_id == ^tournament.id, select: p.agent_id)
-    #schedule_matches(agents, tournament.id)
+    # agents = Repo.all(from p in Participation, where: p.tournament_id == ^tournament.id, select: p.agent_id)
+    # schedule_matches(agents, tournament.id)
   end
 
   defp schedule_matches(_agents, _tournament_id) do
