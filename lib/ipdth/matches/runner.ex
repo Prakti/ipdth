@@ -75,19 +75,8 @@ defmodule Ipdth.Matches.Runner do
   end
 
   defp tally_round(result_a, result_b, start_date) do
-    action_a =
-      case result_a["action"] do
-        "cooperate" -> :cooperate
-        "Cooperate" -> :cooperate
-        _ -> :compete
-      end
-
-    action_b =
-      case result_b["action"] do
-        "cooperate" -> :cooperate
-        "Cooperate" -> :cooperate
-        _ -> :compete
-      end
+    action_a = normalize_decision(result_a)
+    action_b = normalize_decision(result_b)
 
     {score_a, score_b} =
       case {action_a, action_b} do
@@ -106,4 +95,10 @@ defmodule Ipdth.Matches.Runner do
       end_date: DateTime.utc_now()
     }
   end
+
+  defp normalize_decision("cooperate"), do: :cooperate
+  defp normalize_decision("Cooperate"), do: :cooperate
+  defp normalize_decision(:cooperate), do: :cooperate
+  defp normalize_decision(_), do: :compete
+
 end

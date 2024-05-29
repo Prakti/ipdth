@@ -4,6 +4,17 @@ defmodule Ipdth.Agents.Connection do
   with an Agent.
   """
 
+  # TODO: 2024-05-26 - Read config values for backoff and retries
+  @max_retries 3
+  @backoff_duration 5_000
+
+  defmodule State do
+    @moduledoc """
+    Struct representing the internal state of the connection
+    """
+    defstruct agent: nil, decision_request: nil, errors: [], retries: 0
+  end
+
   defmodule Request do
     @moduledoc """
     Struct representing the Request sent to an Agent.
@@ -32,19 +43,69 @@ defmodule Ipdth.Agents.Connection do
   end
 
   def decide(agent, decision_request) do
-    auth = {:bearer, agent.bearer_token}
-    req = Req.new(json: decision_request, auth: auth, url: agent.url)
+    decide(%State{ agent: agent, decision_request: decision_request })
+  end
 
-    with {:ok, response} <- Req.post(req) do
-      case response.status do
-        200 -> interpret_decision(response)
-        # TODO: 2024-05-26 - Read config values for backoff and retried
-        # TODO: 2024-05-26 - Put backoff-control and retries here
-        # TODO: 2024-05-26 - Use Sleep and tail-recursion
-        401 -> {:error, fill_error_details(:auth_error, response)}
-        500 -> {:error, fill_error_details(:server_error, response)}
-        _ -> {:error, fill_error_details(:undefined_error, response)}
+  def decide(%State{} = state) do
+    agent = state.agent
+    decision_request = state.decision_request
+    auth = {:bearer, agent.bearer_token}
+    try do
+      req = Req.new(json: decision_request, auth: auth, url: agent.url)
+
+      case Req.post(req) do
+        {:ok, response} ->
+          handle_http_response(state, response)
+        {:error, exception} ->
+          log_exception_and_backoff(state, exception)
       end
+    rescue
+      exception -> log_exception_and_backoff(state, exception)
+    end
+  end
+
+  defp handle_http_response(%State{} = state, response) do
+    case response.status do
+      200 ->
+        # TODO: 2024-05-29 - Ensure that Agent is 'active'
+        interpret_decision(response)
+      _ ->
+        {:error, log_http_error_and_backoff(state, response) }
+    end
+  end
+
+  defp log_http_error_and_backoff(%State{} = state, response) do
+    details =
+      case response.status do
+        401 -> "Authentification Error: " <> response.body <> "\n"
+        500 -> "Internal Server Error: " <> response.body <> "\n"
+        _ -> "Undefined Error: " <> response.body <> "\n"
+      end
+
+    # TODO: 2024-05-29 - TODO: write error into DB (not via 'Agents' module)
+
+    state = %State{state | errors: [details | state.errors]}
+
+    if state.retries <= @max_retries do
+      # TODO: 2024-05-28 - Compute backoff duration
+      Process.sleep(@backoff_duration)
+      decide(%State{ state | retries: state.retries + 1 })
+    else
+      {:agent_nonresponsive, state.errors}
+    end
+  end
+
+  defp log_exception_and_backoff(%State{} = state, exception) do
+    details = "Exception: " <> Exception.message(exception) <> "\n"
+    state = %State{state | errors: [details | state.errors]}
+
+    # TODO: 2024-05-29 - TODO: write error into DB (not via 'Agents' module)
+
+    if state.retries <= @max_retries do
+      # TODO: 2024-05-29 - Compute backoff duration
+      decide(%State{ state | retries: state.retries + 1 })
+    else
+      {:runtime_exception, state.errors}
     end
   end
 
@@ -59,9 +120,9 @@ defmodule Ipdth.Agents.Connection do
         with {:ok, response} <- Req.post(req) do
           case response.status do
             200 -> validate_body(response)
-            401 -> {:error, fill_error_details(:auth_error, response)}
-            500 -> {:error, fill_error_details(:server_error, response)}
-            _ -> {:error, fill_error_details(:undefined_error, response)}
+            401 -> {:error, {:auth_error, response.body}}
+            500 -> {:error, {:server_error, response.body}}
+            _ -> {:error, {:undefined_error, response.body}}
           end
         end
       end)
@@ -99,11 +160,6 @@ defmodule Ipdth.Agents.Connection do
     else
       {:error, {:no_action_given, json}}
     end
-  end
-
-  def fill_error_details(error, _response) do
-    # TODO: 2024-03-17 - Do proper inspection of response body.
-    {error, "TODO: fill in more details!"}
   end
 
   def create_test_request() do

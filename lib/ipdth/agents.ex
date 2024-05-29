@@ -214,6 +214,7 @@ defmodule Ipdth.Agents do
   """
   def activate_agent(%Agent{} = agent, actor_id) do
     if agent.owner_id == actor_id do
+      # TODO: 2024-05-29 - Move this into Connection Module
       case Connection.test(agent) do
         :ok ->
           agent
@@ -258,4 +259,5 @@ defmodule Ipdth.Agents do
       {:error, :not_authorized}
     end
   end
+
 end
