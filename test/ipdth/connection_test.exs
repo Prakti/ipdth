@@ -220,6 +220,31 @@ defmodule Ipdth.Agents.ConnectionTest do
         assert decision == :cooperate or decision == :compete
       end
     end
+
+    test "performs a retry with backoff in case the agent is temporarily offline" do
+      owner = user_fixture()
+      %{agent: agent, bypass: bypass} = agent_fixture_and_mock_service(owner)
+
+      Bypass.expect(bypass, "POST", "/decide", fn conn ->
+        assert "POST" == conn.method
+
+        conn
+        |> Plug.Conn.merge_resp_headers([{"content-type", "application/json"}])
+        |> Plug.Conn.resp(200, agent_service_success_response())
+      end)
+
+      on_off_task = Task.async(fn ->
+        Bypass.down(bypass)
+        Process.sleep(4_000)
+        Bypass.up(bypass)
+        :ok
+      end)
+
+      assert {:ok, decision} = Connection.decide(agent, create_test_request())
+      assert decision == :cooperate or decision == :compete
+
+      assert :ok = Task.await(on_off_task)
+    end
   end
 
   describe "Connection test/1" do
@@ -258,7 +283,6 @@ defmodule Ipdth.Agents.ConnectionTest do
       assert :ok == Connection.test(agent)
     end
 
-    @tag silence_logger: true
     test "returns :error if the connected agent is offline" do
       owner = user_fixture()
       agent = agent_fixture(owner, %{url: "http://localhost:4000/"})

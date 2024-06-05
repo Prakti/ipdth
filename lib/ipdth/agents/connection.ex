@@ -103,6 +103,7 @@ defmodule Ipdth.Agents.Connection do
 
     if state.retries <= @max_retries do
       # TODO: 2024-05-29 - Compute backoff duration
+      Process.sleep(@backoff_duration)
       decide(%State{ state | retries: state.retries + 1 })
     else
       {:runtime_exception, state.errors}
