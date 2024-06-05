@@ -2,9 +2,13 @@ defmodule Ipdth.Agents.ConnectionTest do
   use Ipdth.DataCase
   use ExUnitProperties
 
+  # Agent has a special meaning in the domain of our app.
+  alias Agent, as: Shelf 
+
   import Ipdth.AgentsFixtures
   import Ipdth.AccountsFixtures
 
+  alias Ipdth.Agents.Connection
   alias Ipdth.Agents.Connection.{PastResult, Request, MatchInfo}
 
   setup tags do
@@ -158,7 +162,7 @@ defmodule Ipdth.Agents.ConnectionTest do
         |> Plug.Conn.resp(200, agent_service_success_response())
       end)
 
-      assert {:ok, decision} = Ipdth.Agents.Connection.decide(agent, create_test_request())
+      assert {:ok, decision} = Connection.decide(agent, create_test_request())
       assert decision == :cooperate or decision == :compete
     end
 
@@ -166,13 +170,13 @@ defmodule Ipdth.Agents.ConnectionTest do
       owner = user_fixture()
       %{agent: agent, bypass: bypass} = agent_fixture_and_mock_service(owner)
 
-      {:ok, store} = Agent.start_link(fn -> 0 end)
+      {:ok, shelf} = Shelf.start_link(fn -> 0 end)
 
       Bypass.expect(bypass, "POST", "/decide", fn conn ->
         assert "POST" == conn.method
 
-        request_count = Agent.get_and_update(store, fn state -> { state, state + 1 } end)
-        # We count the number of calls to the endpoint and only success on the second call
+        request_count = Shelf.get_and_update(shelf, fn state -> { state, state + 1 } end)
+        # We count the number of calls to the endpoint and only succeed on the second call
         if request_count == 1 do
           conn
           |> Plug.Conn.merge_resp_headers([{"content-type", "application/json"}])
@@ -184,8 +188,37 @@ defmodule Ipdth.Agents.ConnectionTest do
         end
       end)
 
-      assert {:ok, decision} = Ipdth.Agents.Connection.decide(agent, create_test_request())
+      assert {:ok, decision} = Connection.decide(agent, create_test_request())
       assert decision == :cooperate or decision == :compete
+    end
+
+    property "performs a retry with backoff in case of an malformed data but status 200" do
+      owner = user_fixture()
+
+      check all malformed_response <- string(:ascii) do
+        %{agent: agent, bypass: bypass} = agent_fixture_and_mock_service(owner)
+
+        {:ok, store} = Agent.start_link(fn -> 0 end)
+
+        Bypass.expect(bypass, "POST", "/decide", fn conn ->
+          assert "POST" == conn.method
+
+          request_count = Agent.get_and_update(store, fn state -> { state, state + 1 } end)
+          # We count the number of calls to the endpoint and only succeed on the second call
+          if request_count == 1 do
+            conn
+            |> Plug.Conn.merge_resp_headers([{"content-type", "application/json"}])
+            |> Plug.Conn.resp(200, malformed_response)
+          else
+            conn
+            |> Plug.Conn.merge_resp_headers([{"content-type", "application/json"}])
+            |> Plug.Conn.resp(200, agent_service_success_response())
+          end
+        end)
+
+        assert {:ok, decision} = Connection.decide(agent, create_test_request())
+        assert decision == :cooperate or decision == :compete
+      end
     end
   end
 
@@ -222,7 +255,7 @@ defmodule Ipdth.Agents.ConnectionTest do
         |> Plug.Conn.resp(200, agent_service_success_response())
       end)
 
-      assert :ok == Ipdth.Agents.Connection.test(agent)
+      assert :ok == Connection.test(agent)
     end
 
     @tag silence_logger: true
@@ -230,7 +263,7 @@ defmodule Ipdth.Agents.ConnectionTest do
       owner = user_fixture()
       agent = agent_fixture(owner, %{url: "http://localhost:4000/"})
 
-      assert {:error, details} = Ipdth.Agents.Connection.test(agent)
+      assert {:error, details} = Connection.test(agent)
       assert %Mint.TransportError{reason: :econnrefused} = details
     end
 
@@ -248,7 +281,7 @@ defmodule Ipdth.Agents.ConnectionTest do
           Plug.Conn.resp(conn, status, body)
         end)
 
-        assert {:error, _} = Ipdth.Agents.Connection.test(agent)
+        assert {:error, _} = Connection.test(agent)
       end
     end
   end

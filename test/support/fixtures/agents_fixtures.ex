@@ -63,7 +63,7 @@ defmodule Ipdth.AgentsFixtures do
   def agent_service_500_response() do
     ~s<{
       "error": "ProvokedError",
-      "details": "Intentionally provoked arror to test error handling."
+      "details": "Intentionally provoked error, to test error handling."
     }>
   end
 
