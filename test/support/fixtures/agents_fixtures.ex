@@ -60,6 +60,13 @@ defmodule Ipdth.AgentsFixtures do
     }>
   end
 
+  def agent_service_500_response() do
+    ~s<{
+      "error": "ProvokedError",
+      "details": "Intentionally provoked arror to test error handling."
+    }>
+  end
+
   def agent_service_bearer_token() do
     "0xBABAF00"
   end

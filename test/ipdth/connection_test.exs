@@ -161,6 +161,32 @@ defmodule Ipdth.Agents.ConnectionTest do
       assert {:ok, decision} = Ipdth.Agents.Connection.decide(agent, create_test_request())
       assert decision == :cooperate or decision == :compete
     end
+
+    test "performs a retry with backoff in case of an error 500" do
+      owner = user_fixture()
+      %{agent: agent, bypass: bypass} = agent_fixture_and_mock_service(owner)
+
+      {:ok, store} = Agent.start_link(fn -> 0 end)
+
+      Bypass.expect(bypass, "POST", "/decide", fn conn ->
+        assert "POST" == conn.method
+
+        request_count = Agent.get_and_update(store, fn state -> { state, state + 1 } end)
+        # We count the number of calls to the endpoint and only success on the second call
+        if request_count == 1 do
+          conn
+          |> Plug.Conn.merge_resp_headers([{"content-type", "application/json"}])
+          |> Plug.Conn.resp(500, agent_service_500_response())
+        else
+          conn
+          |> Plug.Conn.merge_resp_headers([{"content-type", "application/json"}])
+          |> Plug.Conn.resp(200, agent_service_success_response())
+        end
+      end)
+
+      assert {:ok, decision} = Ipdth.Agents.Connection.decide(agent, create_test_request())
+      assert decision == :cooperate or decision == :compete
+    end
   end
 
   describe "Connection test/1" do
