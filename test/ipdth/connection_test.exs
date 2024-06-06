@@ -245,6 +245,9 @@ defmodule Ipdth.Agents.ConnectionTest do
 
       assert :ok = Task.await(on_off_task)
     end
+
+    # TODO: 2024-06-0-6 - Test that the Agent returns with an error in case of permanent failures
+    # TODO: 2024-06-0-6 - Test that the Agent switches into an error state when there are errors
   end
 
   describe "Connection test/1" do

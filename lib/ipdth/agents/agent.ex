@@ -9,7 +9,7 @@ defmodule Ipdth.Agents.Agent do
 
   alias Ipdth.Tournaments.Participation
   alias Ipdth.Accounts.User
-  alias Ipdth.Agents.Agent
+  alias Ipdth.Agents.{Agent, ConnectionError}
 
   schema "agents" do
     field :name, :string
@@ -18,6 +18,7 @@ defmodule Ipdth.Agents.Agent do
     field :url, :string
     field :bearer_token, :string
     has_many :participations, Participation
+    has_many :connection_errors, ConnectionError
     belongs_to :owner, User
 
     timestamps(type: :utc_datetime_usec)
