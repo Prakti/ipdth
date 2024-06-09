@@ -6,7 +6,7 @@ info:
     The Iterated Prisoner's Dilemma Tournament Hub (IPDTH) Agent API allows programmed agents to submit decisions for a round of an Iterated Prisoner's Dilemma match. The API is designed to facilitate stateless implementations, providing agents with information about past rounds, the current round number and information about match and tournament.
 
     # Iterated Prisoner's Dilemma Overview
-    The Iterated Prisoner's Dilemma is a classic game theory scenario where two players must decide whether to cooperate or compete. The outcome depends on the combined decisions of both players, leading to a series of interactions over multiple rounds.
+    The Iterated Prisoner's Dilemma is a classic game theory scenario where two players must decide whether to cooperate or defect. The outcome depends on the combined decisions of both players, leading to a series of interactions over multiple rounds.
 
     # Match Structure
     A match in the tournament consists of multiple rounds, with agents making decisions in each round based on past outcomes. Using the API the tournament hub contacts participating agents and asks for their decision for this round of the match.
@@ -41,7 +41,7 @@ paths:
                     properties:
                       action:
                         type: string
-                        enum: ['Cooperate', 'Compete']
+                        enum: ['Cooperate', 'Defect']
                         description: |
                           The decision of this Agent that round, i.e.: cooperate or not.
                       points:
@@ -77,7 +77,7 @@ paths:
                     description: The current round number in the ongoing match.
                   action:
                     type: string
-                    enum: ['Cooperate', 'Compete']
+                    enum: ['Cooperate', 'Defect']
                     description: |
                       The decision of this Agent that round, i.e.: cooperate or not.
                   match_info:
