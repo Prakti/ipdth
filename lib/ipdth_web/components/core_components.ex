@@ -102,7 +102,8 @@ defmodule IpdthWeb.CoreComponents do
             :inactive -> "zinc"
             :testing -> "yellow"
             :active -> "green"
-            :error_backoff -> "orange"
+            :backoff -> "orange"
+            :error -> "red"
           end
       )
 

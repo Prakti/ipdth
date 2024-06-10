@@ -4,23 +4,10 @@ defmodule Ipdth.Agents.Connection do
   with an Agent.
   """
 
-  import Ecto.Query, warn: false
+  require Logger
 
-  alias Ipdth.Repo
-  alias Ipdth.Agents.ConnectionError
+  alias Ipdth.Agents.ConnectionManager
 
-  # TODO: 2024-06-06 - Use the following pattern for the TaskSupervisor
-
-  # TODO: 2024-05-26 - Read config values for backoff and retries
-  @max_retries 3
-  @backoff_duration 5_000
-
-  defmodule State do
-    @moduledoc """
-    Struct representing the internal state of the connection
-    """
-    defstruct agent: nil, decision_request: nil, errors: [], retries: 0
-  end
 
   defmodule Request do
     @moduledoc """
@@ -49,156 +36,60 @@ defmodule Ipdth.Agents.Connection do
     defstruct type: "Test Match", tournament_id: "", match_id: ""
   end
 
-  ###
-  # Public Interface
-  ###
-
-  def child_spec(_), do: Supervisor.child_spec(Task.Supervisor.child_spec(name: __MODULE__), id: __MODULE__)
-
   def decide(agent, decision_request) do
-    decide(%State{ agent: agent, decision_request: decision_request })
-  end
-
-  def decide(%State{} = state) do
-    # TODO: 2024-06-06 - Replace try/rescue with Async-Task pattern for consistency
-
-    agent = state.agent
-    decision_request = state.decision_request
     auth = {:bearer, agent.bearer_token}
-    try do
-      req = Req.new(json: decision_request, auth: auth, url: agent.url)
 
-      case Req.post(req) do
-        {:ok, response} ->
-          handle_http_response(state, response)
-        {:error, exception} ->
-          log_exception_and_backoff(state, exception)
-      end
-    rescue
-      exception -> log_exception_and_backoff(state, exception)
+    # We can assertively use post! here because all error-handling is done
+    # in ConnectionManager
+    response = Req.post!(json: decision_request, auth: auth, url: agent.url)
+
+    case response.status do
+      200 ->
+        decision = evaluate_decision(response.body)
+        ConnectionManager.report_decision_result(self(), agent.id, decision)
+      # All error-handling is done in ConnectionManager, so we just let the
+      # process crash and let it handle backoff and retry
+      401 ->
+        raise "401 Unauthorized - #{inspect(response.body)}"
+      500 ->
+        raise "500 Internal Server Error - #{inspect(response.body)}"
+      status ->
+        raise "HTTP Error - #{inspect(status)} - #{inspect(response.body)}"
     end
   end
 
   def test(agent) do
-    # TODO: 2024-06-06 - Clean this up using the MFA variant of async-nolink!
-    pid =
-      Task.Supervisor.async_nolink(__MODULE__, fn ->
-        auth = {:bearer, agent.bearer_token}
-        test_request = create_test_request()
+    auth = {:bearer, agent.bearer_token}
+    test_request = create_test_request()
 
-        req = Req.new(json: test_request, auth: auth, url: agent.url)
+    response = Req.post!(json: test_request, auth: auth, url: agent.url)
 
-        with {:ok, response} <- Req.post(req) do
-          case response.status do
-            200 -> validate_body(response)
-            401 -> {:error, {:auth_error, response.body}}
-            500 -> {:error, {:server_error, response.body}}
-            _ -> {:error, {:undefined_error, response.body}}
-          end
-        end
-      end)
-
-    case Task.yield(pid) do
-      {:ok, result} ->
-        Task.shutdown(pid)
-        result
-
-      {:exit, {exception, _stacktrace}} when is_exception(exception) ->
-        Task.shutdown(pid)
-        {:error, {:runtime_exception, Exception.message(exception)}}
-
-      {:exit, {reason, details}} ->
-        Task.shutdown(pid)
-        {:error, {reason, details}}
-    end
-  end
-
-  ###
-  # Internal Functionality
-  ###
-
-  defp handle_http_response(%State{} = state, response) do
-    case response.status do
-      200 ->
-        # TODO: 2024-05-29 - Ensure that Agent is 'active'
-        interpret_decision(response)
-      _ ->
-        {:error, log_http_error_and_backoff(state, response) }
-    end
-  end
-
-  defp log_http_error_and_backoff(%State{} = state, response) do
-    details =
+    result =
       case response.status do
-        401 -> "Authentification Error: " <> response.body <> "\n"
-        500 -> "Internal Server Error: " <> response.body <> "\n"
-        _ -> "Undefined Error: " <> response.body <> "\n"
+        200 ->
+          if response.body["action"] != nil do
+            :ok
+          else
+            {:error, {:no_action_given, response.body}}
+          end
+        401 ->
+          {:error, {:auth_error, response.body}}
+        500 ->
+          {:error, {:server_error, response.body}}
+        _ ->
+          {:error, {:undefined_error, response.status, response.body}}
       end
 
-    log_error(state.agent.id, details)
-
-    state = %State{state | errors: [details | state.errors]}
-
-    if state.retries <= @max_retries do
-      # TODO: 2024-05-28 - Compute backoff duration
-      Process.sleep(@backoff_duration)
-      decide(%State{ state | retries: state.retries + 1 })
-    else
-      {:agent_nonresponsive, state.errors}
-    end
+    ConnectionManager.report_test_result(self(), agent.id, result)
   end
 
-  defp log_exception_and_backoff(%State{} = state, exception) do
-    details = "Exception: " <> Exception.message(exception) <> "\n"
-    state = %State{state | errors: [details | state.errors]}
-
-    log_error(state.agent.id, details)
-
-    if state.retries <= @max_retries do
-      # TODO: 2024-05-29 - Compute backoff duration
-      Process.sleep(@backoff_duration)
-      decide(%State{ state | retries: state.retries + 1 })
-    else
-      {:runtime_exception, state.errors}
-    end
-  end
-
-  defp log_error(agent_id, error_message) do
-    %ConnectionError{}
-    |> ConnectionError.changeset(%{agent_id: agent_id, error_message: error_message})
-    |> Repo.insert()
-    prune_old_errors(agent_id)
-  end
-
-  defp prune_old_errors(agent_id) do
-    Repo.transaction(fn ->
-      query = from e in ConnectionError,
-              where: e.agent_id == ^agent_id,
-              order_by: [desc: e.inserted_at],
-              offset: 50,
-              select: e.id
-
-      Repo.delete_all(from e in ConnectionError, where: e.id in subquery(query))
-    end)
-  end
-
-  defp interpret_decision(response) do
-    json = response.body
-
-    case json["action"] do
+  defp evaluate_decision(response_body) do
+    case response_body["action"] do
       "Cooperate" -> {:ok, :cooperate}
       "cooperate" -> {:ok, :cooperate}
-      _ -> {:ok, :compete}
-    end
-  end
-
-  defp validate_body(response) do
-    json = response.body
-
-    if json["action"] != nil do
-      :ok
-    else
-      {:error, {:no_action_given, json}}
+      "Defect" -> {:ok, :defect}
+      "defect" -> {:ok, :defect}
+      decision -> raise "Error: #{inspect(decision)} is not a valid Decision."
     end
   end
 
@@ -214,7 +105,7 @@ defmodule Ipdth.Agents.Connection do
           }
         else
           %PastResult{
-            action: "Compete",
+            action: "Defect",
             points: modnum + 1
           }
         end

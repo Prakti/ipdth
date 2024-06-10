@@ -8,7 +8,7 @@ defmodule Ipdth.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      Ipdth.Agents.Connection,
+      Ipdth.Agents.ConnectionManager,
       # Start the Telemetry supervisor
       IpdthWeb.Telemetry,
       # Start the Ecto repository

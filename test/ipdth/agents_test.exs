@@ -80,7 +80,8 @@ defmodule Ipdth.AgentsTest do
       assert activated_agent.status == :active
     end
 
-    test "activate_agent/1 handles unresponsive agents and error_backoff properly" do
+    @tag silence_logger: true
+    test "activate_agent/1 handles unresponsive agents and error state properly" do
       owner = user_fixture()
       %{agent: agent, bypass: bypass} = agent_fixture_and_mock_service(owner)
 
@@ -124,13 +125,13 @@ defmodule Ipdth.AgentsTest do
     end
 
     @tag silence_logger: true
-    test "deactivate_agent/1 with agent in error_backoff results in deavtivated agent" do
+    test "deactivate_agent/1 with agent in error results in deavtivated agent" do
       owner = user_fixture()
       agent = agent_fixture(owner)
 
       assert {:error, _reason} = Agents.activate_agent(agent, owner.id)
       error_agent = Agents.get_agent!(agent.id)
-      assert error_agent.status == :error_backoff
+      assert error_agent.status == :error
 
       assert {:ok, %Agent{} = deactivated_agent} = Agents.deactivate_agent(error_agent, owner.id)
       assert deactivated_agent.status == :inactive

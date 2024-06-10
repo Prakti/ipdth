@@ -13,7 +13,7 @@ defmodule Ipdth.Agents.Agent do
 
   schema "agents" do
     field :name, :string
-    field :status, Ecto.Enum, values: [:inactive, :testing, :active, :error_backoff]
+    field :status, Ecto.Enum, values: [:inactive, :testing, :active, :backoff, :error]
     field :description, :string
     field :url, :string
     field :bearer_token, :string
@@ -51,8 +51,12 @@ defmodule Ipdth.Agents.Agent do
     change(agent, status: :active)
   end
 
-  def error_backoff(agent) do
-    change(agent, status: :error_backoff)
+  def backoff(agent) do
+    change(agent, status: :backoff)
+  end
+
+  def error(agent) do
+    change(agent, status: :error)
   end
 
   def deactivate(agent) do

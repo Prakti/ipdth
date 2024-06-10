@@ -9,7 +9,7 @@ defmodule Ipdth.Agents do
   alias Ipdth.Accounts.User
 
   alias Ipdth.Agents.Agent
-  alias Ipdth.Agents.Connection
+  alias Ipdth.Agents.ConnectionManager
 
   alias Ipdth.Tournaments.Participation
 
@@ -214,28 +214,9 @@ defmodule Ipdth.Agents do
   """
   def activate_agent(%Agent{} = agent, actor_id) do
     if agent.owner_id == actor_id do
-      # TODO: 2024-05-29 - Move this into Connection Module
-      case Connection.test(agent) do
-        :ok ->
-          agent
-          |> Agent.activate()
-          |> Repo.update()
-
-        {:error, {_type, details}} ->
-          # TODO: 2024-04-08 - Save details of errors in a text field on the agent
-          agent
-          |> Agent.error_backoff()
-          |> Repo.update()
-
-          {:error, details}
-
-        {:error, details} ->
-          # TODO: 2024-04-08 - Save details of errors in a text field on the agent
-          agent
-          |> Agent.error_backoff()
-          |> Repo.update()
-
-          {:error, details}
+      case ConnectionManager.test(agent) do
+        :ok -> {:ok, get_agent!(agent.id)}
+        error -> error
       end
     else
       {:error, :not_authorized}

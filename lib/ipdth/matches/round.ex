@@ -8,8 +8,8 @@ defmodule Ipdth.Matches.Round do
   alias Ipdth.Matches.Round
 
   embedded_schema do
-    field :action_a, Ecto.Enum, values: [:cooperate, :compete]
-    field :action_b, Ecto.Enum, values: [:cooperate, :compete]
+    field :action_a, Ecto.Enum, values: [:cooperate, :defect]
+    field :action_b, Ecto.Enum, values: [:cooperate, :defect]
     field :score_a, :integer
     field :score_b, :integer
     field :start_date, :utc_datetime_usec

@@ -2,7 +2,8 @@ defmodule Ipdth.Matches.Runner do
   alias Ipdth.Matches
   alias Ipdth.Matches.{Match, Round}
 
-  alias Ipdth.Agents.Connection
+  alias Ipdth.Agents.ConnectionManager
+  alias Ipdth.Agents.Connection.{MatchInfo, PastResult, Request}
 
   def run_match(%Match{} = match, rounds_to_play, tournament_runner_pid) do
     round_no = Enum.count(match.rounds)
@@ -10,30 +11,17 @@ defmodule Ipdth.Matches.Runner do
     if round_no < rounds_to_play do
       start_date = DateTime.utc_now()
 
-      match_info = %Connection.MatchInfo{
+      match_info = %MatchInfo{
         type: "Tournament Match",
         tournament_id: match.tournament_id,
         match_id: match.id
       }
 
-      # TODO: 2024-05-24 - Execute with Task and try-rescue
-      result_a =
-        try do
-          agent_a_decision_request(match, round_no, match_info)
-        rescue
-          _ ->
-            {:error, :unknown}
-            # TODO: 2024-05-26 - Set error status on match and report to tournament_runner
-        end
+      {:ok, result_a} = agent_a_decision_request(match, round_no, match_info)
+      # TODO: 2024-06-10 - Check for error, and handle it properly
 
-      result_b =
-        try do
-          agent_b_decision_request(match, round_no, match_info)
-        rescue
-          _ ->
-            {:error, :unknown}
-            # TODO: 2024-05-26 - Set error status on match and report to tournament_runner
-        end
+      {:ok, result_b} = agent_b_decision_request(match, round_no, match_info)
+      # TODO: 2024-06-10 - Check for error, and handle it properly
 
       round = tally_round(result_a, result_b, start_date)
 
@@ -47,43 +35,40 @@ defmodule Ipdth.Matches.Runner do
   defp agent_a_decision_request(match, round_no, match_info) do
     past_results_a =
       Enum.map(match.rounds, fn round ->
-        %Connection.PastResult{action: round.action_a, points: round.score_a}
+        %PastResult{action: round.action_a, points: round.score_a}
       end)
 
-    request_a = %Connection.Request{
+    request_a = %Request{
       round_number: round_no,
       past_results: past_results_a,
       match_info: match_info
     }
 
-    Connection.decide(match.agent_a, request_a)
+    ConnectionManager.decide(match.agent_a, request_a)
   end
 
   defp agent_b_decision_request(match, round_no, match_info) do
     past_results_b =
       Enum.map(match.rounds, fn round ->
-        %Connection.PastResult{action: round.action_b, points: round.score_b}
+        %PastResult{action: round.action_b, points: round.score_b}
       end)
 
-    request_b = %Connection.Request{
+    request_b = %Request{
       round_number: round_no,
       past_results: past_results_b,
       match_info: match_info
     }
 
-    Connection.decide(match.agent_b, request_b)
+    ConnectionManager.decide(match.agent_b, request_b)
   end
 
-  defp tally_round(result_a, result_b, start_date) do
-    action_a = normalize_decision(result_a)
-    action_b = normalize_decision(result_b)
-
+  defp tally_round(action_a, action_b, start_date) do
     {score_a, score_b} =
       case {action_a, action_b} do
-        {:cooperate, :cooperate} -> {1, 1}
-        {:cooperate, :compete} -> {0, 2}
-        {:compete, :cooperate} -> {2, 0}
-        {:compete, :compete} -> {0, 0}
+        {:cooperate, :cooperate} -> {3, 3}
+        {:cooperate, :defect} -> {0, 5}
+        {:defect, :cooperate} -> {5, 0}
+        {:defect, :defect} -> {1, 1}
       end
 
     %Round{
@@ -95,10 +80,5 @@ defmodule Ipdth.Matches.Runner do
       end_date: DateTime.utc_now()
     }
   end
-
-  defp normalize_decision("cooperate"), do: :cooperate
-  defp normalize_decision("Cooperate"), do: :cooperate
-  defp normalize_decision(:cooperate), do: :cooperate
-  defp normalize_decision(_), do: :compete
 
 end
