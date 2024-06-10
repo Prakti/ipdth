@@ -8,6 +8,11 @@ defmodule Ipdth.Agents.Connection do
 
   alias Ipdth.Agents.ConnectionManager
 
+  @default_config [
+    connect_options: [timeout: 30_000],
+    pool_timeout: 5_000,
+    receive_timeout: 15_000
+  ]
 
   defmodule Request do
     @moduledoc """
@@ -41,7 +46,10 @@ defmodule Ipdth.Agents.Connection do
 
     # We can assertively use post! here because all error-handling is done
     # in ConnectionManager
-    response = Req.post!(json: decision_request, auth: auth, url: agent.url)
+    response =
+      Req.new(json: decision_request, auth: auth, url: agent.url)
+      |> Req.merge(get_config())
+      |> Req.post!()
 
     case response.status do
       200 ->
@@ -62,7 +70,10 @@ defmodule Ipdth.Agents.Connection do
     auth = {:bearer, agent.bearer_token}
     test_request = create_test_request()
 
-    response = Req.post!(json: test_request, auth: auth, url: agent.url)
+    response =
+      Req.new(json: test_request, auth: auth, url: agent.url)
+      |> Req.merge(get_config())
+      |> Req.post!()
 
     result =
       case response.status do
@@ -82,6 +93,14 @@ defmodule Ipdth.Agents.Connection do
 
     ConnectionManager.report_test_result(self(), agent.id, result)
   end
+
+  def get_config() do
+    Application.get_env(:ipdth, Ipdth.Agents.Connection, @default_config)
+  end
+
+  ###
+  # Internal Functionality
+  ###
 
   defp evaluate_decision(response_body) do
     case response_body["action"] do

@@ -10,9 +10,7 @@ defmodule Ipdth.Agents.ConnectionManager do
 
   use GenServer
 
-  # TODO: 2024-05-26 - Read config values for backoff and retries
-  @max_retries 3
-  @backoff_duration 5_000
+  @default_config [ max_retries: 3, backoff_duration: 5_000 ]
 
   ###
   # Public API
@@ -23,22 +21,22 @@ defmodule Ipdth.Agents.ConnectionManager do
   end
 
   def decide(%Agent{id: agent_id}, decision_request) do
-    timeout = (@max_retries + 1) * @backoff_duration
+    timeout = compute_timeout()
     GenServer.call(__MODULE__, {:decide, agent_id, decision_request}, timeout)
   end
 
   def decide(agent_id, decision_request) do
-    timeout = (@max_retries + 1) * @backoff_duration
+    timeout = compute_timeout()
     GenServer.call(__MODULE__, {:decide, agent_id, decision_request}, timeout)
   end
 
   def test(%Agent{id: agent_id}) do
-    timeout = (@max_retries + 1) * @backoff_duration
+    timeout = compute_timeout()
     GenServer.call(__MODULE__, {:test, agent_id}, timeout)
   end
 
   def test(agent_id) do
-    timeout = (@max_retries + 1) * @backoff_duration
+    timeout = compute_timeout()
     GenServer.call(__MODULE__, {:test, agent_id}, timeout)
   end
 
@@ -48,6 +46,10 @@ defmodule Ipdth.Agents.ConnectionManager do
 
   def report_test_result(task_pid, agent_id, result) do
     GenServer.cast(__MODULE__, {:test_result, task_pid, agent_id, result})
+  end
+
+  def get_config do
+    Application.get_env(:ipdth, Ipdth.Agents.ConnectionManager, @default_config)
   end
 
   ###
@@ -123,12 +125,17 @@ defmodule Ipdth.Agents.ConnectionManager do
           Process.send(self(), message, [])
           {:noreply, state}
       %BackoffInfo{} = backoff_info ->
-        # Agent is already in backof, postpone request by current backoff_duration
-        if backoff_info.retry_count < @max_retries do
+        # Agent is already in backoff, postpone request by current backoff_duration
+        backoff_config = get_config()
+        max_retries = backoff_config[:max_retries]
+
+        if backoff_info.retry_count < max_retries do
           message = {:try_decide, agent_id, decision_request, from}
           Process.send_after(self(), message, backoff_info.backoff_duration)
           {:noreply, state}
         else
+          error_agent(agent_id)
+
           GenServer.reply(from, {:error, :max_retries_exceeded})
           {:noreply, state}
         end
@@ -150,7 +157,19 @@ defmodule Ipdth.Agents.ConnectionManager do
       {:noreply, %State{ state |
         task_info: Map.put(state.task_info, task_pid, task_info)
       }}
-      # TODO: 2024-06-10 - We need to handle the error case here!
+    else
+      # This should be a rare error; in case it happens: back off
+      error ->
+        backoff_config = get_config()
+        backoff_duration = backoff_config[:backoff_duration]
+
+        log_msg = "Cannot start decision task, Backing off for " <>
+                  "#{inspect(backoff_duration)} ms. Reason: #{inspect(error)}"
+        Logger.error(log_msg)
+
+        message = {:do_decide, agent_id, decision_request, from}
+        Process.send_after(self(), message, backoff_duration)
+        {:noreply, state}
     end
   end
 
@@ -169,6 +188,7 @@ defmodule Ipdth.Agents.ConnectionManager do
   @impl true
   def handle_cast({:decision_result, task_pid, agent_id, decision}, state) do
     activate_agent(agent_id)
+
     task_info = Map.get(state.task_info, task_pid)
     GenServer.reply(task_info.caller_pid, decision)
 
@@ -290,13 +310,17 @@ defmodule Ipdth.Agents.ConnectionManager do
 
     backoff_agent(agent_id)
 
+    backoff_config = get_config()
+    max_retries = backoff_config[:max_retries]
+    backoff_duration = backoff_config[:backoff_duration]
+
     backoff_info =
       case Map.get(state.backoff_info, agent_id) do
         nil ->
           %BackoffInfo{
             agent_id: agent_id,
             retry_count: 0,
-            backoff_duration: @backoff_duration,
+            backoff_duration: backoff_duration,
           }
 
         backoff_info ->
@@ -305,15 +329,17 @@ defmodule Ipdth.Agents.ConnectionManager do
           }
       end
 
-    if backoff_info.retry_count < @max_retries do
+    if backoff_info.retry_count < max_retries do
       message = {:do_decide, agent_id, decision_request, caller_pid}
       updated_state = %State{ state |
         backoff_info: Map.put(state.backoff_info, agent_id, backoff_info),
         task_info: Map.delete(state.task_info, pid)
       }
-      Process.send_after(self(), message, @backoff_duration)
+      Process.send_after(self(), message, backoff_duration)
       {:noreply, updated_state}
     else
+      error_agent(agent_id)
+
       updated_state = %State{ state |
         backoff_info: Map.delete(state.backoff_info, agent_id),
         task_info: Map.delete(state.task_info, pid)
@@ -324,7 +350,7 @@ defmodule Ipdth.Agents.ConnectionManager do
     end
   end
 
-  def handle_test_crash(state, task_info, pid, reason) do
+  defp handle_test_crash(state, task_info, pid, reason) do
     %TaskInfo{
       agent_id: agent_id,
       caller_pid: caller_pid,
@@ -369,6 +395,11 @@ defmodule Ipdth.Agents.ConnectionManager do
     rescue
       error -> Logger.warning("Could not update Agent. Maybe a deleted Agent. #{inspect(error)}")
     end
+  end
+
+  defp compute_timeout do
+    backoff_config = get_config()
+    (backoff_config[:max_retries] + 1) * backoff_config[:backoff_duration]
   end
 
 end

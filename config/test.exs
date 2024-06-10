@@ -34,3 +34,16 @@ config :logger, level: :warning
 
 # Initialize plugs at runtime for faster test compilation
 config :phoenix, :plug_init_mode, :runtime
+
+config :ipdth,
+     Ipdth.Agents.ConnectionManager,
+     backoff_duration: 1_000,
+     max_retries: 2
+
+# Shorten connection timeouts for faster tests
+config :ipdth,
+       Ipdth.Agents.Connection,
+       connect_options: [timeout: 6_000],
+       pool_timeout: 1_000,
+       receive_timeout: 3_000
+

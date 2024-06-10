@@ -64,6 +64,18 @@ config :ipdth,
        Ipdth.Repo,
        migration_timestamps: [type: :utc_datetime_usec]
 
+config :ipdth,
+       Ipdth.Agents.ConnectionManager,
+       backoff_duration: 5_000,
+       max_retries: 3
+
+config :ipdth,
+       Ipdth.Agents.Connection,
+       connect_options: [timeout: 30_000],
+       pool_timeout: 5_000,
+       receive_timeout: 15_000
+
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"
