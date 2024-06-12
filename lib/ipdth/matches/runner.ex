@@ -41,8 +41,9 @@ defmodule Ipdth.Matches.Runner do
 
     round = tally_round(result_a, result_b, start_date)
 
+    # {:ok, saved_round} = Matches.save_round(round)
     # {:ok, updated_match} = Matches.save_match_round(match, round)
-    #run(updated_match, tournament_runner_pid)
+    #run(match, rounds_to_play, round_no + 1, tournament_runner_pid)
   end
 
   def run(match, _, _, tournament_runner_pid) do

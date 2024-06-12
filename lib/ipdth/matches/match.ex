@@ -19,7 +19,7 @@ defmodule Ipdth.Matches.Match do
     field :score_b, :integer
     field :rounds_to_play, :integer
     field :status, Ecto.Enum, values: [:open, :finished, :invalidated, :aborted]
-    embeds_many :rounds, Round
+    has_many :rounds, Round
     belongs_to :agent_a, Agent
     belongs_to :agent_b, Agent
     belongs_to :tournament, Tournament
@@ -33,4 +33,5 @@ defmodule Ipdth.Matches.Match do
     |> cast(attrs, [:start_date, :end_date, :score_a, :score_b])
     |> validate_required([:start_date])
   end
+
 end
