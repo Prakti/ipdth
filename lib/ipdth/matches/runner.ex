@@ -5,31 +5,49 @@ defmodule Ipdth.Matches.Runner do
   alias Ipdth.Agents.ConnectionManager
   alias Ipdth.Agents.Connection.{MatchInfo, PastResult, Request}
 
-  def run_match(%Match{} = match, rounds_to_play, tournament_runner_pid) do
+  alias Agent, as: Shelf
+
+  require Logger
+
+  use Task, restart: :transient
+
+
+  def start_link(args) do
+    Task.start_link(__MODULE__, :run, [args])
+  end
+
+  def run(match, tournament_runner_pid) do
     round_no = Enum.count(match.rounds)
 
-    if round_no < rounds_to_play do
-      start_date = DateTime.utc_now()
+    run(match, match.rounds_to_play, round_no, tournament_runner_pid)
+  end
 
-      match_info = %MatchInfo{
-        type: "Tournament Match",
-        tournament_id: match.tournament_id,
-        match_id: match.id
-      }
+  def run(match, rounds_to_play, round_no, tournament_runner_pid) when round_no < rounds_to_play do
+    round_no = Enum.count(match.rounds)
 
-      {:ok, result_a} = agent_a_decision_request(match, round_no, match_info)
-      # TODO: 2024-06-10 - Check for error, and handle it properly
+    start_date = DateTime.utc_now()
 
-      {:ok, result_b} = agent_b_decision_request(match, round_no, match_info)
-      # TODO: 2024-06-10 - Check for error, and handle it properly
+    match_info = %MatchInfo{
+      type: "Tournament Match",
+      tournament_id: match.tournament_id,
+      match_id: match.id
+    }
 
-      round = tally_round(result_a, result_b, start_date)
+    {:ok, result_a} = agent_a_decision_request(match, round_no, match_info)
+    # TODO: 2024-06-10 - Check for error, and handle it properly
 
-      # {:ok, updated_match} = Matches.save_match_round(match, round)
-      # run_match(updated_match, rounds_to_play, tournament_runner_pid)
-    else
-      TournamentRunner.report_complete_match(tournament_runner_pid, match)
-    end
+    {:ok, result_b} = agent_b_decision_request(match, round_no, match_info)
+    # TODO: 2024-06-10 - Check for error, and handle it properly
+
+    round = tally_round(result_a, result_b, start_date)
+
+    # {:ok, updated_match} = Matches.save_match_round(match, round)
+    #run(updated_match, tournament_runner_pid)
+  end
+
+  def run(match, _, _, tournament_runner_pid) do
+    # TODO: Set Match to :Finished
+    TournamentRunner.report_complete_match(tournament_runner_pid, match)
   end
 
   defp agent_a_decision_request(match, round_no, match_info) do
