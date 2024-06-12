@@ -17,6 +17,8 @@ defmodule Ipdth.Matches.Match do
     field :end_date, :utc_datetime_usec
     field :score_a, :integer
     field :score_b, :integer
+    field :rounds_to_play, :integer
+    field :status, Ecto.Enum, values: [:open, :finished, :invalidated, :aborted]
     embeds_many :rounds, Round
     belongs_to :agent_a, Agent
     belongs_to :agent_b, Agent
