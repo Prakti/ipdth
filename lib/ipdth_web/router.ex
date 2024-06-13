@@ -88,12 +88,8 @@ defmodule IpdthWeb.Router do
       # TODO: 2024-01-21 - Remove this in favour of Embedded views in Tournament
 
       # Match Management - Global View
-      live "/matches", MatchLive.Index, :index
-      live "/matches/new", MatchLive.Index, :new
-      live "/matches/:id/edit", MatchLive.Index, :edit
-
+      # TODO: 2024-06-13 - Move this under TournamentLive and AgentLive
       live "/matches/:id", MatchLive.Show, :show
-      live "/matches/:id/show/edit", MatchLive.Show, :edit
     end
   end
 

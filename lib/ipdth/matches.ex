@@ -6,7 +6,7 @@ defmodule Ipdth.Matches do
   import Ecto.Query, warn: false
   alias Ipdth.Repo
 
-  alias Ipdth.Matches.{Match, Round}
+  alias Ipdth.Matches.Match
 
   @doc """
   Returns the list of matches.

@@ -3,7 +3,7 @@ defmodule Ipdth.Matches.Runner do
   import Ecto.Query, warn: false
 
   alias Ipdth.Repo
-  alias Ipdth.Matches.{Match, Round}
+  alias Ipdth.Matches.{Match, Round, Runner}
   alias Ipdth.Tournaments
   alias Ipdth.Agents.ConnectionManager
   alias Ipdth.Agents.Connection.{MatchInfo, PastResult, Request}
@@ -51,10 +51,15 @@ defmodule Ipdth.Matches.Runner do
       match_id: match.id
     }
 
-    result_a = agent_a_decision_request(match, round_no, match_info)
-    result_b = agent_b_decision_request(match, round_no, match_info)
+    task_a = Task.async(Runner, :agent_a_decision_request, [match, round_no, match_info])
+    task_b = Task.async(Runner, :agent_b_decision_request, [match, round_no, match_info])
 
-    case {result_a, result_b} do
+    results =
+      [task_a, task_b]
+      |> Task.await_many(ConnectionManager.compute_timeout())
+      |> List.to_tuple()
+
+    case results do
       {{:ok, decision_a}, {:ok, decision_b}} ->
         {:ok, _round} = tally_round(match.id, decision_a, decision_b, start_date)
         run(match, rounds_to_play, round_no + 1, tournament_runner_pid)
@@ -72,7 +77,7 @@ defmodule Ipdth.Matches.Runner do
     report_completed_match(finished_match, tournament_runner_pid)
   end
 
-  defp agent_a_decision_request(match, round_no, match_info) do
+  def agent_a_decision_request(match, round_no, match_info) do
     past_results_a =
       Enum.map(match.rounds, fn round ->
         %PastResult{action: round.action_a, points: round.score_a}
@@ -87,7 +92,7 @@ defmodule Ipdth.Matches.Runner do
     ConnectionManager.decide(match.agent_a, request_a)
   end
 
-  defp agent_b_decision_request(match, round_no, match_info) do
+  def agent_b_decision_request(match, round_no, match_info) do
     past_results_b =
       Enum.map(match.rounds, fn round ->
         %PastResult{action: round.action_b, points: round.score_b}

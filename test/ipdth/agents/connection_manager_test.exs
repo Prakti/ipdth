@@ -349,7 +349,7 @@ defmodule Ipdth.Agents.ConnectionManagerTest do
       owner = user_fixture()
       agent = agent_fixture(owner, %{url: "http://localhost:4000/"})
 
-      assert {:error, details} = ConnectionManager.test(agent)
+      assert {:error, _details} = ConnectionManager.test(agent)
       assert %Agent{status: :error} = Agents.get_agent!(agent.id)
 
       # assert %Mint.TransportError{reason: :econnrefused} = details

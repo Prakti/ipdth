@@ -11,9 +11,6 @@ defmodule Ipdth.MatchesTest do
 
   describe "matches" do
 
-
-    @invalid_attrs %{start_date: nil, end_date: nil, score_a: nil, score_b: nil}
-
     test "list_matches/0 returns all matches" do
       admin_user = admin_user_fixture()
       agent_a = agent_fixture(admin_user)
@@ -39,18 +36,14 @@ defmodule Ipdth.MatchesTest do
 
     test "create_match/1 with valid data creates a match" do
       admin_user = admin_user_fixture()
-      %{agent: agent_a, bypass: bypass_a} = agent_fixture_and_mock_service(admin_user)
-      %{agent: agent_b, bypass: bypass_b} = agent_fixture_and_mock_service(admin_user)
+      agent_a = agent_fixture(admin_user)
+      agent_b = agent_fixture(admin_user)
       tournament = published_tournament_fixture(admin_user.id)
 
       {:ok, match} = Matches.create_match(agent_a, agent_b, tournament, 1)
 
       assert Matches.get_match!(match.id, [:agent_a, :agent_b, :tournament]) == match
     end
-
-    #test "create_match/1 with invalid data returns error changeset" do
-    #  assert {:error, %Ecto.Changeset{}} = Matches.create_match(@invalid_attrs)
-    #end
 
     test "delete_match/1 deletes the match" do
       admin_user = admin_user_fixture()

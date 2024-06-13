@@ -2,7 +2,7 @@ defmodule Ipdth.Matches.RunnerTest do
   use Ipdth.DataCase
 
   alias Ipdth.Matches
-  alias Ipdth.Matches.{Match, Runner}
+  alias Ipdth.Matches.{Runner}
 
   import Ipdth.AccountsFixtures
   import Ipdth.AgentsFixtures

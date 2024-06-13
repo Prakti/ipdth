@@ -10,7 +10,7 @@ defmodule Ipdth.Agents.ConnectionManager do
 
   use GenServer
 
-  @default_config [ max_retries: 3, backoff_duration: 5_000 ]
+  @default_config [max_retries: 3, backoff_duration: 5_000] 
 
   ###
   # Public API
@@ -50,6 +50,11 @@ defmodule Ipdth.Agents.ConnectionManager do
 
   def get_config do
     Application.get_env(:ipdth, Ipdth.Agents.ConnectionManager, @default_config)
+  end
+
+  def compute_timeout do
+    backoff_config = get_config()
+    (backoff_config[:max_retries] + 1) * backoff_config[:backoff_duration]
   end
 
   ###
@@ -395,11 +400,6 @@ defmodule Ipdth.Agents.ConnectionManager do
     rescue
       error -> Logger.warning("Could not update Agent. Maybe a deleted Agent. #{inspect(error)}")
     end
-  end
-
-  defp compute_timeout do
-    backoff_config = get_config()
-    (backoff_config[:max_retries] + 1) * backoff_config[:backoff_duration]
   end
 
 end

@@ -1,9 +1,9 @@
 defmodule Ipdth.Tournaments.Manager do
   use GenServer
 
-  alias Tournaments
+  alias Ipdth.Tournaments
 
-  @max_interval :timer.minutes(1)
+  #@max_interval :timer.minutes(1)
 
   ## Client API
 
@@ -29,7 +29,7 @@ defmodule Ipdth.Tournaments.Manager do
   def init(state) do
     unless state.manual_mode do
       # TODO: 2024-05-20 - Check if there are running tournaments that need to be restarted after a crash
-      {:ok, started_tournaments} = check_and_start_tournaments(DateTime.utc_now())
+      {:ok, _started_tournaments} = check_and_start_tournaments(DateTime.utc_now())
 
       # TODO: 2024-05-20 - Check if there are due or overdue tournaments thatneed to be started and start them
       # TODO: 2024-05-20 - Determine when the next check for due tournaments should happen
@@ -82,7 +82,7 @@ defmodule Ipdth.Tournaments.Manager do
     |> Enum.each(&start_tournament/1)
   end
 
-  defp start_tournament(tournament) do
+  defp start_tournament(_tournament) do
     # TODO: 2024-05-21 - Hand over the tournament to a tournament runner
     # TODO: 2024-05-20 - Move the database functionality into the Tournaments Context and a TournamentRunner
     #
@@ -99,7 +99,7 @@ defmodule Ipdth.Tournaments.Manager do
     # end)
   end
 
-  defp next_check_interval() do
+  #defp next_check_interval() do
     # TODO: 2024-05-20 - Move the query into the Tournaments Context
 
     # next_tournament =
@@ -115,18 +115,16 @@ defmodule Ipdth.Tournaments.Manager do
     #    DateTime.diff(start_date, now, :millisecond)
     #    |> max(0) # Ensure non-negative interval
     # end
-  end
+  #end
 
-  defp create_round_robin_schedule(_tournament) do
+  #defp create_round_robin_schedule(_tournament) do
     # TODO: 2024-05-20 - Move this functionalty into the Tournaments Context
     #
     # agents = Repo.all(from p in Participation, where: p.tournament_id == ^tournament.id, select: p.agent_id)
     # schedule_matches(agents, tournament.id)
-  end
+  #end
 
-  defp schedule_matches(_agents, _tournament_id) do
-    # TODO: 2024-05-20 - Move this functionality into the Matches context.
-    # TODO: 2024-05-20 - The Matches context then also needs to notify the MatchesRunner
-    # pairs = for {a, i} <- Enum.with_index(agents), {b, j} <- Enum.with_index(agents), i < j, do: {a, b}
-  end
+  #defp schedule_matches(agents, tournament) do
+    #pairs = for {a, i} <- Enum.with_index(agents), {b, j} <- Enum.with_index(agents), i < j, do: {a, b}
+  #end
 end
