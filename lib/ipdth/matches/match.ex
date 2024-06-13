@@ -8,7 +8,7 @@ defmodule Ipdth.Matches.Match do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Ipdth.Matches.Round
+  alias Ipdth.Matches.{Match, Round}
   alias Ipdth.Agents.Agent
   alias Ipdth.Tournaments.Tournament
 
@@ -18,7 +18,7 @@ defmodule Ipdth.Matches.Match do
     field :score_a, :integer
     field :score_b, :integer
     field :rounds_to_play, :integer
-    field :status, Ecto.Enum, values: [:open, :finished, :invalidated, :aborted]
+    field :status, Ecto.Enum, values: [:open, :started, :finished, :invalidated, :aborted]
     has_many :rounds, Round
     belongs_to :agent_a, Agent
     belongs_to :agent_b, Agent
@@ -27,11 +27,33 @@ defmodule Ipdth.Matches.Match do
     timestamps()
   end
 
-  @doc false
-  def changeset(match, attrs) do
-    match
-    |> cast(attrs, [:start_date, :end_date, :score_a, :score_b])
-    |> validate_required([:start_date])
+  def new(agent_a, agent_b, tournament, rounds_to_play) do
+    change(%Match{},
+      status: :open,
+      agent_a: agent_a,
+      agent_b: agent_b,
+      tournament: tournament,
+      rounds_to_play: rounds_to_play
+    )
+    |> validate_required([:agent_a, :agent_b, :tournament, :rounds_to_play])
+    |> validate_number(:rounds_to_play, greater_than: 0)
+  end
+
+  def start(match) do
+    change(match, status: :started,
+                  start_date: DateTime.utc_now())
+  end
+
+  def abort(match) do
+    change(match, status: :aborted, end_date: DateTime.utc_now())
+  end
+
+  def finish(match) do
+    change(match, status: :finished, end_date: DateTime.utc_now())
+  end
+
+  def invalidate(match) do
+    change(match, status: :invalidated)
   end
 
 end

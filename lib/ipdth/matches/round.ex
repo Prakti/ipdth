@@ -20,10 +20,15 @@ defmodule Ipdth.Matches.Round do
   end
 
   @doc false
-  def new(%Round{} = round, attrs) do
-    round
-    |> cast(attrs, [:action_a, :action_b, :score_a, :score_b])
-    # Put in start_date and end_date as utc_now
-    |> validate_required([:action_a, :action_b, :score_a, :score_b])
+  def new(match_id, action_a, action_b, score_a, score_b, start_date) do
+    change(%Round{},
+      action_a: action_a,
+      action_b: action_b,
+      score_a: score_a,
+      score_b: score_b,
+      start_date: start_date,
+      end_date: DateTime.utc_now(),
+      match_id: match_id
+    )
   end
 end

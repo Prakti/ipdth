@@ -3,24 +3,6 @@ defmodule Ipdth.AgentsTest do
 
   alias Ipdth.Agents
 
-  setup tags do
-    if tags[:silence_logger] do
-      # Store the current log level
-      original_log_level = Logger.level()
-
-      # Set the Logger level to :none to silence it
-      :ok = Logger.configure(level: :none)
-
-      # Ensure the Logger level is restored after the test
-      on_exit(fn ->
-        :ok = Logger.configure(level: original_log_level)
-      end)
-    end
-
-    # Continue with the test
-    :ok
-  end
-
   describe "agents" do
     alias Ipdth.Agents.Agent
 

@@ -6,7 +6,7 @@ defmodule Ipdth.Matches do
   import Ecto.Query, warn: false
   alias Ipdth.Repo
 
-  alias Ipdth.Matches.Match
+  alias Ipdth.Matches.{Match, Round}
 
   @doc """
   Returns the list of matches.
@@ -35,42 +35,20 @@ defmodule Ipdth.Matches do
       ** (Ecto.NoResultsError)
 
   """
-  def get_match!(id), do: Repo.get!(Match, id)
+  def get_match!(id, preload \\ []) do
+    Repo.get!(Match, id) |> Repo.preload(preload)
+  end
+
+
+
 
   @doc """
   Creates a match.
 
-  ## Examples
-
-      iex> create_match(%{field: value})
-      {:ok, %Match{}}
-
-      iex> create_match(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
   """
-  def create_match(attrs \\ %{}) do
-    %Match{}
-    |> Match.changeset(attrs)
+  def create_match(agent_a, agent_b, tournament, rounds_to_play) do
+    Match.new(agent_a, agent_b, tournament, rounds_to_play)
     |> Repo.insert()
-  end
-
-  @doc """
-  Updates a match.
-
-  ## Examples
-
-      iex> update_match(match, %{field: new_value})
-      {:ok, %Match{}}
-
-      iex> update_match(match, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def update_match(%Match{} = match, attrs) do
-    match
-    |> Match.changeset(attrs)
-    |> Repo.update()
   end
 
   @doc """
@@ -89,16 +67,4 @@ defmodule Ipdth.Matches do
     Repo.delete(match)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking match changes.
-
-  ## Examples
-
-      iex> change_match(match)
-      %Ecto.Changeset{data: %Match{}}
-
-  """
-  def change_match(%Match{} = match, attrs \\ %{}) do
-    Match.changeset(match, attrs)
-  end
 end
