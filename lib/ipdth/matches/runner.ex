@@ -3,25 +3,23 @@ defmodule Ipdth.Matches.Runner do
   import Ecto.Query, warn: false
 
   alias Ipdth.Repo
-  alias Ipdth.Matches.{Match, Round, Runner}
+  alias Ipdth.Matches.{Match, Round}
   alias Ipdth.Tournaments
   alias Ipdth.Agents.ConnectionManager
   alias Ipdth.Agents.Connection.{MatchInfo, PastResult, Request}
 
   require Logger
 
-  use Task, restart: :transient
-
-  def start_link(args) do
-    Task.start_link(__MODULE__, :run, [args])
+  def start(supervisor_pid, args) do
+    Task.Supervisor.start_child(supervisor_pid, __MODULE__,
+                                :run, [args], restart: :transient)
   end
-
 
   def run(%Match{} = match, tournament_runner_pid), do: run(match.id, tournament_runner_pid)
 
   def run(match_id, tournament_runner_pid) do
     # Our Runner might have crashed and been restarted.
-    # We re-fetch the task from DB to avoid working on stale data
+    # We re-fetch the match from DB to avoid working on stale data
     match =
       Repo.get!(Match, match_id)
       |> Repo.preload([:agent_a, :agent_b, :tournament, :rounds])
@@ -51,8 +49,8 @@ defmodule Ipdth.Matches.Runner do
       match_id: match.id
     }
 
-    task_a = Task.async(Runner, :agent_a_decision_request, [match, round_no, match_info])
-    task_b = Task.async(Runner, :agent_b_decision_request, [match, round_no, match_info])
+    task_a = Task.async(__MODULE__, :agent_a_decision_request, [match, round_no, match_info])
+    task_b = Task.async(__MODULE__, :agent_b_decision_request, [match, round_no, match_info])
 
     results =
       [task_a, task_b]

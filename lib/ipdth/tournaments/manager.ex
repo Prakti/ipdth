@@ -27,6 +27,8 @@ defmodule Ipdth.Tournaments.Manager do
 
   @impl true
   def init(state) do
+    # TODO: 2024-06-13 - Start a TaskSupervisor 
+
     unless state.manual_mode do
       # TODO: 2024-05-20 - Check if there are running tournaments that need to be restarted after a crash
       {:ok, _started_tournaments} = check_and_start_tournaments(DateTime.utc_now())
@@ -83,20 +85,7 @@ defmodule Ipdth.Tournaments.Manager do
   end
 
   defp start_tournament(_tournament) do
-    # TODO: 2024-05-21 - Hand over the tournament to a tournament runner
-    # TODO: 2024-05-20 - Move the database functionality into the Tournaments Context and a TournamentRunner
-    #
-    # Repo.transaction(fn ->
-    #  tournament
-    #  |> Ecto.Changeset.change(status: :running)
-    #  |> Repo.update!()
-    #
-    # Participation
-    #  |> where([p], p.tournament_id == ^tournament.id)
-    #  |> Repo.update_all(set: [status: :participating])
-    #
-    #  create_round_robin_schedule(tournament)
-    # end)
+    # TODO: 2024-06-13 - Start a TournamentRunner as a Task
   end
 
   #defp next_check_interval() do
@@ -117,14 +106,4 @@ defmodule Ipdth.Tournaments.Manager do
     # end
   #end
 
-  #defp create_round_robin_schedule(_tournament) do
-    # TODO: 2024-05-20 - Move this functionalty into the Tournaments Context
-    #
-    # agents = Repo.all(from p in Participation, where: p.tournament_id == ^tournament.id, select: p.agent_id)
-    # schedule_matches(agents, tournament.id)
-  #end
-
-  #defp schedule_matches(agents, tournament) do
-    #pairs = for {a, i} <- Enum.with_index(agents), {b, j} <- Enum.with_index(agents), i < j, do: {a, b}
-  #end
 end

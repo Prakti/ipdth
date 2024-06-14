@@ -8,7 +8,6 @@ defmodule Ipdth.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      Ipdth.Agents.ConnectionManager,
       # Start the Telemetry supervisor
       IpdthWeb.Telemetry,
       # Start the Ecto repository
@@ -18,9 +17,11 @@ defmodule Ipdth.Application do
       # Start Finch
       {Finch, name: Ipdth.Finch},
       # Start the Endpoint (http/https)
-      IpdthWeb.Endpoint
-      # Start a worker by calling: Ipdth.Worker.start_link(arg)
-      # {Ipdth.Worker, arg}
+      IpdthWeb.Endpoint,
+      # System managing Connections to Agents
+      Ipdth.Agents.ConnectionManager,
+      # Supervisor for Tasks running the Tournaments
+      Ipdth.Tournaments.Runner.supervisor_spec()
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

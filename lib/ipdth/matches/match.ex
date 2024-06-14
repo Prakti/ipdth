@@ -27,7 +27,7 @@ defmodule Ipdth.Matches.Match do
     timestamps()
   end
 
-  def new(agent_a, agent_b, tournament, rounds_to_play) do
+  def new(%Agent{} = agent_a, %Agent{} = agent_b, %Tournament{} = tournament, rounds_to_play) do
     change(%Match{},
       status: :open,
       agent_a: agent_a,

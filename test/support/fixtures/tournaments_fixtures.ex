@@ -4,6 +4,8 @@ defmodule Ipdth.TournamentsFixtures do
   entities via the `Ipdth.Tournaments` context.
   """
 
+  alias Ipdth.Tournaments
+
   @doc """
   Generate a tournament.
   """
@@ -17,7 +19,7 @@ defmodule Ipdth.TournamentsFixtures do
         round_number: 42,
         start_date: ~U[2024-01-20 12:56:00Z]
       })
-      |> Ipdth.Tournaments.create_tournament(admin_id)
+      |> Tournaments.create_tournament(admin_id)
 
     tournament
   end
@@ -25,8 +27,15 @@ defmodule Ipdth.TournamentsFixtures do
   def published_tournament_fixture(admin_id, attrs \\ %{}) do
     {:ok, tournament} =
       tournament_fixture(admin_id, attrs)
-      |> Ipdth.Tournaments.publish_tournament(admin_id)
+      |> Tournaments.publish_tournament(admin_id)
 
     tournament
+  end
+
+  def published_tournament_with_participants_fixture(admin_id, participants) do
+    tournament = published_tournament_fixture(admin_id)
+    Enum.map(participants, fn agent ->
+      Tournaments.sign_up(tournament, agent, admin_id)
+    end)
   end
 end

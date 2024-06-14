@@ -10,7 +10,7 @@ defmodule Ipdth.Agents.ConnectionManager do
 
   use GenServer
 
-  @default_config [max_retries: 3, backoff_duration: 5_000] 
+  @default_config [max_retries: 3, backoff_duration: 5_000]
 
   ###
   # Public API
