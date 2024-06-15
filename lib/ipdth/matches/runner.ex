@@ -12,7 +12,7 @@ defmodule Ipdth.Matches.Runner do
 
   def start(supervisor_pid, args) do
     Task.Supervisor.start_child(supervisor_pid, __MODULE__,
-                                :run, [args], restart: :transient)
+                                :run, args, restart: :transient)
   end
 
   def run(%Match{} = match, tournament_runner_pid), do: run(match.id, tournament_runner_pid)

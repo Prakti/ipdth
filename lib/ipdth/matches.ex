@@ -55,22 +55,7 @@ defmodule Ipdth.Matches do
   Creates multiple matches in one transaction.
 
   """
-  def create_multiple_matches(match_tuples) do
-    matches = Enum.map(match_tuples, fn data ->
-      { agent_a_id, agent_b_id, tournament_id,
-        tournament_round, rounds_to_play} = data
-      %{
-        status: :open,
-        agent_a_id: agent_a_id,
-        agent_b_id: agent_b_id,
-        tournament_id: tournament_id,
-        tournament_round: tournament_round,
-        rounds_to_play: rounds_to_play,
-        inserted_at: NaiveDateTime.utc_now(:second),
-        updated_at: NaiveDateTime.utc_now(:second)
-      }
-    end)
-
+  def create_multiple_matches(matches) do
     Repo.insert_all(Match, matches)
   end
 

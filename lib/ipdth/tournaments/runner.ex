@@ -23,10 +23,33 @@ defmodule Ipdth.Tournaments.Runner do
     # We re-fetch the tournament from DB to avoid working on stale data
     tournament = Repo.get!(Tournament, tournament_id)
 
-    update_status(tournament)
-    create_round_robin_schedule(tournament)
+    #@status_values [:created, :published, :signup_closed, :running, :aborted, :finished]
+    case tournament.status do
+      :published ->
+        prepare_and_start_tournament(tournament)
+      :signup_closed ->
+        prepare_and_start_tournament(tournament)
+      :running ->
+        check_and_resume_tournament(tournament)
+      :created ->
+        "TODO: 2024-06-15 -> Log weird state as warning and stop."
+      :aborted ->
+        "TODO: 2024-06-15 -> Log weird state as warning and stop."
+      :finished ->
+        "TODO: 2024-06-15 -> Log weird state as warning and stop."
+    end
+  end
 
-    :ok
+  def report_finished_match(runner_pid, %Match{} = match) do
+    Process.send(runner_pid, {:match_finished, match}, [])
+  end
+
+  defp prepare_and_start_tournament(tournament) do
+    update_status(tournament)
+    tournament_rounds = create_round_robin_schedule(tournament)
+    {:ok, matches_supervisor} = Task.Supervisor.start_link()
+
+    start_next_round(tournament, matches_supervisor, tournament_rounds)
   end
 
   defp update_status(tournament) do
@@ -40,6 +63,8 @@ defmodule Ipdth.Tournaments.Runner do
       |> Repo.update_all(set: [status: :participating])
 
     end)
+
+    Repo.get!(Tournament, tournament.id)
   end
 
   defp create_round_robin_schedule(tournament) do
@@ -63,12 +88,102 @@ defmodule Ipdth.Tournaments.Runner do
             updated_at: NaiveDateTime.utc_now(:second)
           }
         end)
-      Repo.insert_all(Match, matches)
+
+      Matches.create_multiple_matches(matches)
     end)
+
+    Map.keys(tournament_schedule)
   end
 
-  def report_finished_match(runner_pid, %Match{} = match) do
-    Process.send(runner_pid, {:match_finished, match}, [])
+  defp check_and_resume_tournament(tournament) do
+    {:ok, matches_supervisor} = Task.Supervisor.start_link()
+
+    query = from p in Participation,
+            where: p.tournament_id == ^tournament.id,
+            select: count(p.id)
+    participant_count = Repo.one(query)
+
+    query = from m in Match,
+            where: m.tournament_id == ^tournament.id,
+            select: count(m.id)
+    match_count = Repo.one(query)
+
+    rounds_to_play = ceil(participant_count / 2)
+
+    if rounds_to_play * (participant_count - 1) == match_count do
+      # Correct number of Matches are found - continue tournament
+
+      # Determine in which round we crashed
+      query = from m in Match,
+              where: m.tournament_id == ^tournament.id,
+              where: m.status == :open or m.status == :started,
+              select: min(m.tournament_round)
+
+      round_no = Repo.one(query)
+      start_next_round(tournament, matches_supervisor, [round_no..rounds_to_play])
+    else
+      # Delete all matches associated with this tournament
+      query = from m in Match,
+              where: m.tournament_id == ^tournament.id,
+              select: m
+
+      Repo.delete_all(query)
+
+      tournament_rounds = create_round_robin_schedule(tournament)
+      start_next_round(tournament, matches_supervisor, tournament_rounds)
+    end
+  end
+
+  defp start_next_round(tournament, matches_supervisor, [round_no | more_rounds]) do
+    query = from m in Match,
+            where: m.tournament_id == ^tournament.id,
+            where: m.tournament_round == ^round_no,
+            where: m.status == :open or m.status == :started,
+            select: m.id
+
+    round_matches = Repo.all(query)
+
+    running_matches = start_matches(round_matches, matches_supervisor)
+    wait_for_matches(running_matches, tournament, matches_supervisor, more_rounds)
+  end
+
+  defp start_next_round(_tuournament, matches_supervisor, []) do
+    # No more rounds to play, tournament finished.
+    Supervisor.stop(matches_supervisor)
+    # TODO: 2024-06-15 - Set tournament status to finished
+    # TODO: 2024-06-15 - Compute final scores for each participation
+    # TODO: 2024-06-15 - Compute ranking for participations
+    # TODO: 2024-06-15 - What else to do when tournament is finished? PubSub?
+  end
+
+  defp wait_for_matches([], tournament, matches_supervisor, more_rounds) do
+    start_next_round(tournament, matches_supervisor, more_rounds)
+  end
+
+  defp wait_for_matches(running_matches, tournament, matches_supervisor, more_rounds) do
+    receive do
+      {:match_finished, match} ->
+        remaining_matches = Enum.filter(running_matches, fn m -> m != match.id end)
+        case match.status do
+          :finished ->
+            wait_for_matches(remaining_matches, tournament, matches_supervisor, more_rounds)
+          :aborted ->
+            "TODO: 2024-06-15 - Invalidate Matches if unsuccessful Match for errored Agent"
+            "TODO: 2024-06-15 - Cancel all open Matches of errored Agent"
+          other ->
+            "TODO: 2024-06-15 - Log unexpected #{other} status!"
+        end
+
+      message ->
+        "TODO: 2024-06-15 - Log unexpected #{message}"
+    end
+  end
+
+  defp start_matches(matches, matches_supervisor) do
+    Enum.map(matches, fn match ->
+      {:ok, _} = Matches.Runner.start(matches_supervisor, [match, self()])
+    end)
+    matches
   end
 
 end

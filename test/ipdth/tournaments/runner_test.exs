@@ -16,7 +16,7 @@ defmodule Ipdth.Tournaments.RunnerTest do
 
   describe "tournaments/runner" do
 
-    test "run/1 computes correct matches for even number of participants" do
+    test "run/1 correctly runs a tournament for even number of participants" do
       admin_user = admin_user_fixture()
       %{agents: agents} =
           multiple_activated_agents_one_bypass_fixture(admin_user, 10)
@@ -58,6 +58,9 @@ defmodule Ipdth.Tournaments.RunnerTest do
           select: count(m.id)
       assert Repo.one(query)  == 0
 
+      # Check if the matches are all successful
+      # Check if tournament scores have been computed correctly on the
+      # participations
     end
   end
 end
