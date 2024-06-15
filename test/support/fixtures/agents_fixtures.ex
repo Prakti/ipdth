@@ -4,6 +4,8 @@ defmodule Ipdth.AgentsFixtures do
   entities via the `Ipdth.Agents` context.
   """
 
+  alias Ipdth.Agents
+
   @doc """
   Generate a agent.
   """
@@ -17,7 +19,7 @@ defmodule Ipdth.AgentsFixtures do
         url: "http://example.com"
       })
 
-    {:ok, agent} = Ipdth.Agents.create_agent(owner.id, agent_attrs)
+    {:ok, agent} = Agents.create_agent(owner.id, agent_attrs)
 
     agent
   end
@@ -31,9 +33,43 @@ defmodule Ipdth.AgentsFixtures do
       |> Plug.Conn.resp(200, agent_service_success_response())
     end)
 
-    {:ok, agent} = Ipdth.Agents.activate_agent(inactive_agent, owner.id)
+    {:ok, agent} = Agents.activate_agent(inactive_agent, owner.id)
 
     agent
+  end
+
+  def multiple_agents_one_bypass_fixture(owner, count) do
+    bypass = Bypass.open()
+
+    generator = Stream.unfold(1, fn n ->
+      attrs = %{
+        name: "Agent #{n}",
+        url: "http://localhost:#{bypass.port}/decide",
+        bearer_token: agent_service_bearer_token()
+      }
+
+      {agent_fixture(owner, attrs), n + 1}
+    end)
+
+    %{agents: Stream.take(generator, count), bypass: bypass}
+  end
+
+  def multiple_activated_agents_one_bypass_fixture(owner, count) do
+    %{ agents: agents, bypass: bypass } = multiple_agents_one_bypass_fixture(owner, count)
+
+    Bypass.stub(bypass, "POST", "/decide", fn conn ->
+      conn
+      |> Plug.Conn.merge_resp_headers([{"content-type", "application/json"}])
+      |> Plug.Conn.resp(200, agent_service_success_response())
+
+    end)
+
+    active_agents = Stream.map(agents, fn agent ->
+      {:ok, agent} = Agents.activate_agent(agent, owner.id)
+      agent
+    end)
+
+    %{agents: active_agents, bypass: bypass}
   end
 
   def agent_fixture_and_mock_service(owner) do

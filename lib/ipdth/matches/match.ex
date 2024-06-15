@@ -19,6 +19,7 @@ defmodule Ipdth.Matches.Match do
     field :score_b, :integer
     field :rounds_to_play, :integer
     field :status, Ecto.Enum, values: [:open, :started, :finished, :invalidated, :aborted]
+    field :tournament_round, :integer
     has_many :rounds, Round
     belongs_to :agent_a, Agent
     belongs_to :agent_b, Agent
@@ -27,12 +28,13 @@ defmodule Ipdth.Matches.Match do
     timestamps()
   end
 
-  def new(%Agent{} = agent_a, %Agent{} = agent_b, %Tournament{} = tournament, rounds_to_play) do
+  def new(agent_a, agent_b, tournament, tournament_round, rounds_to_play) do
     change(%Match{},
       status: :open,
       agent_a: agent_a,
       agent_b: agent_b,
       tournament: tournament,
+      tournament_round: tournament_round,
       rounds_to_play: rounds_to_play
     )
     |> validate_required([:agent_a, :agent_b, :tournament, :rounds_to_play])

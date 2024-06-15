@@ -46,8 +46,8 @@ defmodule Ipdth.Matches do
   Creates a match.
 
   """
-  def create_match(agent_a, agent_b, tournament, rounds_to_play) do
-    Match.new(agent_a, agent_b, tournament, rounds_to_play)
+  def create_match(agent_a, agent_b, tournament, tournament_round, rounds_to_play) do
+    Match.new(agent_a, agent_b, tournament, tournament_round, rounds_to_play)
     |> Repo.insert()
   end
 
@@ -56,12 +56,15 @@ defmodule Ipdth.Matches do
 
   """
   def create_multiple_matches(match_tuples) do
-    matches = Enum.map(match_tuples, fn {agent_a_id, agent_b_id, tournament_id, rounds_to_play} ->
+    matches = Enum.map(match_tuples, fn data ->
+      { agent_a_id, agent_b_id, tournament_id,
+        tournament_round, rounds_to_play} = data
       %{
         status: :open,
         agent_a_id: agent_a_id,
         agent_b_id: agent_b_id,
         tournament_id: tournament_id,
+        tournament_round: tournament_round,
         rounds_to_play: rounds_to_play,
         inserted_at: NaiveDateTime.utc_now(:second),
         updated_at: NaiveDateTime.utc_now(:second)

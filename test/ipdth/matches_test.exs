@@ -16,7 +16,7 @@ defmodule Ipdth.MatchesTest do
       agent_a = agent_fixture(admin_user)
       agent_b = agent_fixture(admin_user)
       tournament = published_tournament_fixture(admin_user.id)
-      match = match_fixture(agent_a, agent_b, tournament, 1)
+      match = match_fixture(agent_a, agent_b, tournament, 1, 1)
 
       match = Matches.get_match!(match.id)
 
@@ -29,7 +29,7 @@ defmodule Ipdth.MatchesTest do
       agent_b = agent_fixture(admin_user)
       tournament = published_tournament_fixture(admin_user.id)
 
-      match = match_fixture(agent_a, agent_b, tournament, 1)
+      match = match_fixture(agent_a, agent_b, tournament, 1, 1)
 
       assert Matches.get_match!(match.id, [:agent_a, :agent_b, :tournament]) == match
     end
@@ -40,7 +40,7 @@ defmodule Ipdth.MatchesTest do
       agent_b = agent_fixture(admin_user)
       tournament = published_tournament_fixture(admin_user.id)
 
-      {:ok, match} = Matches.create_match(agent_a, agent_b, tournament, 1)
+      {:ok, match} = Matches.create_match(agent_a, agent_b, tournament, 1, 1)
 
       assert Matches.get_match!(match.id, [:agent_a, :agent_b, :tournament]) == match
     end
@@ -50,7 +50,7 @@ defmodule Ipdth.MatchesTest do
       agent_a = agent_fixture(admin_user)
       agent_b = agent_fixture(admin_user)
       tournament = published_tournament_fixture(admin_user.id)
-      match = match_fixture(agent_a, agent_b, tournament, 1)
+      match = match_fixture(agent_a, agent_b, tournament, 1, 1)
 
       assert {:ok, %Match{}} = Matches.delete_match(match)
       assert_raise Ecto.NoResultsError, fn -> Matches.get_match!(match.id) end

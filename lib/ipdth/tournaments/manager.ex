@@ -36,6 +36,7 @@ defmodule Ipdth.Tournaments.Manager do
       # TODO: 2024-05-20 - Check if there are due or overdue tournaments thatneed to be started and start them
       # TODO: 2024-05-20 - Determine when the next check for due tournaments should happen
       # TODO: 2024-05-20 - Schedule the next check for due tournaments
+      # TODD: 2024-06-16 - Don't start Tournaments with only one parcitipant
     end
 
     {:ok, state}

@@ -32,10 +32,13 @@ defmodule Ipdth.TournamentsFixtures do
     tournament
   end
 
-  def published_tournament_with_participants_fixture(admin_id, participants) do
+  def published_tournament_with_participants_fixture(admin_id, agents) do
     tournament = published_tournament_fixture(admin_id)
-    Enum.map(participants, fn agent ->
-      Tournaments.sign_up(tournament, agent, admin_id)
+    participations = Enum.map(agents, fn agent ->
+      {:ok, participation} = Tournaments.sign_up(tournament, agent, admin_id)
+      participation
     end)
+
+    %{participations: participations, agents: agents, tournament: tournament}
   end
 end

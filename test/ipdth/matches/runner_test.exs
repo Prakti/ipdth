@@ -29,7 +29,7 @@ defmodule Ipdth.Matches.RunnerTest do
       end)
 
       tournament = published_tournament_fixture(admin_user.id)
-      match = match_fixture(agent_a, agent_b, tournament, 5)
+      match = match_fixture(agent_a, agent_b, tournament, 1, 5)
 
       Runner.run(match, self())
 
@@ -62,7 +62,7 @@ defmodule Ipdth.Matches.RunnerTest do
       end)
 
       tournament = published_tournament_fixture(admin_user.id)
-      match = match_fixture(agent_a, agent_b, tournament, 1)
+      match = match_fixture(agent_a, agent_b, tournament, 1, 1)
 
       Runner.run(match, self())
 
