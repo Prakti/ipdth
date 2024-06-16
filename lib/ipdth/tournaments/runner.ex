@@ -2,6 +2,8 @@ defmodule Ipdth.Tournaments.Runner do
 
   import Ecto.Query, warn: false
 
+  require Logger
+
   alias Ipdth.Repo
   alias Ipdth.Matches
   alias Ipdth.Matches.Match
@@ -23,7 +25,6 @@ defmodule Ipdth.Tournaments.Runner do
     # We re-fetch the tournament from DB to avoid working on stale data
     tournament = Repo.get!(Tournament, tournament_id)
 
-    #@status_values [:created, :published, :signup_closed, :running, :aborted, :finished]
     case tournament.status do
       :published ->
         prepare_and_start_tournament(tournament)
@@ -31,12 +32,8 @@ defmodule Ipdth.Tournaments.Runner do
         prepare_and_start_tournament(tournament)
       :running ->
         check_and_resume_tournament(tournament)
-      :created ->
-        "TODO: 2024-06-15 -> Log weird state as warning and stop."
-      :aborted ->
-        "TODO: 2024-06-15 -> Log weird state as warning and stop."
-      :finished ->
-        "TODO: 2024-06-15 -> Log weird state as warning and stop."
+      other ->
+        Logger.warning("Attempting to run tournament in status #{other}. Stopping.")
     end
   end
 
@@ -184,14 +181,17 @@ defmodule Ipdth.Tournaments.Runner do
           :finished ->
             wait_for_matches(remaining_matches, tournament, matches_supervisor, more_rounds)
           :aborted ->
-            "TODO: 2024-06-15 - Invalidate Matches if unsuccessful Match for errored Agent"
-            "TODO: 2024-06-15 - Cancel all open Matches of errored Agent"
+            #TODO: 2024-06-15 - Invalidate Matches if unsuccessful Match for errored Agent
+            #TODO: 2024-06-15 - Cancel all open Matches of errored Agent
+            wait_for_matches(remaining_matches, tournament, matches_supervisor, more_rounds)
           other ->
-            "TODO: 2024-06-15 - Log unexpected #{other} status!"
+            Logger.warning("Received :match_finished for match in status #{other}.")
+            wait_for_matches(remaining_matches, tournament, matches_supervisor, more_rounds)
         end
 
       message ->
-        "TODO: 2024-06-15 - Log unexpected #{message}"
+        Logger.warning("Tournament.Runner for tournament #{tournament.id} received unexpected message #{inspect(message)}")
+        wait_for_matches(running_matches, tournament, matches_supervisor, more_rounds)
     end
   end
 

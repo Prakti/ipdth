@@ -6,7 +6,6 @@ defmodule Ipdth.Tournaments.RunnerTest do
   import Ipdth.AccountsFixtures
   import Ipdth.AgentsFixtures
   import Ipdth.TournamentsFixtures
-  import Ipdth.MatchesFixtures
 
   alias Ipdth.Repo
   alias Ipdth.Tournaments.{Runner, Tournament}
@@ -27,10 +26,11 @@ defmodule Ipdth.Tournaments.RunnerTest do
       assert Enum.count(agents) == participant_count
 
       matches_to_play_each = participant_count - 1
-      matches_to_play_total = matches_to_play_each * participant_count
 
+      # vvvv----- Actual Test Call happens here
       Runner.run(tournament)
 
+      # vvvv----- Veryfiy Post-Conditions
       tournament = Repo.get!(Tournament, tournament.id)
 
       assert :finished == tournament.status
