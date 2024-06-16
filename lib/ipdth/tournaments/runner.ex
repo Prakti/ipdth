@@ -55,7 +55,7 @@ defmodule Ipdth.Tournaments.Runner do
   defp update_status(tournament) do
     Repo.transaction(fn ->
       tournament
-      |> Ecto.Changeset.change(status: :running)
+      |> Tournament.start()
       |> Repo.update!()
 
      Participation
@@ -151,8 +151,9 @@ defmodule Ipdth.Tournaments.Runner do
     # No more rounds to play, tournament finished.
     Supervisor.stop(matches_supervisor)
 
-    # TODO: 2024-06-15 - Set Participation status to :done for all that are not :disqualified or :error
-    # TODO: 2024-06-15 - Set tournament status to finished
+    set_parcicipations_to_done(tournament)
+
+    tournament |> Tournament.finish() |> Repo.update!()
 
     compute_participant_scores(tournament)
 
@@ -199,6 +200,13 @@ defmodule Ipdth.Tournaments.Runner do
       {:ok, _} = Matches.Runner.start(matches_supervisor, [match, self()])
     end)
     matches
+  end
+
+  defp set_parcicipations_to_done(tournament) do
+    query = from p in Participation,
+            where: p.tournament_id == ^tournament.id,
+            where: p.status == :participating
+    Repo.update_all(query, set: [status: :done])
   end
 
   def compute_participant_scores(tournament) do

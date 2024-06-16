@@ -39,10 +39,8 @@ defmodule Ipdth.Tournaments.Tournament do
       :name,
       :description,
       :start_date,
-      :end_date,
       :round_number,
       :random_seed,
-      :random_trace,
       :status
     ])
     |> validate_required([:name, :start_date, :round_number])
@@ -83,17 +81,16 @@ defmodule Ipdth.Tournaments.Tournament do
     change(tournament, status: :signup_closed, last_modified_by_id: actor_id)
   end
 
-  def start(tournament, actor_id) do
-    change(tournament, status: :running, last_modified_by_id: actor_id)
+  def start(tournament) do
+    change(tournament, status: :running)
   end
 
-  def abort(tournament, actor_id) do
-    change(tournament, status: :aborted, last_modified_by_id: actor_id)
+  def abort(tournament) do
+    change(tournament, status: :aborted)
     # TODO: 2024-04-28 - Set the end date on abort
   end
 
-  def finish(tournament, actor_id) do
-    change(tournament, status: :finished, last_modified_by_id: actor_id)
-    # TODO: 2024-04-28 - Set the end date on finish
+  def finish(tournament) do
+    change(tournament, status: :finished, end_date: DateTime.utc_now())
   end
 end

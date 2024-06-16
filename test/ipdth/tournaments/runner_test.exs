@@ -9,7 +9,7 @@ defmodule Ipdth.Tournaments.RunnerTest do
   import Ipdth.MatchesFixtures
 
   alias Ipdth.Repo
-  alias Ipdth.Tournaments.Runner
+  alias Ipdth.Tournaments.{Runner, Tournament}
   alias Ipdth.Tournaments.Participation
 
   alias Ipdth.Matches.Match
@@ -30,6 +30,10 @@ defmodule Ipdth.Tournaments.RunnerTest do
       matches_to_play_total = matches_to_play_each * participant_count
 
       Runner.run(tournament)
+
+      tournament = Repo.get!(Tournament, tournament.id)
+
+      assert :finished == tournament.status
 
       # Each agent should have played once against the others
       Enum.each(participations, fn participation ->
@@ -82,8 +86,9 @@ defmodule Ipdth.Tournaments.RunnerTest do
 
       participations = Repo.all(query)
       Enum.each(participations, fn p ->
-        assert expected_score = p.score # All agents should have same score
-        assert 1 = p.ranking # All agents should be tied for 1st rank
+        assert expected_score == p.score # All agents should have same score
+        assert 1 == p.ranking # All agents should be tied for 1st rank
+        assert :done == p.status
       end)
     end
   end
