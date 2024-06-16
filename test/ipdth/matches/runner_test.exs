@@ -10,7 +10,7 @@ defmodule Ipdth.Matches.RunnerTest do
   import Ipdth.MatchesFixtures
 
   describe "matches/runner" do
-    test "run/2 successfully runs a test with two agents" do
+    test "run/2 successfully runs a match with two agents" do
       admin_user = admin_user_fixture()
       %{agent: agent_a, bypass: bypass_a} = agent_fixture_and_mock_service(admin_user)
 
@@ -39,7 +39,11 @@ defmodule Ipdth.Matches.RunnerTest do
       assert finished_match.status == :finished
 
       match = Matches.get_match!(match.id, [:rounds])
-      assert 5 == Enum.count(match.rounds)
+      assert match.rounds_to_play == Enum.count(match.rounds)
+
+      # Both Agents cooperate always -> 3 points per round
+      assert match.score_a == 3 * match.rounds_to_play
+      assert match.score_b == 3 * match.rounds_to_play
     end
 
     @tag silence_logger: true

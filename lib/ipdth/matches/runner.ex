@@ -71,7 +71,12 @@ defmodule Ipdth.Matches.Runner do
   end
 
   def run(match, _, _, tournament_runner_pid) do
-    {:ok, finished_match} = Match.finish(match) |> Repo.update()
+    query = from r in Round,
+            where: r.match_id == ^match.id,
+            select: %{score_a: sum(r.score_a), score_b: sum(r.score_b)}
+    total_scores = Repo.one(query)
+
+    {:ok, finished_match} = Match.finish(match, total_scores) |> Repo.update()
     report_completed_match(finished_match, tournament_runner_pid)
   end
 

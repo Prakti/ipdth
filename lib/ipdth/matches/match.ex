@@ -50,8 +50,10 @@ defmodule Ipdth.Matches.Match do
     change(match, status: :aborted, end_date: DateTime.utc_now())
   end
 
-  def finish(match) do
-    change(match, status: :finished, end_date: DateTime.utc_now())
+  def finish(match, total_scores) do
+    match
+    |> cast(total_scores, [:score_a, :score_b])
+    |> change(status: :finished, end_date: DateTime.utc_now())
   end
 
   def invalidate(match) do
