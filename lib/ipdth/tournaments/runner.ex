@@ -147,12 +147,27 @@ defmodule Ipdth.Tournaments.Runner do
     wait_for_matches(running_matches, tournament, matches_supervisor, more_rounds)
   end
 
-  defp start_next_round(_tuournament, matches_supervisor, []) do
+  defp start_next_round(tournament, matches_supervisor, []) do
     # No more rounds to play, tournament finished.
     Supervisor.stop(matches_supervisor)
+
+    # TODO: 2024-06-15 - Set Participation status to :done for all that are not :disqualified or :error
     # TODO: 2024-06-15 - Set tournament status to finished
-    # TODO: 2024-06-15 - Compute final scores for each participation
-    # TODO: 2024-06-15 - Compute ranking for participations
+
+    compute_participant_scores(tournament)
+
+    query = from p in Participation,
+            where: p.tournament_id == ^tournament.id,
+            select: {p.id, rank() |> over(order_by: p.score)}
+
+    ranking = Repo.all(query)
+
+    Enum.each(ranking, fn {id, rank} ->
+      Repo.get!(Participation, id)
+      |> Participation.set_rank(rank)
+      |> Repo.update()
+    end)
+
     # TODO: 2024-06-15 - What else to do when tournament is finished? PubSub?
   end
 
@@ -184,6 +199,37 @@ defmodule Ipdth.Tournaments.Runner do
       {:ok, _} = Matches.Runner.start(matches_supervisor, [match, self()])
     end)
     matches
+  end
+
+  def compute_participant_scores(tournament) do
+    query_a = from p in Participation,
+              join: m_a in Match, on: p.tournament_id == m_a.tournament_id
+                                  and p.agent_id == m_a.agent_a_id,
+              where: p.tournament_id == ^tournament.id,
+              group_by: p.id,
+              select: { p.id, sum(m_a.score_a) }
+
+    query_b = from p in Participation,
+              join: m_b in Match, on: p.tournament_id == m_b.tournament_id
+                                  and p.agent_id == m_b.agent_b_id,
+              where: p.tournament_id == ^tournament.id,
+              group_by: p.id,
+              select: { p.id, sum(m_b.score_b) }
+
+    scores_a = Repo.all(query_a) |> Map.new()
+    scores_b = Repo.all(query_b) |> Map.new()
+
+    scores = Map.merge(scores_a, scores_b, fn _id, score_a, score_b ->
+      score_a + score_b
+    end)
+
+    Repo.transaction(fn ->
+      Enum.each(scores, fn {id, score} ->
+        Repo.get!(Participation, id)
+        |> Participation.update_score(score)
+        |> Repo.update()
+      end)
+    end)
   end
 
 end

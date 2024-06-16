@@ -23,11 +23,12 @@ defmodule Ipdth.Tournaments.Participation do
     timestamps()
   end
 
-  @doc false
-  def changeset(participation, attrs) do
-    participation
-    |> cast(attrs, [:score, :ranking, :sign_up, :status, :details])
-    |> validate_required([:score, :ranking, :sign_up, :status, :details])
+  def update_score(participation, score) do
+    change(participation, score: score)
+  end
+
+  def set_rank(participation, rank) do
+    change(participation, ranking: rank)
   end
 
   def sign_up(participation, tournament, agent) do
