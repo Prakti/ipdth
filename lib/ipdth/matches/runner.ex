@@ -31,11 +31,9 @@ defmodule Ipdth.Matches.Runner do
       :started ->
         round_no = count_match_rounds(match_id)
         run(match, match.rounds_to_play, round_no, tournament_runner_pid)
-      :finished ->
-        report_completed_match(match, tournament_runner_pid)
-      :invalidated ->
-        report_completed_match(match, tournament_runner_pid)
-      :aborted ->
+      other ->
+        Logger.warn("Matches.Runner encountered match in state #{other}." <>
+                    "Match: #{inspect(match, pretty: true)}")
         report_completed_match(match, tournament_runner_pid)
     end
   end
@@ -62,10 +60,15 @@ defmodule Ipdth.Matches.Runner do
         {:ok, _round} = tally_round(match.id, decision_a, decision_b, start_date)
         run(match, rounds_to_play, round_no + 1, tournament_runner_pid)
       {{:error, _}, {:ok, _}} ->
+        Logger.info("Agent #{match.agent_a_id} is in error-state, aborting Match.")
         abort_match(match, tournament_runner_pid)
       {{:ok, _}, {:error, _}} ->
+        Logger.info("Agent #{match.agent_b_id} is in error-state, aborting Match.")
         abort_match(match, tournament_runner_pid)
-      _ ->
+      {{:error, _}, {:error, _}} ->
+        Logger.info("Agents #{match.agent_b_id} and #{match.agent_a_id} are in error-state, aborting Match.")
+      other ->
+        Logger.warning("Unexpected Agent decisions: #{inspect(other)}.")
         abort_match(match, tournament_runner_pid)
     end
   end

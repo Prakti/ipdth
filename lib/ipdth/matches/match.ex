@@ -18,7 +18,7 @@ defmodule Ipdth.Matches.Match do
     field :score_a, :integer
     field :score_b, :integer
     field :rounds_to_play, :integer
-    field :status, Ecto.Enum, values: [:open, :started, :finished, :invalidated, :aborted]
+    field :status, Ecto.Enum, values: [:open, :started, :finished, :invalidated, :aborted, :cancelled]
     field :tournament_round, :integer
     has_many :rounds, Round
     belongs_to :agent_a, Agent
