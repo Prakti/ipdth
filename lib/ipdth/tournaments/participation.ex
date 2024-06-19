@@ -23,6 +23,10 @@ defmodule Ipdth.Tournaments.Participation do
     timestamps()
   end
 
+  def set_to_error(participation) do
+    change(participation, status: :error)
+  end
+
   def update_score(participation, score) do
     change(participation, score: score)
   end

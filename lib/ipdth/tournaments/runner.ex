@@ -5,9 +5,13 @@ defmodule Ipdth.Tournaments.Runner do
   require Logger
 
   alias Ipdth.Repo
+  alias Ipdth.Agents
+  alias Ipdth.Agents.Agent
   alias Ipdth.Matches
   alias Ipdth.Matches.Match
   alias Ipdth.Tournaments.{Tournament, Participation, Scheduler}
+
+  # TODO: 2024-06-19 - Idea: register all Runners via name "Tournament.Runner-#ID"
 
   @supervisor_name Ipdth.Tournaments.Supervisor
 
@@ -148,23 +152,11 @@ defmodule Ipdth.Tournaments.Runner do
     # No more rounds to play, tournament finished.
     Supervisor.stop(matches_supervisor)
 
-    set_parcicipations_to_done(tournament)
-
-    tournament |> Tournament.finish() |> Repo.update!()
-
-    compute_participant_scores(tournament)
-
-    query = from p in Participation,
-            where: p.tournament_id == ^tournament.id,
-            select: {p.id, rank() |> over(order_by: p.score)}
-
-    ranking = Repo.all(query)
-
-    Enum.each(ranking, fn {id, rank} ->
-      Repo.get!(Participation, id)
-      |> Participation.set_rank(rank)
-      |> Repo.update()
-    end)
+    tournament
+    |> set_parcicipations_to_done()
+    |> compute_participant_scores()
+    |> compute_tournament_rankings()
+    |> Tournament.finish() |> Repo.update!()
 
     # TODO: 2024-06-15 - What else to do when tournament is finished? PubSub?
   end
@@ -181,8 +173,11 @@ defmodule Ipdth.Tournaments.Runner do
           :finished ->
             wait_for_matches(remaining_matches, tournament, matches_supervisor, more_rounds)
           :aborted ->
-            #TODO: 2024-06-15 - Invalidate Matches if unsuccessful Match for errored Agent
-            #TODO: 2024-06-15 - Cancel all open Matches of errored Agent
+            determine_errored_agent(match)
+            |> invalidate_past_matches_for_errored_agents(tournament)
+            |> cancel_upcoming_matches_for_errored_agents(tournament)
+            |> set_participation_to_error_for_errored_agents(tournament)
+
             wait_for_matches(remaining_matches, tournament, matches_supervisor, more_rounds)
           other ->
             Logger.warning("Received :match_finished for match in status #{other}.")
@@ -207,13 +202,21 @@ defmodule Ipdth.Tournaments.Runner do
             where: p.tournament_id == ^tournament.id,
             where: p.status == :participating
     Repo.update_all(query, set: [status: :done])
+
+    # Return for pipelining
+    tournament
   end
 
   def compute_participant_scores(tournament) do
+    # TODO: 2024-06-19 - We're basically violating the context-boundary to matches here. We should refactor this.
+    # TODO: 2024-06-19 - We need a distinction between the facade used by the Web-Layer / UI and internal Context API
+    #                    Idea: Use main Ipdth module as Facade to Web-Layer and do permission checks there!
+    #                    Then we can leave out permission checks from the internal contexts which is more consistent
     query_a = from p in Participation,
               join: m_a in Match, on: p.tournament_id == m_a.tournament_id
                                   and p.agent_id == m_a.agent_a_id,
               where: p.tournament_id == ^tournament.id,
+              where: m_a.status == :finished,
               group_by: p.id,
               select: { p.id, sum(m_a.score_a) }
 
@@ -221,6 +224,7 @@ defmodule Ipdth.Tournaments.Runner do
               join: m_b in Match, on: p.tournament_id == m_b.tournament_id
                                   and p.agent_id == m_b.agent_b_id,
               where: p.tournament_id == ^tournament.id,
+              where: m_b.status == :finished,
               group_by: p.id,
               select: { p.id, sum(m_b.score_b) }
 
@@ -238,6 +242,92 @@ defmodule Ipdth.Tournaments.Runner do
         |> Repo.update()
       end)
     end)
+
+    # Return for pipelining
+    tournament
   end
 
+  def compute_tournament_rankings(tournament) do
+    query = from p in Participation,
+            where: p.tournament_id == ^tournament.id,
+            select: {p.id, rank() |> over(order_by: p.score)}
+
+    ranking = Repo.all(query)
+
+    Repo.transaction(fn ->
+      Enum.each(ranking, fn {id, rank} ->
+        Repo.get!(Participation, id)
+        |> Participation.set_rank(rank)
+        |> Repo.update()
+      end)
+    end)
+
+    # Return for pipelining
+    tournament
+  end
+
+  def determine_errored_agent(match) do
+    agent_a = Agents.get_agent!(match.agent_a_id)
+    agent_b = Agents.get_agent!(match.agent_b_id)
+
+    %Agent{ status: status_a } = agent_a
+    %Agent{ status: status_b } = agent_b
+
+    case {status_a, status_b} do
+      {:error, :error} ->
+        [agent_a, agent_b]
+      {:error, _} ->
+        [agent_a]
+      {_, :error} ->
+        [agent_b]
+    end
+  end
+
+  def invalidate_past_matches_for_errored_agents(agents, tournament) do
+    # TODO: 2024-06-19 - We're basically violating the context-boundary to matches here. We should refactor this.
+    Repo.transaction(fn ->
+      Enum.each(agents, fn agent ->
+        query = from m in Match,
+                where: m.tournament_id == ^tournament.id,
+                where: m.agent_a_id == ^agent.id
+                    or m.agent_b_id == ^agent.id,
+                where: m.status == :finished,
+                update: [set: [status: :invalidated]]
+        Repo.update_all(query, [])
+      end)
+    end)
+
+    # Return agents for pipelining
+    agents
+  end
+
+  def cancel_upcoming_matches_for_errored_agents(agents, tournament) do
+    # TODO: 2024-06-19 - We're basically violating the context-boundary to matches here. We should refactor this.
+    Repo.transaction(fn ->
+      Enum.each(agents, fn agent ->
+        query = from m in Match,
+                where: m.tournament_id == ^tournament.id,
+                where: m.agent_a_id == ^agent.id
+                    or m.agent_b_id == ^agent.id,
+                where: m.status == :open,
+                update: [set: [status: :cancelled]]
+        Repo.update_all(query, [])
+      end)
+    end)
+
+    # Return agents for pipelining
+    agents
+  end
+
+  def set_participation_to_error_for_errored_agents(agents, tournament) do
+    Repo.transaction(fn ->
+      Enum.each(agents, fn agent ->
+        Repo.get_by!(Participation, [tournament_id: tournament.id, agent_id: agent.id])
+        |> Participation.set_to_error()
+        |> Repo.update()
+      end)
+    end)
+    # Return agents for pipelining
+    agents
+  end
 end
