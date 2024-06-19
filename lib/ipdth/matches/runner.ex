@@ -32,8 +32,8 @@ defmodule Ipdth.Matches.Runner do
         round_no = count_match_rounds(match_id)
         run(match, match.rounds_to_play, round_no, tournament_runner_pid)
       other ->
-        Logger.warn("Matches.Runner encountered match in state #{other}." <>
-                    "Match: #{inspect(match, pretty: true)}")
+        Logger.warning("Matches.Runner encountered match in state #{other}." <>
+                       "Match: #{inspect(match, pretty: true)}")
         report_completed_match(match, tournament_runner_pid)
     end
   end

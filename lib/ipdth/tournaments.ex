@@ -6,10 +6,10 @@ defmodule Ipdth.Tournaments do
   import Ecto.Query, warn: false
   alias Ipdth.Repo
 
-  alias Ipdth.Tournaments.Participation
-  alias Ipdth.Tournaments.Tournament
+  alias Ipdth.Tournaments.{Participation, Tournament, Scheduler}
   alias Ipdth.Agents.Agent
   alias Ipdth.Accounts
+  alias Ipdth.Matches
 
   @doc """
   Returns the list of tournaments.
@@ -350,5 +350,104 @@ defmodule Ipdth.Tournaments do
     else
       {:error, :not_authorized}
     end
+  end
+
+  def set_tournament_to_started(tournament) do
+    Repo.transaction(fn ->
+      tournament
+      |> Tournament.start()
+      |> Repo.update!()
+
+     Participation
+      |> where([p], p.tournament_id == ^tournament.id)
+      |> Repo.update_all(set: [status: :participating])
+
+    end)
+
+    Repo.get!(Tournament, tournament.id)
+  end
+
+  def get_participant_count(tournament_id) do
+    query = from p in Participation,
+            where: p.tournament_id == ^tournament_id,
+            select: count(p.id)
+    Repo.one(query)
+  end
+
+  def create_round_robin_schedule(tournament) do
+    agents = Repo.all(from p in Participation, where: p.tournament_id == ^tournament.id, select: p.agent_id)
+
+    tournament_schedule = Scheduler.create_schedule(agents)
+
+    Enum.each(tournament_schedule, fn {round_no, round_schedule} ->
+      matches =
+        round_schedule
+        |> Enum.filter(fn {a, b} -> a != :bye and b != :bye end)
+        |> Enum.map(fn {agent_a, agent_b} ->
+          %{
+            status: :open,
+            agent_a_id: agent_a,
+            agent_b_id: agent_b,
+            tournament_id: tournament.id,
+            tournament_round: round_no,
+            rounds_to_play: tournament.round_number,
+            inserted_at: NaiveDateTime.utc_now(:second),
+            updated_at: NaiveDateTime.utc_now(:second)
+          }
+        end)
+
+      Matches.create_multiple_matches(matches)
+    end)
+
+    Map.keys(tournament_schedule)
+  end
+
+  def set_participation_to_error_for_errored_agents(agents, tournament) do
+    Repo.transaction(fn ->
+      Enum.each(agents, fn agent ->
+        Repo.get_by!(Participation, [tournament_id: tournament.id, agent_id: agent.id])
+        |> Participation.set_to_error()
+        |> Repo.update()
+      end)
+    end)
+  end
+
+  def compute_participant_scores(tournament_id) do
+    scores = Matches.sum_tournament_score_for_agents(tournament_id)
+
+    Repo.transaction(fn ->
+      Enum.each(scores, fn {id, score} ->
+        Repo.get_by!(Participation, [agent_id: id, tournament_id: tournament_id])
+        |> Participation.update_score(score)
+        |> Repo.update()
+      end)
+    end)
+  end
+
+  def compute_participant_ranking(tournament_id) do
+    query = from p in Participation,
+            where: p.tournament_id == ^tournament_id,
+            select: {p.id, rank() |> over(order_by: p.score)}
+
+    ranking = Repo.all(query)
+
+    Repo.transaction(fn ->
+      Enum.each(ranking, fn {id, rank} ->
+        Repo.get!(Participation, id)
+        |> Participation.set_rank(rank)
+        |> Repo.update()
+      end)
+    end)
+  end
+
+  def set_participations_to_done(tournament_id) do
+    query = from p in Participation,
+            where: p.tournament_id == ^tournament_id,
+            where: p.status == :participating
+    Repo.update_all(query, set: [status: :done])
+  end
+
+  def finish_tournament(tournament) do
+    Tournament.finish(tournament) |> Repo.update()
   end
 end

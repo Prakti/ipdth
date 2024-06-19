@@ -75,4 +75,87 @@ defmodule Ipdth.Matches do
     Repo.delete(match)
   end
 
+  def delete_all_matches_of_tournament(tournament_id) do
+    # Delete all matches associated with this tournament
+    query = from m in Match,
+            where: m.tournament_id == ^tournament_id,
+            select: m
+
+    Repo.delete_all(query)
+  end
+
+  def count_matches_in_tournament(tournament_id) do
+    query = from m in Match,
+            where: m.tournament_id == ^tournament_id,
+            select: count(m.id)
+    Repo.one(query)
+  end
+
+  def determine_current_tournament_round(tournament_id) do
+    query = from m in Match,
+            where: m.tournament_id == ^tournament_id,
+            where: m.status == :open or m.status == :started,
+            select: min(m.tournament_round)
+
+    Repo.one(query)
+  end
+
+  def get_open_or_started_matches_for_tournament_round(tournament_id, round_no) do
+    query = from m in Match,
+            where: m.tournament_id == ^tournament_id,
+            where: m.tournament_round == ^round_no,
+            where: m.status == :open or m.status == :started,
+            select: m.id
+
+    Repo.all(query)
+  end
+
+  def sum_tournament_score_for_agents(tournament_id) do
+    query_a = from m in Match,
+              where: m.tournament_id == ^tournament_id,
+              where: m.status == :finished,
+              group_by: m.agent_a_id,
+              select: { m.agent_a_id, sum(m.score_a) }
+
+    query_b = from m in Match,
+              where: m.tournament_id == ^tournament_id,
+              where: m.status == :finished,
+              group_by: m.agent_b_id,
+              select: { m.agent_b_id, sum(m.score_a) }
+
+    scores_a = Repo.all(query_a) |> Map.new()
+    scores_b = Repo.all(query_b) |> Map.new()
+
+    Map.merge(scores_a, scores_b, fn _id, score_a, score_b ->
+      score_a + score_b
+    end)
+  end
+
+  def invalidate_past_matches_for_errored_agents(agents, tournament) do
+    Repo.transaction(fn ->
+      Enum.each(agents, fn agent ->
+        query = from m in Match,
+                where: m.tournament_id == ^tournament.id,
+                where: m.agent_a_id == ^agent.id
+                    or m.agent_b_id == ^agent.id,
+                where: m.status == :finished,
+                update: [set: [status: :invalidated]]
+        Repo.update_all(query, [])
+      end)
+    end)
+  end
+
+  def cancel_open_matches_for_errored_agents(agents, tournament) do
+    Repo.transaction(fn ->
+      Enum.each(agents, fn agent ->
+        query = from m in Match,
+                where: m.tournament_id == ^tournament.id,
+                where: m.agent_a_id == ^agent.id
+                    or m.agent_b_id == ^agent.id,
+                where: m.status == :open,
+                update: [set: [status: :cancelled]]
+        Repo.update_all(query, [])
+      end)
+    end)
+  end
 end
