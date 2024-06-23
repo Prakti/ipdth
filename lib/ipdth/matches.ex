@@ -111,6 +111,18 @@ defmodule Ipdth.Matches do
   end
 
   def sum_tournament_score_for_agents(tournament_id) do
+    query_a_s =
+      from m in Match,
+      where: m.tournament_id == ^tournament_id,
+      where: m.status == :finished,
+      #order_by: [asc: :agent_a_id, asc: :agent_b_id],
+      order_by: [asc: :id],
+      select: %{ no: row_number() |> over(order_by: m.id),
+                 agent_a_id: m.agent_a_id, score_a: m.score_a,
+                 agent_b_id: m.agent_b_id, score_b: m.score_b, id: m.id}
+
+    Repo.all(query_a_s)
+
     query_a = from m in Match,
               where: m.tournament_id == ^tournament_id,
               where: m.status == :finished,
@@ -121,7 +133,7 @@ defmodule Ipdth.Matches do
               where: m.tournament_id == ^tournament_id,
               where: m.status == :finished,
               group_by: m.agent_b_id,
-              select: { m.agent_b_id, sum(m.score_a) }
+              select: { m.agent_b_id, sum(m.score_b) }
 
     scores_a = Repo.all(query_a) |> Map.new()
     scores_b = Repo.all(query_b) |> Map.new()

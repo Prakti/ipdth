@@ -1,25 +1,25 @@
 defmodule Ipdth.Tournaments.Scheduler do
 
   def create_schedule(players) do
-    player_count = Enum.count(players)
-    split_idx = ceil(player_count/2)
-    round_count = player_count - 1
-
-    schedule_round(players, split_idx, 0, round_count, %{})
-  end
-
-  defp schedule_round(players, split_idx, round_no, round_count, rounds) when round_no < round_count do
     even_players =
-      if rem(round_count, 2) == 0 do
+      if rem(Enum.count(players), 2) == 1 do
         players ++ [:bye]
       else
         players
       end
 
+    player_count = Enum.count(even_players)
+    split_idx = div(player_count, 2)
+    round_count = player_count - 1
+
+    schedule_round(even_players, split_idx, 0, round_count, %{})
+  end
+
+  defp schedule_round(players, split_idx, round_no, round_count, rounds) when round_no < round_count do
     schedule =
-      even_players
+      players
       |> Enum.split(split_idx)
-      |> Tuple.to_list()
+      |> then(fn {left, right} -> [left, Enum.reverse(right)] end)
       |> Enum.zip()
 
     [pivot | other] = players

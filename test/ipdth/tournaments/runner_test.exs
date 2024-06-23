@@ -195,7 +195,7 @@ defmodule Ipdth.Tournaments.RunnerTest do
 
       error_participation = Repo.one(query)
       assert nil == error_participation.score
-      assert 10 == error_participation.ranking
+      assert nil == error_participation.ranking
       assert :error == error_participation.status
 
       # All check scores of all other agents
@@ -213,10 +213,70 @@ defmodule Ipdth.Tournaments.RunnerTest do
 
       participations = Repo.all(query)
       Enum.each(participations, fn p ->
-        assert expected_score == p.score # All agents should have same score
-        assert 1 == p.ranking # All agents should be tied for 1st rank
+      assert expected_score == p.score # All other agents should have same score
+        assert 1 == p.ranking # All other agents should be tied for 1st rank
         assert :done == p.status
       end)
     end
+
+    test "run/1 computes correct scores and ranking" do
+      admin_user = admin_user_fixture()
+
+      # Create tournament with three agents and two rounds
+      # Agent 1 -> Defects always -> Rank 1 -> Score 16
+      # Agent 2 -> Defects in round 2 -> Rank 2 -> Score 9
+      # Agent 3 -> Cooperates always -> Ranke 3 -> Score 3
+      {agents, _} = Enum.map(0..2, fn num ->
+        %{agent: agent, bypass: bypass} =
+            agent_fixture_and_mock_service(admin_user)
+
+        # Set up a Shelf (Elixir Agent) for storing some State
+        {:ok, shelf} = Shelf.start_link(fn -> 0 end)
+
+        Bypass.stub(bypass, "POST", "/decide", fn conn ->
+          match_round = Shelf.get_and_update(shelf, fn round ->
+           {round, rem(round + 1, 2)}
+          end)
+
+          action = if num <= match_round, do: :defect, else: :cooperate
+
+          if action == :defect do
+            conn
+            |> Plug.Conn.merge_resp_headers([{"content-type", "application/json"}])
+            |> Plug.Conn.resp(200, agent_defect_reponse())
+          else
+            conn
+            |> Plug.Conn.merge_resp_headers([{"content-type", "application/json"}])
+            |> Plug.Conn.resp(200, agent_cooperate_reponse())
+          end
+        end)
+
+        {agent, bypass}
+      end) |> Enum.unzip()
+
+      %{tournament: tournament, participations: participations} =
+        published_tournament_with_participants_fixture(admin_user.id, agents, %{round_number: 2})
+
+      participant_count = Enum.count(participations)
+      assert Enum.count(agents) == participant_count
+
+      Runner.run(tournament)
+
+      Enum.with_index(agents) |> Enum.each(fn {agent, idx} ->
+        query = from p in Participation,
+                where: p.agent_id == ^agent.id,
+                where: p.tournament_id == ^tournament.id,
+                select: p
+        participation = Repo.one(query)
+
+        assert idx + 1 == participation.ranking
+        case idx do
+          0 -> assert 16 == participation.score
+          1 -> assert 9 == participation.score
+          2 -> assert 3 == participation.score
+        end
+      end)
+    end
+
   end
 end

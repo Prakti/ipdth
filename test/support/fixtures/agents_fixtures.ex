@@ -96,6 +96,30 @@ defmodule Ipdth.AgentsFixtures do
     }>
   end
 
+  def agent_cooperate_reponse() do
+    ~s<{
+      "roundNumber": 0,
+      "action": "Cooperate",
+      "matchInfo": {
+        "type": "Tournament",
+        "tournamentId": "string",
+        "matchId": "string"
+      }
+    }>
+  end
+
+  def agent_defect_reponse() do
+    ~s<{
+      "roundNumber": 0,
+      "action": "Defect",
+      "matchInfo": {
+        "type": "Tournament",
+        "tournamentId": "string",
+        "matchId": "string"
+      }
+    }>
+  end
+
   def agent_service_500_response() do
     ~s<{
       "error": "ProvokedError",

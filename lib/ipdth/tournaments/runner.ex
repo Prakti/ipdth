@@ -1,10 +1,7 @@
 defmodule Ipdth.Tournaments.Runner do
 
-  import Ecto.Query, warn: false
-
   require Logger
 
-  alias Ipdth.Repo
   alias Ipdth.Agents
   alias Ipdth.Agents.Agent
   alias Ipdth.Matches
@@ -13,6 +10,7 @@ defmodule Ipdth.Tournaments.Runner do
   alias Ipdth.Tournaments.Tournament
 
   # TODO: 2024-06-19 - Idea: register all Runners via name "Tournament.Runner-#ID"
+  # TODO: 2024-06-29 - Idea: recompute scores and ranks after each tournament round and send PubSub message for live-updates in the UI
 
   @supervisor_name Ipdth.Tournaments.Supervisor
 
@@ -28,7 +26,8 @@ defmodule Ipdth.Tournaments.Runner do
   def run(tournament_id) do
     # Our runner might have crashed and been restarted.
     # We re-fetch the tournament from DB to avoid working on stale data
-    tournament = Repo.get!(Tournament, tournament_id)
+    #tournament = Repo.get!(Tournament, tournament_id)
+    tournament = Tournaments.get_tournament!(tournament_id)
 
     case tournament.status do
       :published ->
@@ -50,6 +49,8 @@ defmodule Ipdth.Tournaments.Runner do
     Tournaments.set_tournament_to_started(tournament)
     tournament_rounds = Tournaments.create_round_robin_schedule(tournament)
     {:ok, matches_supervisor} = Task.Supervisor.start_link()
+
+    # TODO: 2024-06-20 - Send Pub/Sub message that tournament was started
 
     start_next_round(tournament, matches_supervisor, tournament_rounds)
   end
@@ -76,11 +77,15 @@ defmodule Ipdth.Tournaments.Runner do
   end
 
   defp start_next_round(tournament, matches_supervisor, [round_no | more_rounds]) do
-    round_matches =
-    Matches.get_open_or_started_matches_for_tournament_round(tournament.id, round_no)
+    # Recompute preliminary score and ranking
+    Tournaments.compute_participant_scores(tournament.id)
+    Tournaments.compute_participant_ranking(tournament.id)
+    # TODO: 2024-06-20 - send Pub/Sub message of completed round
 
-    running_matches = start_matches(round_matches, matches_supervisor)
-    wait_for_matches(running_matches, tournament, matches_supervisor, more_rounds)
+    tournament.id
+    |> Matches.get_open_or_started_matches_for_tournament_round(round_no)
+    |> start_matches(matches_supervisor)
+    |> wait_for_matches(tournament, matches_supervisor, more_rounds)
   end
 
   defp start_next_round(tournament, matches_supervisor, []) do
@@ -93,7 +98,7 @@ defmodule Ipdth.Tournaments.Runner do
 
     Tournaments.finish_tournament(tournament)
 
-    # TODO: 2024-06-15 - What else to do when tournament is finished? PubSub?
+    # TODO: 2024-06-15 - Sent Pub/Sub message when Tournament is finished!
   end
 
   defp wait_for_matches([], tournament, matches_supervisor, more_rounds) do

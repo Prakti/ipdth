@@ -427,7 +427,8 @@ defmodule Ipdth.Tournaments do
   def compute_participant_ranking(tournament_id) do
     query = from p in Participation,
             where: p.tournament_id == ^tournament_id,
-            select: {p.id, rank() |> over(order_by: p.score)}
+            where: not is_nil(p.score),
+            select: {p.id, rank() |> over(order_by: [desc: p.score])}
 
     ranking = Repo.all(query)
 

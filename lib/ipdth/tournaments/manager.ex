@@ -27,19 +27,22 @@ defmodule Ipdth.Tournaments.Manager do
 
   @impl true
   def init(state) do
-    # TODO: 2024-06-13 - Start a TaskSupervisor 
-
     unless state.manual_mode do
-      # TODO: 2024-05-20 - Check if there are running tournaments that need to be restarted after a crash
-      {:ok, _started_tournaments} = check_and_start_tournaments(DateTime.utc_now())
-
-      # TODO: 2024-05-20 - Check if there are due or overdue tournaments thatneed to be started and start them
-      # TODO: 2024-05-20 - Determine when the next check for due tournaments should happen
-      # TODO: 2024-05-20 - Schedule the next check for due tournaments
-      # TODD: 2024-06-16 - Don't start Tournaments with only one parcitipant
+      {:ok, state, {:continue, :resume_auto_mode}}
     end
 
     {:ok, state}
+  end
+
+  @impl true
+  def handle_continue(:resume_auto_mode, state) do
+    # TODO: 2024-05-20 - Check if there are running tournaments that need to be restarted after a crash
+    {:ok, _started_tournaments} = check_and_start_tournaments(DateTime.utc_now())
+
+    # TODO: 2024-05-20 - Determine when the next check for due tournaments should happen
+    # TODO: 2024-05-20 - Schedule the next check for due tournaments
+    # TODD: 2024-06-16 - Don't start Tournaments with only one parcitipant
+    {:noreply, state}
   end
 
   @impl true
@@ -90,21 +93,9 @@ defmodule Ipdth.Tournaments.Manager do
   end
 
   #defp next_check_interval() do
-    # TODO: 2024-05-20 - Move the query into the Tournaments Context
+    # Just check each x seconds and be done!
 
-    # next_tournament =
-    #  Tournament
-    #  |> where([t], t.status == "scheduled" and t.start_date > ^now)
-    #  |> order_by(asc: :start_date)
-    #  |> limit(1)
-    #  |> Repo.one()
 
-    # case next_tournament do
-    #  nil -> @max_interval
-    #  %Tournament{start_date: start_date} ->
-    #    DateTime.diff(start_date, now, :millisecond)
-    #    |> max(0) # Ensure non-negative interval
-    # end
   #end
 
 end

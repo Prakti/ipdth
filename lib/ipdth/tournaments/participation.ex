@@ -24,7 +24,7 @@ defmodule Ipdth.Tournaments.Participation do
   end
 
   def set_to_error(participation) do
-    change(participation, status: :error)
+    change(participation, status: :error, score: nil, ranking: nil)
   end
 
   def update_score(participation, score) do
