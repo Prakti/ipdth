@@ -4,7 +4,7 @@ jobs:
   dependencies:
     runs-on: ubuntu-latest
     concurrency:
-      group: elixir
+      group: elixir-dependencies
       cancel-in-progress: true
     strategy:
       matrix:
@@ -37,7 +37,7 @@ jobs:
     needs: dependencies
     runs-on: ubuntu-latest
     concurrency:
-      group: elixir
+      group: elixir-credo
       cancel-in-progress: true
     strategy:
       matrix:
@@ -64,7 +64,7 @@ jobs:
     needs: dependencies
     runs-on: ubuntu-latest
     concurrency:
-      group: elixir
+      group: elixir-formatting
       cancel-in-progress: true
     strategy:
       matrix:
@@ -91,7 +91,7 @@ jobs:
     needs: dependencies
     runs-on: ubuntu-latest
     concurrency:
-      group: elixir
+      group: elixir-test
       cancel-in-progress: true
     strategy:
       matrix:
