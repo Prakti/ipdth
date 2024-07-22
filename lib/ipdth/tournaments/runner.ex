@@ -131,10 +131,16 @@ defmodule Ipdth.Tournaments.Runner do
   end
 
   defp start_matches(matches, matches_supervisor) do
-    Enum.map(matches, fn match ->
-      {:ok, _} = Matches.Runner.start(matches_supervisor, [match, self()])
-    end)
-    matches
+    # TODO: change result to {status, result} code
+    errors = Enum.map(matches, fn match ->
+      Matches.Runner.start(matches_supervisor, [match, self()])
+    end) |> Enum.filter(fn {status, _} -> status == :error end)
+
+    if errors == [] do
+      matches
+    else 
+      errors
+    end
   end
 
   def determine_errored_agents(match) do
