@@ -47,7 +47,7 @@ defmodule Ipdth.MixProject do
       {:gettext, "~> 0.20"},
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
-      {:req, "~> 0.4.0"},
+      {:req, "~> 0.5.4"},
       {:dredd, "~> 2.0"},
       {:faker, "~> 0.18", only: [:dev, :test]},
       {:floki, ">= 0.30.0", only: :test},
