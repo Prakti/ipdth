@@ -98,6 +98,16 @@ defmodule Ipdth.Agents.Connection do
     Application.get_env(:ipdth, Ipdth.Agents.Connection, @default_config)
   end
 
+  def get_timeout() do
+    [
+      connect_options: [timeout: connect_timeout],
+      pool_timeout: pool_timeout,
+      receive_timeout: receive_timeout
+    ] = get_config()
+
+    connect_timeout + pool_timeout + receive_timeout
+  end
+
   ###
   # Internal Functionality
   ###

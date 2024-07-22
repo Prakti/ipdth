@@ -16,9 +16,9 @@ defmodule Ipdth.Tournaments.Runner do
 
   def supervisor_spec, do: {Task.Supervisor, name: @supervisor_name}
 
-  def start(args) do
+  def start(tournament) do
     Task.Supervisor.start_child(@supervisor_name, __MODULE__, :run,
-                                args, restart: :transient)
+                                [tournament], restart: :transient)
   end
 
   def run(%Tournament{} = tournament), do: run(tournament.id)

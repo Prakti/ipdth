@@ -21,7 +21,9 @@ defmodule Ipdth.Application do
       # System managing Connections to Agents
       Ipdth.Agents.ConnectionManager,
       # Supervisor for Tasks running the Tournaments
-      Ipdth.Tournaments.Runner.supervisor_spec()
+      Ipdth.Tournaments.Runner.supervisor_spec(),
+      # The Tournament Manager that starts the Runners
+      Ipdth.Tournaments.Manager,
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

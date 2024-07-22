@@ -54,7 +54,9 @@ defmodule Ipdth.Agents.ConnectionManager do
 
   def compute_timeout do
     backoff_config = get_config()
-    (backoff_config[:max_retries] + 1) * backoff_config[:backoff_duration]
+    overall_timeout = backoff_config[:backoff_duration] + Connection.get_timeout()
+    retry_safety = backoff_config[:max_retries] + 1
+    retry_safety * overall_timeout
   end
 
   ###
