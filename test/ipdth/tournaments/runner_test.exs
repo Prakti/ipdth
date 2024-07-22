@@ -16,13 +16,14 @@ defmodule Ipdth.Tournaments.RunnerTest do
   alias Ipdth.Matches.Match
 
   describe "tournaments/runner" do
-
     test "run/1 correctly runs a tournament for even number of participants" do
       admin_user = admin_user_fixture()
+
       %{agents: agents} =
-          multiple_activated_agents_one_bypass_fixture(admin_user, 10)
+        multiple_activated_agents_one_bypass_fixture(admin_user, 10)
+
       %{tournament: tournament, participations: participations} =
-          published_tournament_with_participants_fixture(admin_user.id, agents, %{round_number: 10})
+        published_tournament_with_participants_fixture(admin_user.id, agents, %{round_number: 10})
 
       participant_count = Enum.count(participations)
       assert Enum.count(agents) == participant_count
@@ -42,8 +43,9 @@ defmodule Ipdth.Tournaments.RunnerTest do
         query =
           from m in Match,
             where: m.tournament_id == ^participation.tournament_id,
-            where: m.agent_a_id == ^participation.agent_id
-                or m.agent_b_id == ^participation.agent_id,
+            where:
+              m.agent_a_id == ^participation.agent_id or
+                m.agent_b_id == ^participation.agent_id,
             select: count(m.id)
 
         assert Repo.one(query) == matches_to_play_each
@@ -53,43 +55,50 @@ defmodule Ipdth.Tournaments.RunnerTest do
       query =
         from m in Match,
           left_join: p in Participation,
-          on: p.tournament_id == m.tournament_id
-          and p.agent_id == m.agent_a_id,
+          on:
+            p.tournament_id == m.tournament_id and
+              p.agent_id == m.agent_a_id,
           where: m.tournament_id == ^tournament.id,
           where: is_nil(p.id),
           select: count(m.id)
-      assert Repo.one(query)  == 0
+
+      assert Repo.one(query) == 0
 
       # There must be no match where agent_b has no participation record
       query =
         from m in Match,
           left_join: p in Participation,
-            on: p.tournament_id == m.tournament_id and p.agent_id == m.agent_b_id,
+          on: p.tournament_id == m.tournament_id and p.agent_id == m.agent_b_id,
           where: m.tournament_id == ^tournament.id,
           where: is_nil(p.id),
           select: count(m.id)
-      assert Repo.one(query)  == 0
+
+      assert Repo.one(query) == 0
 
       # Check if the matches were all successful
       query =
         from m in Match,
-        where: m.tournament_id == ^tournament.id,
-        where: m.status == :finished,
-        select: count(m.id)
+          where: m.tournament_id == ^tournament.id,
+          where: m.status == :finished,
+          select: count(m.id)
+
       assert Repo.one(query) == 45
 
       query =
         from p in Participation,
-        where: p.tournament_id == ^tournament.id,
-        select: p
+          where: p.tournament_id == ^tournament.id,
+          select: p
 
       # All Agents cooperate so each gets 3 points in ever round every match
       expected_score = 3 * tournament.round_number * matches_to_play_each
 
       participations = Repo.all(query)
+
       Enum.each(participations, fn p ->
-        assert expected_score == p.score # All agents should have same score
-        assert 1 == p.ranking # All agents should be tied for 1st rank
+        # All agents should have same score
+        assert expected_score == p.score
+        # All agents should be tied for 1st rank
+        assert 1 == p.ranking
         assert :done == p.status
       end)
     end
@@ -97,8 +106,10 @@ defmodule Ipdth.Tournaments.RunnerTest do
     @tag silence_logger: true
     test "run/1 invalidates matches of failing agents" do
       admin_user = admin_user_fixture()
+
       %{agents: agents} =
         multiple_activated_agents_one_bypass_fixture(admin_user, 9)
+
       %{agent: error_agent, bypass: bypass} =
         agent_fixture_and_mock_service(admin_user)
 
@@ -117,9 +128,10 @@ defmodule Ipdth.Tournaments.RunnerTest do
       {:ok, shelf} = Shelf.start_link(fn -> 0 end)
 
       Bypass.stub(bypass, "POST", "/decide", fn conn ->
-        match_round = Shelf.get_and_update(shelf, fn round ->
-         {round, round + 1}
-        end)
+        match_round =
+          Shelf.get_and_update(shelf, fn round ->
+            {round, round + 1}
+          end)
 
         if match_round < 25 do
           conn
@@ -148,11 +160,13 @@ defmodule Ipdth.Tournaments.RunnerTest do
       # There should be one match that is in :aborted state
       query =
         from m in Match,
-        where: m.tournament_id == ^tournament.id,
-        where: m.agent_a_id == ^error_agent.id
-            or m.agent_b_id == ^error_agent.id,
-        where: m.status == :aborted,
-        select: count(m.id)
+          where: m.tournament_id == ^tournament.id,
+          where:
+            m.agent_a_id == ^error_agent.id or
+              m.agent_b_id == ^error_agent.id,
+          where: m.status == :aborted,
+          select: count(m.id)
+
       assert Repo.one(query) == 1
 
       # All the other matches of that agent should be :ivalidated or cancelled
@@ -160,38 +174,43 @@ defmodule Ipdth.Tournaments.RunnerTest do
       # 2 :cancelled
       query =
         from m in Match,
-        where: m.tournament_id == ^tournament.id,
-        where: m.agent_a_id == ^error_agent.id
-            or m.agent_b_id == ^error_agent.id,
-        where: m.status == :invalidated,
-        select: count(m.id)
+          where: m.tournament_id == ^tournament.id,
+          where:
+            m.agent_a_id == ^error_agent.id or
+              m.agent_b_id == ^error_agent.id,
+          where: m.status == :invalidated,
+          select: count(m.id)
+
       assert Repo.one(query) == 2
 
       query =
         from m in Match,
-        where: m.tournament_id == ^tournament.id,
-        where: m.agent_a_id == ^error_agent.id
-            or m.agent_b_id == ^error_agent.id,
-        where: m.status == :cancelled,
-        select: count(m.id)
+          where: m.tournament_id == ^tournament.id,
+          where:
+            m.agent_a_id == ^error_agent.id or
+              m.agent_b_id == ^error_agent.id,
+          where: m.status == :cancelled,
+          select: count(m.id)
+
       assert Repo.one(query) == 6
 
       # All the other matches should be successful
       query =
         from m in Match,
-        where: m.tournament_id == ^tournament.id,
-        where: m.agent_a_id != ^error_agent.id,
-        where: m.agent_b_id != ^error_agent.id,
-        where: m.status == :finished,
-        select: count(m.id)
+          where: m.tournament_id == ^tournament.id,
+          where: m.agent_a_id != ^error_agent.id,
+          where: m.agent_b_id != ^error_agent.id,
+          where: m.status == :finished,
+          select: count(m.id)
+
       assert Repo.one(query) == 36
 
       # Errored Agent should have tournament score of 0
       query =
         from p in Participation,
-        where: p.tournament_id == ^tournament.id,
-        where: p.agent_id == ^error_agent.id,
-        select: p
+          where: p.tournament_id == ^tournament.id,
+          where: p.agent_id == ^error_agent.id,
+          select: p
 
       error_participation = Repo.one(query)
       assert nil == error_participation.score
@@ -201,9 +220,9 @@ defmodule Ipdth.Tournaments.RunnerTest do
       # All check scores of all other agents
       query =
         from p in Participation,
-        where: p.tournament_id == ^tournament.id,
-        where: p.agent_id != ^error_agent.id,
-        select: p
+          where: p.tournament_id == ^tournament.id,
+          where: p.agent_id != ^error_agent.id,
+          select: p
 
       # All agents finish with one less match that counts
       finished_matches_each = matches_to_play_each - 1
@@ -212,9 +231,12 @@ defmodule Ipdth.Tournaments.RunnerTest do
       expected_score = 3 * tournament.round_number * finished_matches_each
 
       participations = Repo.all(query)
+
       Enum.each(participations, fn p ->
-      assert expected_score == p.score # All other agents should have same score
-        assert 1 == p.ranking # All other agents should be tied for 1st rank
+        # All other agents should have same score
+        assert expected_score == p.score
+        # All other agents should be tied for 1st rank
+        assert 1 == p.ranking
         assert :done == p.status
       end)
     end
@@ -226,33 +248,36 @@ defmodule Ipdth.Tournaments.RunnerTest do
       # Agent 1 -> Defects always -> Rank 1 -> Score 16
       # Agent 2 -> Defects in round 2 -> Rank 2 -> Score 9
       # Agent 3 -> Cooperates always -> Ranke 3 -> Score 3
-      {agents, _} = Enum.map(0..2, fn num ->
-        %{agent: agent, bypass: bypass} =
+      {agents, _} =
+        Enum.map(0..2, fn num ->
+          %{agent: agent, bypass: bypass} =
             agent_fixture_and_mock_service(admin_user)
 
-        # Set up a Shelf (Elixir Agent) for storing some State
-        {:ok, shelf} = Shelf.start_link(fn -> 0 end)
+          # Set up a Shelf (Elixir Agent) for storing some State
+          {:ok, shelf} = Shelf.start_link(fn -> 0 end)
 
-        Bypass.stub(bypass, "POST", "/decide", fn conn ->
-          match_round = Shelf.get_and_update(shelf, fn round ->
-           {round, rem(round + 1, 2)}
+          Bypass.stub(bypass, "POST", "/decide", fn conn ->
+            match_round =
+              Shelf.get_and_update(shelf, fn round ->
+                {round, rem(round + 1, 2)}
+              end)
+
+            action = if num <= match_round, do: :defect, else: :cooperate
+
+            if action == :defect do
+              conn
+              |> Plug.Conn.merge_resp_headers([{"content-type", "application/json"}])
+              |> Plug.Conn.resp(200, agent_defect_reponse())
+            else
+              conn
+              |> Plug.Conn.merge_resp_headers([{"content-type", "application/json"}])
+              |> Plug.Conn.resp(200, agent_cooperate_reponse())
+            end
           end)
 
-          action = if num <= match_round, do: :defect, else: :cooperate
-
-          if action == :defect do
-            conn
-            |> Plug.Conn.merge_resp_headers([{"content-type", "application/json"}])
-            |> Plug.Conn.resp(200, agent_defect_reponse())
-          else
-            conn
-            |> Plug.Conn.merge_resp_headers([{"content-type", "application/json"}])
-            |> Plug.Conn.resp(200, agent_cooperate_reponse())
-          end
+          {agent, bypass}
         end)
-
-        {agent, bypass}
-      end) |> Enum.unzip()
+        |> Enum.unzip()
 
       %{tournament: tournament, participations: participations} =
         published_tournament_with_participants_fixture(admin_user.id, agents, %{round_number: 2})
@@ -262,14 +287,18 @@ defmodule Ipdth.Tournaments.RunnerTest do
 
       Runner.run(tournament)
 
-      Enum.with_index(agents) |> Enum.each(fn {agent, idx} ->
-        query = from p in Participation,
-                where: p.agent_id == ^agent.id,
-                where: p.tournament_id == ^tournament.id,
-                select: p
+      Enum.with_index(agents)
+      |> Enum.each(fn {agent, idx} ->
+        query =
+          from p in Participation,
+            where: p.agent_id == ^agent.id,
+            where: p.tournament_id == ^tournament.id,
+            select: p
+
         participation = Repo.one(query)
 
         assert idx + 1 == participation.ranking
+
         case idx do
           0 -> assert 16 == participation.score
           1 -> assert 9 == participation.score
@@ -277,6 +306,5 @@ defmodule Ipdth.Tournaments.RunnerTest do
         end
       end)
     end
-
   end
 end

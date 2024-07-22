@@ -5,7 +5,6 @@ defmodule Ipdth.Tournaments.SchedulerTest do
   alias Ipdth.Tournaments.Scheduler
 
   describe "tournaments/scheduler" do
-
     test "create_schedule/1 returns correctly generated schedules with even number of players" do
       players = [:a, :b, :c, :d, :e, :f, :g, :h, :i, :k]
       player_count = Enum.count(players)
@@ -24,7 +23,8 @@ defmodule Ipdth.Tournaments.SchedulerTest do
             count + 1
           end)
         end)
-      end) |> Enum.each(fn {pair, count} ->
+      end)
+      |> Enum.each(fn {pair, count} ->
         assert 1 == count, "Pair #{inspect(pair)} is scheduled #{count} times!"
       end)
 
@@ -35,7 +35,10 @@ defmodule Ipdth.Tournaments.SchedulerTest do
           assert occurrence == 1, message
 
           byes_count = Enum.count(round, fn {a, b} -> a == :bye || b == :bye end)
-          message = "found :bye #{byes_count} times in round #{round_no} but needed #{byes_needed}"
+
+          message =
+            "found :bye #{byes_count} times in round #{round_no} but needed #{byes_needed}"
+
           assert byes_count == byes_needed, message
         end)
       end)
@@ -59,7 +62,8 @@ defmodule Ipdth.Tournaments.SchedulerTest do
             count + 1
           end)
         end)
-      end) |> Enum.each(fn {pair, count} ->
+      end)
+      |> Enum.each(fn {pair, count} ->
         assert 1 == count, "Pair #{inspect(pair)} is scheduled #{count} times!"
       end)
 
@@ -70,7 +74,10 @@ defmodule Ipdth.Tournaments.SchedulerTest do
           assert occurrence == 1, message
 
           byes_count = Enum.count(round, fn {a, b} -> a == :bye || b == :bye end)
-          message = "found :bye #{byes_count} times in round #{round_no} but needed #{byes_needed}"
+
+          message =
+            "found :bye #{byes_count} times in round #{round_no} but needed #{byes_needed}"
+
           assert byes_count == byes_needed, message
         end)
       end)
@@ -94,7 +101,8 @@ defmodule Ipdth.Tournaments.SchedulerTest do
             count + 1
           end)
         end)
-      end) |> Enum.each(fn {pair, count} ->
+      end)
+      |> Enum.each(fn {pair, count} ->
         assert 1 == count, "Pair #{inspect(pair)} is scheduled #{count} times!"
       end)
 
@@ -105,14 +113,17 @@ defmodule Ipdth.Tournaments.SchedulerTest do
           assert occurrence == 1, message
 
           byes_count = Enum.count(round, fn {a, b} -> a == :bye || b == :bye end)
-          message = "found :bye #{byes_count} times in round #{round_no} but needed #{byes_needed}"
+
+          message =
+            "found :bye #{byes_count} times in round #{round_no} but needed #{byes_needed}"
+
           assert byes_count == byes_needed, message
         end)
       end)
     end
 
     property "create_schedule/1 returns correctly generated schedules for arbitrary number of players" do
-      check all players <- uniq_list_of(atom(:alphanumeric), min_length: 2) do
+      check all(players <- uniq_list_of(atom(:alphanumeric), min_length: 2)) do
         player_count = Enum.count(players)
         byes_needed = rem(player_count, 2)
 
@@ -133,7 +144,8 @@ defmodule Ipdth.Tournaments.SchedulerTest do
               count + 1
             end)
           end)
-        end) |> Enum.each(fn {pair, count} ->
+        end)
+        |> Enum.each(fn {pair, count} ->
           assert 1 == count, "Pair #{inspect(pair)} is scheduled #{count} times!"
         end)
 
@@ -144,7 +156,10 @@ defmodule Ipdth.Tournaments.SchedulerTest do
             assert occurrence == 1, message
 
             byes_count = Enum.count(round, fn {a, b} -> a == :bye || b == :bye end)
-            message = "found :bye #{byes_count} times in round #{round_no} but needed #{byes_needed}"
+
+            message =
+              "found :bye #{byes_count} times in round #{round_no} but needed #{byes_needed}"
+
             assert byes_count == byes_needed, message
           end)
         end)

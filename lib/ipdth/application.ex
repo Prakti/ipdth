@@ -23,7 +23,7 @@ defmodule Ipdth.Application do
       # Supervisor for Tasks running the Tournaments
       Ipdth.Tournaments.Runner.supervisor_spec(),
       # The Tournament Manager that starts the Runners
-      Ipdth.Tournaments.Manager,
+      Ipdth.Tournaments.Manager
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

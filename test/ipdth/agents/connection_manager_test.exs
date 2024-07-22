@@ -180,7 +180,7 @@ defmodule Ipdth.Agents.ConnectionManagerTest do
       Bypass.expect(bypass, "POST", "/decide", fn conn ->
         assert "POST" == conn.method
 
-        request_count = Shelf.get_and_update(shelf, fn state -> { state, state + 1 } end)
+        request_count = Shelf.get_and_update(shelf, fn state -> {state, state + 1} end)
         # We count the number of calls to the endpoint and only succeed on the second call
         if request_count == 1 do
           conn
@@ -202,7 +202,7 @@ defmodule Ipdth.Agents.ConnectionManagerTest do
     property "performs a retry with backoff in case of an malformed data but status 200" do
       owner = user_fixture()
 
-      check all malformed_response <- string(:ascii) do
+      check all(malformed_response <- string(:ascii)) do
         %{agent: agent, bypass: bypass} = agent_fixture_and_mock_service(owner)
 
         {:ok, store} = Shelf.start_link(fn -> 0 end)
@@ -210,7 +210,7 @@ defmodule Ipdth.Agents.ConnectionManagerTest do
         Bypass.expect(bypass, "POST", "/decide", fn conn ->
           assert "POST" == conn.method
 
-          request_count = Shelf.get_and_update(store, fn state -> { state, state + 1 } end)
+          request_count = Shelf.get_and_update(store, fn state -> {state, state + 1} end)
           # We count the number of calls to the endpoint and only succeed on the second call
           if request_count == 1 do
             conn
@@ -246,12 +246,13 @@ defmodule Ipdth.Agents.ConnectionManagerTest do
         |> Plug.Conn.resp(200, agent_service_success_response())
       end)
 
-      on_off_task = Task.async(fn ->
-        Bypass.down(bypass)
-        Process.sleep(backoff_duration * max_retries - 100)
-        Bypass.up(bypass)
-        :ok
-      end)
+      on_off_task =
+        Task.async(fn ->
+          Bypass.down(bypass)
+          Process.sleep(backoff_duration * max_retries - 100)
+          Bypass.up(bypass)
+          :ok
+        end)
 
       assert {:ok, decision} = ConnectionManager.decide(agent, create_test_request())
       assert decision == :cooperate or decision == :defect
@@ -273,7 +274,9 @@ defmodule Ipdth.Agents.ConnectionManagerTest do
         |> Plug.Conn.resp(500, agent_service_500_response())
       end)
 
-      assert {:error, :max_retries_exceeded} = ConnectionManager.decide(agent, create_test_request())
+      assert {:error, :max_retries_exceeded} =
+               ConnectionManager.decide(agent, create_test_request())
+
       assert %Agent{status: :error} = Agents.get_agent!(agent.id)
     end
 
@@ -290,9 +293,11 @@ defmodule Ipdth.Agents.ConnectionManagerTest do
         conn
         |> Plug.Conn.merge_resp_headers([{"content-type", "application/json"}])
         |> Plug.Conn.resp(200, "Intentionally not JSON for testing purposes!")
-     end)
+      end)
 
-      assert {:error, :max_retries_exceeded} = ConnectionManager.decide(agent, create_test_request())
+      assert {:error, :max_retries_exceeded} =
+               ConnectionManager.decide(agent, create_test_request())
+
       assert %Agent{status: :error} = Agents.get_agent!(agent.id)
     end
 
@@ -301,10 +306,11 @@ defmodule Ipdth.Agents.ConnectionManagerTest do
       owner = user_fixture()
       agent = agent_fixture(owner)
 
-      assert {:error, :max_retries_exceeded} = ConnectionManager.decide(agent, create_test_request())
+      assert {:error, :max_retries_exceeded} =
+               ConnectionManager.decide(agent, create_test_request())
+
       assert %Agent{status: :error} = Agents.get_agent!(agent.id)
     end
-
   end
 
   describe "ConnectionManager.test/1" do

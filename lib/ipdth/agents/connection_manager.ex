@@ -1,5 +1,4 @@
 defmodule Ipdth.Agents.ConnectionManager do
-
   import Ecto.Query, warn: false
 
   require Logger
@@ -64,21 +63,17 @@ defmodule Ipdth.Agents.ConnectionManager do
   ###
 
   defmodule BackoffInfo do
-    defstruct [
-      agent_id: nil,
-      retry_count: nil,
-      backoff_duration: nil,
-    ]
+    defstruct agent_id: nil,
+              retry_count: nil,
+              backoff_duration: nil
   end
 
   defmodule TaskInfo do
-    defstruct [
-      task_pid: nil,
-      agent_id: nil,
-      caller_pid: nil,
-      decision_request: nil,
-      test?: false
-    ]
+    defstruct task_pid: nil,
+              agent_id: nil,
+              caller_pid: nil,
+              decision_request: nil,
+              test?: false
   end
 
   defmodule State do
@@ -88,7 +83,7 @@ defmodule Ipdth.Agents.ConnectionManager do
   @impl true
   def init(_) do
     {:ok, pid} = Task.Supervisor.start_link()
-    {:ok, %State{ task_supervisor: pid}}
+    {:ok, %State{task_supervisor: pid}}
   end
 
   @impl true
@@ -101,25 +96,24 @@ defmodule Ipdth.Agents.ConnectionManager do
   def handle_call({:test, agent_id}, from, state) do
     case Map.get(state.backoff_info, agent_id) do
       nil ->
-          with {:ok, task_pid} <- start_test_task(state, agent_id) do
-            Process.monitor(task_pid)
+        with {:ok, task_pid} <- start_test_task(state, agent_id) do
+          Process.monitor(task_pid)
 
-            task_info = %TaskInfo{
-              task_pid: task_pid,
-              agent_id: agent_id,
-              caller_pid: from,
-              test?: true
-            }
+          task_info = %TaskInfo{
+            task_pid: task_pid,
+            agent_id: agent_id,
+            caller_pid: from,
+            test?: true
+          }
 
-            {:noreply, %State{ state |
-              task_info: Map.put(state.task_info, task_pid, task_info)
-            }}
-          else
-            error ->
-              {:reply, {:error, error}}
-          end
+          {:noreply, %State{state | task_info: Map.put(state.task_info, task_pid, task_info)}}
+        else
+          error ->
+            {:reply, {:error, error}}
+        end
+
       _ ->
-          {:reply, {:error, :agent_in_backoff}, state}
+        {:reply, {:error, :agent_in_backoff}, state}
     end
   end
 
@@ -127,10 +121,11 @@ defmodule Ipdth.Agents.ConnectionManager do
   def handle_info({:try_decide, agent_id, decision_request, from}, state) do
     case Map.get(state.backoff_info, agent_id) do
       nil ->
-          # Agent is not backing off, do a request
-          message = {:do_decide, agent_id, decision_request, from}
-          Process.send(self(), message, [])
-          {:noreply, state}
+        # Agent is not backing off, do a request
+        message = {:do_decide, agent_id, decision_request, from}
+        Process.send(self(), message, [])
+        {:noreply, state}
+
       %BackoffInfo{} = backoff_info ->
         # Agent is already in backoff, postpone request by current backoff_duration
         backoff_config = get_config()
@@ -161,17 +156,17 @@ defmodule Ipdth.Agents.ConnectionManager do
         decision_request: decision_request
       }
 
-      {:noreply, %State{ state |
-        task_info: Map.put(state.task_info, task_pid, task_info)
-      }}
+      {:noreply, %State{state | task_info: Map.put(state.task_info, task_pid, task_info)}}
     else
       # This should be a rare error; in case it happens: back off
       error ->
         backoff_config = get_config()
         backoff_duration = backoff_config[:backoff_duration]
 
-        log_msg = "Cannot start decision task, Backing off for " <>
-                  "#{inspect(backoff_duration)} ms. Reason: #{inspect(error)}"
+        log_msg =
+          "Cannot start decision task, Backing off for " <>
+            "#{inspect(backoff_duration)} ms. Reason: #{inspect(error)}"
+
         Logger.error(log_msg)
 
         message = {:do_decide, agent_id, decision_request, from}
@@ -185,8 +180,10 @@ defmodule Ipdth.Agents.ConnectionManager do
     case reason do
       :normal ->
         {:noreply, state}
+
       :noproc ->
         {:noreply, state}
+
       reason ->
         handle_crash(state, pid, reason)
     end
@@ -202,9 +199,10 @@ defmodule Ipdth.Agents.ConnectionManager do
     updated_backoff_info = Map.delete(state.backoff_info, agent_id)
     updated_task_info = Map.delete(state.task_info, task_pid)
 
-    updated_state = %State{ state |
-      backoff_info: updated_backoff_info,
-      task_info: updated_task_info
+    updated_state = %State{
+      state
+      | backoff_info: updated_backoff_info,
+        task_info: updated_task_info
     }
 
     {:noreply, updated_state}
@@ -215,6 +213,7 @@ defmodule Ipdth.Agents.ConnectionManager do
     case result do
       :ok ->
         activate_agent(agent_id)
+
       {:error, reason} ->
         log_error(agent_id, reason)
         error_agent(agent_id)
@@ -226,9 +225,10 @@ defmodule Ipdth.Agents.ConnectionManager do
     updated_backoff_info = Map.delete(state.backoff_info, agent_id)
     updated_task_info = Map.delete(state.task_info, task_pid)
 
-    updated_state = %State{ state |
-      backoff_info: updated_backoff_info,
-      task_info: updated_task_info
+    updated_state = %State{
+      state
+      | backoff_info: updated_backoff_info,
+        task_info: updated_task_info
     }
 
     {:noreply, updated_state}
@@ -241,9 +241,16 @@ defmodule Ipdth.Agents.ConnectionManager do
   defp start_decision_task(state, agent_id, decision_request) do
     try do
       agent = Agents.get_agent!(agent_id)
-      Task.Supervisor.start_child(state.task_supervisor, Connection, :decide, [agent, decision_request])
+
+      Task.Supervisor.start_child(state.task_supervisor, Connection, :decide, [
+        agent,
+        decision_request
+      ])
     rescue
-      error -> Logger.warning("Could not start task for decision request. Maybe a deleted Agent. #{inspect(error)}")
+      error ->
+        Logger.warning(
+          "Could not start task for decision request. Maybe a deleted Agent. #{inspect(error)}"
+        )
     end
   end
 
@@ -252,7 +259,10 @@ defmodule Ipdth.Agents.ConnectionManager do
       agent = Agents.get_agent!(agent_id)
       Task.Supervisor.start_child(state.task_supervisor, Connection, :test, [agent])
     rescue
-      error -> Logger.warning("Could not start task for test request. Maybe a deleted Agent. #{inspect(error)}")
+      error ->
+        Logger.warning(
+          "Could not start task for test request. Maybe a deleted Agent. #{inspect(error)}"
+        )
     end
   end
 
@@ -270,19 +280,22 @@ defmodule Ipdth.Agents.ConnectionManager do
         |> ConnectionError.changeset(%{agent_id: agent_id, error_message: error_message})
         |> Repo.insert()
 
-        query = from e in ConnectionError,
-                where: e.agent_id == ^agent_id,
-                order_by: [desc: e.inserted_at],
-                offset: 50,
-                select: e.id
+        query =
+          from e in ConnectionError,
+            where: e.agent_id == ^agent_id,
+            order_by: [desc: e.inserted_at],
+            offset: 50,
+            select: e.id
 
         Repo.delete_all(from e in ConnectionError, where: e.id in subquery(query))
       end)
     rescue
       error ->
-        message = "Could not write ErrorLog for agent #{agent_id}, " <>
-                  "because #{inspect(error, pretty: true)}; " <>
-                  "initial error was #{inspect(reason, pretty: true)}"
+        message =
+          "Could not write ErrorLog for agent #{agent_id}, " <>
+            "because #{inspect(error, pretty: true)}; " <>
+            "initial error was #{inspect(reason, pretty: true)}"
+
         Logger.warning(message)
     end
   end
@@ -300,9 +313,11 @@ defmodule Ipdth.Agents.ConnectionManager do
       end
     rescue
       error ->
-        msg = "ConnectionManager cannot handle :DOWN message from Connection. " <>
-              "Reason: #{inspect(error, pretty: true)}. " <>
-              ":DOWN reason was #{inspect(reason, pretty: true)}"
+        msg =
+          "ConnectionManager cannot handle :DOWN message from Connection. " <>
+            "Reason: #{inspect(error, pretty: true)}. " <>
+            ":DOWN reason was #{inspect(reason, pretty: true)}"
+
         Logger.warning(msg)
         {:noreply, state}
     end
@@ -312,7 +327,7 @@ defmodule Ipdth.Agents.ConnectionManager do
     %TaskInfo{
       agent_id: agent_id,
       caller_pid: caller_pid,
-      decision_request: decision_request,
+      decision_request: decision_request
     } = task_info
 
     backoff_agent(agent_id)
@@ -327,29 +342,31 @@ defmodule Ipdth.Agents.ConnectionManager do
           %BackoffInfo{
             agent_id: agent_id,
             retry_count: 0,
-            backoff_duration: backoff_duration,
+            backoff_duration: backoff_duration
           }
 
         backoff_info ->
-          %BackoffInfo{ backoff_info |
-            retry_count: backoff_info.retry_count + 1
-          }
+          %BackoffInfo{backoff_info | retry_count: backoff_info.retry_count + 1}
       end
 
     if backoff_info.retry_count < max_retries do
       message = {:do_decide, agent_id, decision_request, caller_pid}
-      updated_state = %State{ state |
-        backoff_info: Map.put(state.backoff_info, agent_id, backoff_info),
-        task_info: Map.delete(state.task_info, pid)
+
+      updated_state = %State{
+        state
+        | backoff_info: Map.put(state.backoff_info, agent_id, backoff_info),
+          task_info: Map.delete(state.task_info, pid)
       }
+
       Process.send_after(self(), message, backoff_duration)
       {:noreply, updated_state}
     else
       error_agent(agent_id)
 
-      updated_state = %State{ state |
-        backoff_info: Map.delete(state.backoff_info, agent_id),
-        task_info: Map.delete(state.task_info, pid)
+      updated_state = %State{
+        state
+        | backoff_info: Map.delete(state.backoff_info, agent_id),
+          task_info: Map.delete(state.task_info, pid)
       }
 
       GenServer.reply(caller_pid, {:error, :max_retries_exceeded})
@@ -360,14 +377,15 @@ defmodule Ipdth.Agents.ConnectionManager do
   defp handle_test_crash(state, task_info, pid, reason) do
     %TaskInfo{
       agent_id: agent_id,
-      caller_pid: caller_pid,
+      caller_pid: caller_pid
     } = task_info
 
     error_agent(agent_id)
 
-    updated_state = %State{ state |
-      backoff_info: Map.delete(state.backoff_info, agent_id),
-      task_info: Map.delete(state.task_info, pid)
+    updated_state = %State{
+      state
+      | backoff_info: Map.delete(state.backoff_info, agent_id),
+        task_info: Map.delete(state.task_info, pid)
     }
 
     GenServer.reply(caller_pid, {:error, reason})
@@ -403,5 +421,4 @@ defmodule Ipdth.Agents.ConnectionManager do
       error -> Logger.warning("Could not update Agent. Maybe a deleted Agent. #{inspect(error)}")
     end
   end
-
 end

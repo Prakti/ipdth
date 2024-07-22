@@ -1,5 +1,4 @@
 defmodule Ipdth.Repo.Migrations.NewMatchesFields do
-
   use Ecto.Migration
 
   def up do
@@ -15,5 +14,4 @@ defmodule Ipdth.Repo.Migrations.NewMatchesFields do
       remove :status
     end
   end
-
 end

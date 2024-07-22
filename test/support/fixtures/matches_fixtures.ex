@@ -8,8 +8,9 @@ defmodule Ipdth.MatchesFixtures do
   Generate a match.
   """
   def match_fixture(agent_a, agent_b, tournament, tournament_round, rounds_to_play) do
-    {:ok, match} = Ipdth.Matches.create_match(agent_a, agent_b, tournament,
-                                              tournament_round, rounds_to_play)
+    {:ok, match} =
+      Ipdth.Matches.create_match(agent_a, agent_b, tournament, tournament_round, rounds_to_play)
+
     match
   end
 end

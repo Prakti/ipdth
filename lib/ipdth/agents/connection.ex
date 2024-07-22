@@ -55,12 +55,15 @@ defmodule Ipdth.Agents.Connection do
       200 ->
         decision = evaluate_decision(response.body)
         ConnectionManager.report_decision_result(self(), agent.id, decision)
+
       # All error-handling is done in ConnectionManager, so we just let the
       # process crash and let it handle backoff and retry
       401 ->
         raise "401 Unauthorized - #{inspect(response.body)}"
+
       500 ->
         raise "500 Internal Server Error - #{inspect(response.body)}"
+
       status ->
         raise "HTTP Error - #{inspect(status)} - #{inspect(response.body)}"
     end
@@ -83,10 +86,13 @@ defmodule Ipdth.Agents.Connection do
           else
             {:error, {:no_action_given, response.body}}
           end
+
         401 ->
           {:error, {:auth_error, response.body}}
+
         500 ->
           {:error, {:server_error, response.body}}
+
         _ ->
           {:error, {:undefined_error, response.status, response.body}}
       end
@@ -146,5 +152,4 @@ defmodule Ipdth.Agents.Connection do
       past_results: past_results
     }
   end
-
 end

@@ -1,5 +1,4 @@
 defmodule Ipdth.Matches.Runner do
-
   import Ecto.Query, warn: false
 
   alias Ipdth.Repo
@@ -11,8 +10,7 @@ defmodule Ipdth.Matches.Runner do
   require Logger
 
   def start(supervisor_pid, args) do
-    Task.Supervisor.start_child(supervisor_pid, __MODULE__,
-                                :run, args, restart: :transient)
+    Task.Supervisor.start_child(supervisor_pid, __MODULE__, :run, args, restart: :transient)
   end
 
   def run(%Match{} = match, tournament_runner_pid), do: run(match.id, tournament_runner_pid)
@@ -28,17 +26,23 @@ defmodule Ipdth.Matches.Runner do
       :open ->
         Match.start(match) |> Repo.update()
         run(match, match.rounds_to_play, 0, tournament_runner_pid)
+
       :started ->
         round_no = count_match_rounds(match_id)
         run(match, match.rounds_to_play, round_no, tournament_runner_pid)
+
       other ->
-        Logger.warning("Matches.Runner encountered match in state #{other}." <>
-                       "Match: #{inspect(match, pretty: true)}")
+        Logger.warning(
+          "Matches.Runner encountered match in state #{other}." <>
+            "Match: #{inspect(match, pretty: true)}"
+        )
+
         report_completed_match(match, tournament_runner_pid)
     end
   end
 
-  def run(match, rounds_to_play, round_no, tournament_runner_pid) when round_no < rounds_to_play do
+  def run(match, rounds_to_play, round_no, tournament_runner_pid)
+      when round_no < rounds_to_play do
     start_date = DateTime.utc_now()
 
     match_info = %MatchInfo{
@@ -59,14 +63,20 @@ defmodule Ipdth.Matches.Runner do
       {{:ok, decision_a}, {:ok, decision_b}} ->
         {:ok, _round} = tally_round(match.id, decision_a, decision_b, start_date)
         run(match, rounds_to_play, round_no + 1, tournament_runner_pid)
+
       {{:error, _}, {:ok, _}} ->
         Logger.info("Agent #{match.agent_a_id} is in error-state, aborting Match.")
         abort_match(match, tournament_runner_pid)
+
       {{:ok, _}, {:error, _}} ->
         Logger.info("Agent #{match.agent_b_id} is in error-state, aborting Match.")
         abort_match(match, tournament_runner_pid)
+
       {{:error, _}, {:error, _}} ->
-        Logger.info("Agents #{match.agent_b_id} and #{match.agent_a_id} are in error-state, aborting Match.")
+        Logger.info(
+          "Agents #{match.agent_b_id} and #{match.agent_a_id} are in error-state, aborting Match."
+        )
+
       other ->
         Logger.warning("Unexpected Agent decisions: #{inspect(other)}.")
         abort_match(match, tournament_runner_pid)
@@ -74,9 +84,11 @@ defmodule Ipdth.Matches.Runner do
   end
 
   def run(match, _, _, tournament_runner_pid) do
-    query = from r in Round,
-            where: r.match_id == ^match.id,
-            select: %{score_a: sum(r.score_a), score_b: sum(r.score_b)}
+    query =
+      from r in Round,
+        where: r.match_id == ^match.id,
+        select: %{score_a: sum(r.score_a), score_b: sum(r.score_b)}
+
     total_scores = Repo.one(query)
 
     {:ok, finished_match} = Match.finish(match, total_scores) |> Repo.update()
@@ -129,7 +141,7 @@ defmodule Ipdth.Matches.Runner do
   defp count_match_rounds(match_id) do
     query =
       from r in Round,
-      where: r.match_id == ^match_id
+        where: r.match_id == ^match_id
 
     Repo.aggregate(query, :count, :id)
   end
@@ -142,5 +154,4 @@ defmodule Ipdth.Matches.Runner do
   defp report_completed_match(match, tournament_runner_pid) do
     Tournaments.Runner.report_finished_match(tournament_runner_pid, match)
   end
-
 end

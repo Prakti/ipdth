@@ -240,5 +240,4 @@ defmodule Ipdth.Agents do
       {:error, :not_authorized}
     end
   end
-
 end

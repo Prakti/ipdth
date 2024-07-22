@@ -358,24 +358,28 @@ defmodule Ipdth.Tournaments do
       |> Tournament.start()
       |> Repo.update!()
 
-     Participation
+      Participation
       |> where([p], p.tournament_id == ^tournament.id)
       |> Repo.update_all(set: [status: :participating])
-
     end)
 
     Repo.get!(Tournament, tournament.id)
   end
 
   def get_participant_count(tournament_id) do
-    query = from p in Participation,
-            where: p.tournament_id == ^tournament_id,
-            select: count(p.id)
+    query =
+      from p in Participation,
+        where: p.tournament_id == ^tournament_id,
+        select: count(p.id)
+
     Repo.one(query)
   end
 
   def create_round_robin_schedule(tournament) do
-    agents = Repo.all(from p in Participation, where: p.tournament_id == ^tournament.id, select: p.agent_id)
+    agents =
+      Repo.all(
+        from p in Participation, where: p.tournament_id == ^tournament.id, select: p.agent_id
+      )
 
     tournament_schedule = Scheduler.create_schedule(agents)
 
@@ -405,7 +409,7 @@ defmodule Ipdth.Tournaments do
   def set_participation_to_error_for_errored_agents(agents, tournament) do
     Repo.transaction(fn ->
       Enum.each(agents, fn agent ->
-        Repo.get_by!(Participation, [tournament_id: tournament.id, agent_id: agent.id])
+        Repo.get_by!(Participation, tournament_id: tournament.id, agent_id: agent.id)
         |> Participation.set_to_error()
         |> Repo.update()
       end)
@@ -417,7 +421,7 @@ defmodule Ipdth.Tournaments do
 
     Repo.transaction(fn ->
       Enum.each(scores, fn {id, score} ->
-        Repo.get_by!(Participation, [agent_id: id, tournament_id: tournament_id])
+        Repo.get_by!(Participation, agent_id: id, tournament_id: tournament_id)
         |> Participation.update_score(score)
         |> Repo.update()
       end)
@@ -425,10 +429,11 @@ defmodule Ipdth.Tournaments do
   end
 
   def compute_participant_ranking(tournament_id) do
-    query = from p in Participation,
-            where: p.tournament_id == ^tournament_id,
-            where: not is_nil(p.score),
-            select: {p.id, rank() |> over(order_by: [desc: p.score])}
+    query =
+      from p in Participation,
+        where: p.tournament_id == ^tournament_id,
+        where: not is_nil(p.score),
+        select: {p.id, rank() |> over(order_by: [desc: p.score])}
 
     ranking = Repo.all(query)
 
@@ -442,9 +447,11 @@ defmodule Ipdth.Tournaments do
   end
 
   def set_participations_to_done(tournament_id) do
-    query = from p in Participation,
-            where: p.tournament_id == ^tournament_id,
-            where: p.status == :participating
+    query =
+      from p in Participation,
+        where: p.tournament_id == ^tournament_id,
+        where: p.status == :participating
+
     Repo.update_all(query, set: [status: :done])
   end
 

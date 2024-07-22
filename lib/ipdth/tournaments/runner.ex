@@ -1,5 +1,4 @@
 defmodule Ipdth.Tournaments.Runner do
-
   require Logger
 
   alias Ipdth.Agents
@@ -17,8 +16,9 @@ defmodule Ipdth.Tournaments.Runner do
   def supervisor_spec, do: {Task.Supervisor, name: @supervisor_name}
 
   def start(tournament) do
-    Task.Supervisor.start_child(@supervisor_name, __MODULE__, :run,
-                                [tournament], restart: :transient)
+    Task.Supervisor.start_child(@supervisor_name, __MODULE__, :run, [tournament],
+      restart: :transient
+    )
   end
 
   def run(%Tournament{} = tournament), do: run(tournament.id)
@@ -26,16 +26,19 @@ defmodule Ipdth.Tournaments.Runner do
   def run(tournament_id) do
     # Our runner might have crashed and been restarted.
     # We re-fetch the tournament from DB to avoid working on stale data
-    #tournament = Repo.get!(Tournament, tournament_id)
+    # tournament = Repo.get!(Tournament, tournament_id)
     tournament = Tournaments.get_tournament!(tournament_id)
 
     case tournament.status do
       :published ->
         prepare_and_start_tournament(tournament)
+
       :signup_closed ->
         prepare_and_start_tournament(tournament)
+
       :running ->
         check_and_resume_tournament(tournament)
+
       other ->
         Logger.warning("Attempting to run tournament in status #{other}. Stopping.")
     end
@@ -109,9 +112,11 @@ defmodule Ipdth.Tournaments.Runner do
     receive do
       {:match_finished, match} ->
         remaining_matches = Enum.filter(running_matches, fn m -> m != match.id end)
+
         case match.status do
           :finished ->
             wait_for_matches(remaining_matches, tournament, matches_supervisor, more_rounds)
+
           :aborted ->
             errored_agents = determine_errored_agents(match)
             Matches.cancel_open_matches_for_errored_agents(errored_agents, tournament)
@@ -119,26 +124,32 @@ defmodule Ipdth.Tournaments.Runner do
             Tournaments.set_participation_to_error_for_errored_agents(errored_agents, tournament)
 
             wait_for_matches(remaining_matches, tournament, matches_supervisor, more_rounds)
+
           other ->
             Logger.warning("Received :match_finished for match in status #{other}.")
             wait_for_matches(remaining_matches, tournament, matches_supervisor, more_rounds)
         end
 
       message ->
-        Logger.warning("Tournament.Runner for tournament #{tournament.id} received unexpected message #{inspect(message)}")
+        Logger.warning(
+          "Tournament.Runner for tournament #{tournament.id} received unexpected message #{inspect(message)}"
+        )
+
         wait_for_matches(running_matches, tournament, matches_supervisor, more_rounds)
     end
   end
 
   defp start_matches(matches, matches_supervisor) do
     # TODO: change result to {status, result} code
-    errors = Enum.map(matches, fn match ->
-      Matches.Runner.start(matches_supervisor, [match, self()])
-    end) |> Enum.filter(fn {status, _} -> status == :error end)
+    errors =
+      Enum.map(matches, fn match ->
+        Matches.Runner.start(matches_supervisor, [match, self()])
+      end)
+      |> Enum.filter(fn {status, _} -> status == :error end)
 
     if errors == [] do
       matches
-    else 
+    else
       errors
     end
   end
@@ -147,17 +158,18 @@ defmodule Ipdth.Tournaments.Runner do
     agent_a = Agents.get_agent!(match.agent_a_id)
     agent_b = Agents.get_agent!(match.agent_b_id)
 
-    %Agent{ status: status_a } = agent_a
-    %Agent{ status: status_b } = agent_b
+    %Agent{status: status_a} = agent_a
+    %Agent{status: status_b} = agent_b
 
     case {status_a, status_b} do
       {:error, :error} ->
         [agent_a, agent_b]
+
       {:error, _} ->
         [agent_a]
+
       {_, :error} ->
         [agent_b]
     end
   end
-
 end

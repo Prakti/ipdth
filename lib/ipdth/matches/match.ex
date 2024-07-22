@@ -18,7 +18,10 @@ defmodule Ipdth.Matches.Match do
     field :score_a, :integer
     field :score_b, :integer
     field :rounds_to_play, :integer
-    field :status, Ecto.Enum, values: [:open, :started, :finished, :invalidated, :aborted, :cancelled]
+
+    field :status, Ecto.Enum,
+      values: [:open, :started, :finished, :invalidated, :aborted, :cancelled]
+
     field :tournament_round, :integer
     has_many :rounds, Round
     belongs_to :agent_a, Agent
@@ -42,8 +45,10 @@ defmodule Ipdth.Matches.Match do
   end
 
   def start(match) do
-    change(match, status: :started,
-                  start_date: DateTime.utc_now())
+    change(match,
+      status: :started,
+      start_date: DateTime.utc_now()
+    )
   end
 
   def abort(match) do
@@ -59,5 +64,4 @@ defmodule Ipdth.Matches.Match do
   def invalidate(match) do
     change(match, status: :invalidated)
   end
-
 end

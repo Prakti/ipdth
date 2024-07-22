@@ -41,33 +41,34 @@ defmodule Ipdth.AgentsFixtures do
   def multiple_agents_one_bypass_fixture(owner, count) do
     bypass = Bypass.open()
 
-    generator = Stream.unfold(1, fn n ->
-      attrs = %{
-        name: "Agent #{n}",
-        url: "http://localhost:#{bypass.port}/decide",
-        bearer_token: agent_service_bearer_token()
-      }
+    generator =
+      Stream.unfold(1, fn n ->
+        attrs = %{
+          name: "Agent #{n}",
+          url: "http://localhost:#{bypass.port}/decide",
+          bearer_token: agent_service_bearer_token()
+        }
 
-      {agent_fixture(owner, attrs), n + 1}
-    end)
+        {agent_fixture(owner, attrs), n + 1}
+      end)
 
     %{agents: Stream.take(generator, count), bypass: bypass}
   end
 
   def multiple_activated_agents_one_bypass_fixture(owner, count) do
-    %{ agents: agents, bypass: bypass } = multiple_agents_one_bypass_fixture(owner, count)
+    %{agents: agents, bypass: bypass} = multiple_agents_one_bypass_fixture(owner, count)
 
     Bypass.stub(bypass, "POST", "/decide", fn conn ->
       conn
       |> Plug.Conn.merge_resp_headers([{"content-type", "application/json"}])
       |> Plug.Conn.resp(200, agent_service_success_response())
-
     end)
 
-    active_agents = Stream.map(agents, fn agent ->
-      {:ok, agent} = Agents.activate_agent(agent, owner.id)
-      agent
-    end)
+    active_agents =
+      Stream.map(agents, fn agent ->
+        {:ok, agent} = Agents.activate_agent(agent, owner.id)
+        agent
+      end)
 
     %{agents: active_agents, bypass: bypass}
   end

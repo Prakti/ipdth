@@ -10,7 +10,6 @@ defmodule Ipdth.MatchesTest do
   import Ipdth.MatchesFixtures
 
   describe "matches" do
-
     test "list_matches/0 returns all matches" do
       admin_user = admin_user_fixture()
       agent_a = agent_fixture(admin_user)
@@ -55,6 +54,5 @@ defmodule Ipdth.MatchesTest do
       assert {:ok, %Match{}} = Matches.delete_match(match)
       assert_raise Ecto.NoResultsError, fn -> Matches.get_match!(match.id) end
     end
-
   end
 end

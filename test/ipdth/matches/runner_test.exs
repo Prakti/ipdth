@@ -76,5 +76,4 @@ defmodule Ipdth.Matches.RunnerTest do
       assert finished_match.status == :aborted
     end
   end
-
 end

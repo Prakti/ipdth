@@ -5,7 +5,8 @@ defmodule Ipdth.Tournaments.Manager do
   alias Ipdth.Tournaments.Runner
 
   # TODO: 2024-06-25 - Make check_interval configurable
-  @check_interval 1_000 # One Second
+  # One Second
+  @check_interval 1_000
 
   defmodule State do
     defstruct auto_mode: true,
@@ -28,10 +29,12 @@ defmodule Ipdth.Tournaments.Manager do
           get_tournaments: fn _timestamp -> [] end,
           start_tournament: fn _tournament -> {:ok, nil} end
         })
+
       :dev ->
         start_link(%State{
           auto_mode: false
         })
+
       _ ->
         start_link(%State{})
     end
@@ -46,7 +49,7 @@ defmodule Ipdth.Tournaments.Manager do
   end
 
   def check_and_start_tournaments(timestamp) do
-    GenServer.cast(__MODULE__, { :check_and_and_start_tournaments, timestamp })
+    GenServer.cast(__MODULE__, {:check_and_and_start_tournaments, timestamp})
   end
 
   ## Server Callbacks
@@ -99,5 +102,4 @@ defmodule Ipdth.Tournaments.Manager do
   def schedule_next_check(wait_time) do
     Process.send_after(self(), :trigger_check, wait_time)
   end
-
 end
