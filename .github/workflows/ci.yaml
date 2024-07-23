@@ -60,6 +60,7 @@ jobs:
           path: |
             deps
             _build
+            priv/plts
           key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('mix.lock') }}
       - run: mix deps.unlock --check-unused
   credo:
@@ -87,6 +88,7 @@ jobs:
           path: |
             deps
             _build
+            priv/plts
           key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('mix.lock') }}
       - run: mix credo
   dialyzer:
@@ -142,6 +144,7 @@ jobs:
           path: |
             deps
             _build
+            priv/plts
           key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('mix.lock') }}
       - run: mix sobelow --config
   audit:
@@ -169,6 +172,7 @@ jobs:
           path: |
             deps
             _build
+            priv/plts
           key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('mix.lock') }}
       - run: mix hex.audit
       - run: mix deps.audit
@@ -197,6 +201,7 @@ jobs:
           path: |
             deps
             _build
+            priv/plts
           key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('mix.lock') }}
       - run: mix format --check-formatted
   mix-test:
@@ -231,5 +236,6 @@ jobs:
           path: |
             deps
             _build
+            priv/plts
           key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('mix.lock') }}
       - run: mix test --trace --slowest 10
