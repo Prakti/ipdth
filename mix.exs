@@ -82,7 +82,8 @@ defmodule Ipdth.MixProject do
         "format --check-formatted",
         "credo",
         "sobelow --config",
-        "deps.audit"
+        "deps.audit",
+        "deps.unlock --check-unused"
       ]
     ]
   end
