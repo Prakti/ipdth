@@ -34,6 +34,7 @@ jobs:
           mix deps.get
           mix deps.compile
   unused_dependencies:
+    needs: dependencies
     runs-on: ubuntu-latest
     concurrency:
       group: elixir-unused-dependencies
@@ -50,6 +51,14 @@ jobs:
         with:
           elixir-version: ${{ matrix.elixir }}
           otp-version: ${{ matrix.otp }}
+      - name: Retrieve cached dependencies
+        uses: actions/cache@v4
+        id: mix-cache
+        with:
+          path: |
+            deps
+            _build
+          key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('mix.lock') }}
       - run: mix deps.unlock --check-unused
   credo:
     needs: dependencies
