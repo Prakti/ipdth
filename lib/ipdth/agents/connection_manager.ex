@@ -125,9 +125,11 @@ defmodule Ipdth.Agents.ConnectionManager do
             }
 
             {:noreply, %State{state | task_info: Map.put(state.task_info, task_pid, task_info)}}
+
           error ->
             {:reply, {:error, error}}
         end
+
       _ ->
         {:reply, {:error, :agent_in_backoff}, state}
     end
@@ -174,6 +176,7 @@ defmodule Ipdth.Agents.ConnectionManager do
         }
 
         {:noreply, %State{state | task_info: Map.put(state.task_info, task_pid, task_info)}}
+
       error ->
         backoff_config = get_config()
         backoff_duration = backoff_config[:backoff_duration]
