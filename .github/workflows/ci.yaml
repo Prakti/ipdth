@@ -1,11 +1,12 @@
 on: push
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   dependencies:
     runs-on: ubuntu-latest
-    concurrency:
-      group: elixir-dependencies
-      cancel-in-progress: true
     strategy:
       matrix:
         elixir: ['1.16.3']
@@ -38,9 +39,6 @@ jobs:
   unused_dependencies:
     needs: dependencies
     runs-on: ubuntu-latest
-    concurrency:
-      group: elixir-unused-dependencies
-      cancel-in-progress: true
     strategy:
       matrix:
         elixir: ['1.16.3']
@@ -66,9 +64,6 @@ jobs:
   credo:
     needs: dependencies
     runs-on: ubuntu-latest
-    concurrency:
-      group: elixir-credo
-      cancel-in-progress: true
     strategy:
       matrix:
         elixir: ['1.16.3']
@@ -94,9 +89,6 @@ jobs:
   dialyzer:
     needs: dependencies
     runs-on: ubuntu-latest
-    concurrency:
-      group: elixir-dialyzer
-      cancel-in-progress: true
     strategy:
       matrix:
         elixir: ['1.16.3']
@@ -122,9 +114,6 @@ jobs:
   sobelow:
     needs: dependencies
     runs-on: ubuntu-latest
-    concurrency:
-      group: elixir-sobelow
-      cancel-in-progress: true
     strategy:
       matrix:
         elixir: ['1.16.3']
@@ -150,9 +139,6 @@ jobs:
   audit:
     needs: dependencies
     runs-on: ubuntu-latest
-    concurrency:
-      group: elixir-audit
-      cancel-in-progress: true
     strategy:
       matrix:
         elixir: ['1.16.3']
@@ -179,9 +165,6 @@ jobs:
   formatting:
     needs: dependencies
     runs-on: ubuntu-latest
-    concurrency:
-      group: elixir-formatting
-      cancel-in-progress: true
     strategy:
       matrix:
         elixir: ['1.16.3']
@@ -207,9 +190,6 @@ jobs:
   mix-test:
     needs: dependencies
     runs-on: ubuntu-latest
-    concurrency:
-      group: elixir-test
-      cancel-in-progress: true
     strategy:
       matrix:
         elixir: ['1.16.3']
