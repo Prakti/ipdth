@@ -58,7 +58,8 @@ defmodule Ipdth.MixProject do
       {:esbuild, "~> 0.7", runtime: Mix.env() == :dev},
       {:tailwind, "~> 0.2.0", runtime: Mix.env() == :dev},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
-      {:sobelow, "~> 0.13", only: [:dev, :test], runtime: false}
+      {:sobelow, "~> 0.13", only: [:dev, :test], runtime: false},
+      {:mix_audit, "~> 2.1", only: [:dev, :test], runtime: false}
     ]
   end
 
@@ -80,7 +81,8 @@ defmodule Ipdth.MixProject do
       "pre-commit": [
         "format --check-formatted",
         "credo",
-        "sobelow --config"
+        "sobelow --config",
+        "deps.audit"
       ]
     ]
   end
