@@ -365,9 +365,7 @@ defmodule Ipdth.Accounts do
       {:error, %Ecto.Changeset{}}
   """
   def add_user_role(%User{} = user, role, actor_id) do
-    actor = get_user!(actor_id)
-    # TODO: 2024-08-28 - Replace by has_role?(actor_id)
-    if Enum.member?(actor.roles, :user_admin) do
+    if has_role?(actor_id, :user_admin) do
       user
       |> User.add_role(role)
       |> Repo.update()
@@ -389,9 +387,7 @@ defmodule Ipdth.Accounts do
       {:error, %Ecto.Changeset{}}
   """
   def remove_user_role(%User{} = user, role, actor_id) do
-    actor = get_user!(actor_id)
-    # TODO: 2024-08-28 - Replace by has_role?(actor_id)
-    if Enum.member?(actor.roles, :user_admin) do
+    if has_role?(actor_id, :user_admin) do
       user
       |> User.remove_role(role)
       |> Repo.update()
