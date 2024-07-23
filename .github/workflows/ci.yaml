@@ -60,6 +60,33 @@ jobs:
             _build
           key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('mix.lock') }}
       - run: mix credo
+  sobelow:
+    needs: dependencies
+    runs-on: ubuntu-latest
+    concurrency:
+      group: elixir-credo
+      cancel-in-progress: true
+    strategy:
+      matrix:
+        elixir: ['1.16.3']
+        otp: ['25']
+    steps:
+      - name: Check- out IPDTH sources
+        uses: actions/checkout@v4
+      - name: Sets up an Erlang/OTP environment
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+      - name: Retrieve cached dependencies
+        uses: actions/cache@v4
+        id: mix-cache
+        with:
+          path: |
+            deps
+            _build
+          key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('mix.lock') }}
+      - run: mix sobelow --config 
   formatting:
     needs: dependencies
     runs-on: ubuntu-latest
