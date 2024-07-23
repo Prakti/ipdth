@@ -10,6 +10,9 @@ import Config
 config :ipdth,
   ecto_repos: [Ipdth.Repo]
 
+# make the current environment
+config :ipdth, :environment, config_env()
+
 # Configures the endpoint
 config :ipdth, IpdthWeb.Endpoint,
   url: [host: "localhost"],

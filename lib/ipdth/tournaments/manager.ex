@@ -28,7 +28,8 @@ defmodule Ipdth.Tournaments.Manager do
   end
 
   def start_link(_) do
-    case Mix.env() do
+    # TODO: 2024-07-23 - Think about loading initial state from config.
+    case Application.get_env(:ipdth, :environment, :prod) do
       :test ->
         start_link(%State{
           auto_mode: false,
