@@ -64,7 +64,7 @@ jobs:
     needs: dependencies
     runs-on: ubuntu-latest
     concurrency:
-      group: elixir-credo
+      group: elixir-sobelow
       cancel-in-progress: true
     strategy:
       matrix:
