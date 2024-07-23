@@ -3,11 +3,6 @@ defmodule Ipdth.Tournaments.ManagerTest do
 
   import Ecto.Query, warn: false
 
-  import Ipdth.AccountsFixtures
-  import Ipdth.AgentsFixtures
-  import Ipdth.TournamentsFixtures
-
-  alias Ipdth.Tournaments
   alias Ipdth.Tournaments.Manager
 
   describe "tournaments/manager" do

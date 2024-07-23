@@ -1,4 +1,10 @@
 defmodule Ipdth.Tournaments.Manager do
+  @moduledoc """
+  This module regularly checks if a tournament has to be started as per it's
+  official start date. In case one or more tournaments are identified to be
+  started, this module spawns a Tournament.Runner task for each.
+  """
+
   use GenServer
 
   alias Ipdth.Tournaments
@@ -9,6 +15,7 @@ defmodule Ipdth.Tournaments.Manager do
   @check_interval 1_000
 
   defmodule State do
+    @moduledoc false
     defstruct auto_mode: true,
               get_tournaments: &Tournaments.list_due_and_overdue_tournaments/1,
               start_tournament: &Runner.start/1

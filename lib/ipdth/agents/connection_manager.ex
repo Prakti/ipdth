@@ -1,4 +1,10 @@
 defmodule Ipdth.Agents.ConnectionManager do
+  @moduledoc """
+  This module manages all connection requests to an agent.
+  Usually it spanws a connection task, that will then execute the requested
+  call to the agent. In case the agent is non-responsive, this module executes
+  a backoff before doing another attempts at triggering a request.
+  """
   import Ecto.Query, warn: false
 
   require Logger
@@ -63,12 +69,20 @@ defmodule Ipdth.Agents.ConnectionManager do
   ###
 
   defmodule BackoffInfo do
+    @moduledoc """
+    Models the backoff state of an agent. Stored in the internal state of this
+    module.
+    """
     defstruct agent_id: nil,
               retry_count: nil,
               backoff_duration: nil
   end
 
   defmodule TaskInfo do
+    @moduledoc """
+    Represents the task information of a currently running request to an
+    agent. Used in the internal state of this module.
+    """
     defstruct task_pid: nil,
               agent_id: nil,
               caller_pid: nil,
@@ -77,6 +91,9 @@ defmodule Ipdth.Agents.ConnectionManager do
   end
 
   defmodule State do
+    @moduledoc """
+    Internal state of this GenServer.
+    """
     defstruct backoff_info: %{}, task_info: %{}, task_supervisor: nil
   end
 
@@ -96,22 +113,21 @@ defmodule Ipdth.Agents.ConnectionManager do
   def handle_call({:test, agent_id}, from, state) do
     case Map.get(state.backoff_info, agent_id) do
       nil ->
-        with {:ok, task_pid} <- start_test_task(state, agent_id) do
-          Process.monitor(task_pid)
+        case start_test_task(state, agent_id) do
+          {:ok, task_pid} ->
+            Process.monitor(task_pid)
 
-          task_info = %TaskInfo{
-            task_pid: task_pid,
-            agent_id: agent_id,
-            caller_pid: from,
-            test?: true
-          }
+            task_info = %TaskInfo{
+              task_pid: task_pid,
+              agent_id: agent_id,
+              caller_pid: from,
+              test?: true
+            }
 
-          {:noreply, %State{state | task_info: Map.put(state.task_info, task_pid, task_info)}}
-        else
+            {:noreply, %State{state | task_info: Map.put(state.task_info, task_pid, task_info)}}
           error ->
             {:reply, {:error, error}}
         end
-
       _ ->
         {:reply, {:error, :agent_in_backoff}, state}
     end
@@ -146,19 +162,18 @@ defmodule Ipdth.Agents.ConnectionManager do
 
   @impl true
   def handle_info({:do_decide, agent_id, decision_request, from}, state) do
-    with {:ok, task_pid} <- start_decision_task(state, agent_id, decision_request) do
-      Process.monitor(task_pid)
+    case start_decision_task(state, agent_id, decision_request) do
+      {:ok, task_pid} ->
+        Process.monitor(task_pid)
 
-      task_info = %TaskInfo{
-        task_pid: task_pid,
-        agent_id: agent_id,
-        caller_pid: from,
-        decision_request: decision_request
-      }
+        task_info = %TaskInfo{
+          task_pid: task_pid,
+          agent_id: agent_id,
+          caller_pid: from,
+          decision_request: decision_request
+        }
 
-      {:noreply, %State{state | task_info: Map.put(state.task_info, task_pid, task_info)}}
-    else
-      # This should be a rare error; in case it happens: back off
+        {:noreply, %State{state | task_info: Map.put(state.task_info, task_pid, task_info)}}
       error ->
         backoff_config = get_config()
         backoff_duration = backoff_config[:backoff_duration]

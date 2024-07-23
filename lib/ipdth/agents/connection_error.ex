@@ -1,4 +1,8 @@
 defmodule Ipdth.Agents.ConnectionError do
+  @moduledoc """
+  Database entity representing an error that occurred while trying to connect
+  to an agent. 
+  """
   use Ecto.Schema
   import Ecto.Changeset
 

@@ -1,4 +1,12 @@
 defmodule Ipdth.Tournaments.Runner do
+  @moduledoc """
+  This module manages the execution of a tournament as a concurrent task.
+  It does calculation of match schedules and then triggers the execution of
+  matches, as the tournament progresses. It finally computes the final scores
+  of all participating agents as well as their ranking within the tournament.
+  This module also handles edge cases, such as an agent going into an error
+  state.
+  """
   require Logger
 
   alias Ipdth.Agents

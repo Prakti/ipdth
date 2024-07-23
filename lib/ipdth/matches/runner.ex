@@ -1,4 +1,9 @@
 defmodule Ipdth.Matches.Runner do
+  @moduledoc """
+  This module models a concurrent task, in which one match between two agents
+  is handled. Calls to the agents, scoring, saving state is managed from here.
+  """
+
   import Ecto.Query, warn: false
 
   alias Ipdth.Repo

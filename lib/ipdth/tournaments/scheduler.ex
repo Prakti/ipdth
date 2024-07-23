@@ -1,4 +1,10 @@
 defmodule Ipdth.Tournaments.Scheduler do
+  @moduledoc """
+  This module calculates a round-robin schedule for a tournament.
+  It is mostly used by the Tournaments.Runner module at startup of a
+  tournament. We have extracted the functionality for testing purposes.
+  """
+
   def create_schedule(players) do
     even_players =
       if rem(Enum.count(players), 2) == 1 do
