@@ -105,13 +105,15 @@ defmodule Ipdth.Accounts.User do
   end
 
   @doc """
-  Creates the changeset for the genesis user.
+  Creates the changeset for seeding a user.
+  Only for testing and seeding purposes.
   """
-  def genesis_user_changeset(user, attrs) do
+  def seed_user_changeset(user, attrs, opts \\ []) do
     user
-    |> cast(attrs, [:email, :hashed_password])
-    |> put_change(:roles, @valid_roles)
-    |> validate_email([])
+    |> cast(attrs, [:email, :password, :roles])
+    |> validate_email(opts)
+    |> validate_password(opts)
+    |> validate_subset(:roles, @valid_roles)
     |> confirm_changeset()
   end
 

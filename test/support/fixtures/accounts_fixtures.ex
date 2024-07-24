@@ -6,7 +6,7 @@ defmodule Ipdth.AccountsFixtures do
 
   def unique_user_email, do: "user#{System.unique_integer()}@example.com"
   def unique_admin_email, do: "admin#{System.unique_integer()}@ipdth.com"
-  def valid_user_password, do: "hello world!"
+  def valid_user_password, do: "Das ist das Haus vom Nikolaus!"
 
   def valid_user_attributes(attrs \\ %{}) do
     Enum.into(attrs, %{
@@ -15,12 +15,16 @@ defmodule Ipdth.AccountsFixtures do
     })
   end
 
-  def admin_user_fixture() do
+  def valid_admin_attributes(attrs \\ %{}) do
+    valid_user_attributes(attrs)
+    |> Enum.into(%{roles: [:tournament_admin, :user_admin]})
+  end
+
+  def admin_user_fixture(attrs \\ %{}) do
     {:ok, admin_user} =
-      Ipdth.Accounts.create_genesis_user(%{
-        "email" => unique_admin_email(),
-        "hashed_password" => "$2b$12$bXskhdRKbOOLc3vOJmn/s.4gXebk3jE/3.Z14TVgm6s4hhfxF0KRK"
-      })
+      attrs
+      |> valid_admin_attributes()
+      |> Ipdth.Accounts.seed_user()
 
     admin_user
   end
@@ -29,7 +33,7 @@ defmodule Ipdth.AccountsFixtures do
     {:ok, user} =
       attrs
       |> valid_user_attributes()
-      |> Ipdth.Accounts.register_user()
+      |> Ipdth.Accounts.seed_user()
 
     user
   end

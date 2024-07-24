@@ -365,10 +365,12 @@ defmodule Ipdth.AccountsTest do
 
   describe "deliver_user_confirmation_instructions/2" do
     setup do
-      %{user: user_fixture()}
+      %{user_attrs: valid_user_attributes()}
     end
 
-    test "sends token through notification", %{user: user} do
+    test "sends token through notification", %{user_attrs: attrs} do
+      {:ok, user} = Accounts.register_user(attrs)
+
       token =
         extract_user_token(fn url ->
           Accounts.deliver_user_confirmation_instructions(user, url)
@@ -384,7 +386,9 @@ defmodule Ipdth.AccountsTest do
 
   describe "confirm_user/1" do
     setup do
-      user = user_fixture()
+      {:ok, user} =
+        valid_user_attributes()
+        |> Accounts.register_user()
 
       token =
         extract_user_token(fn url ->

@@ -397,17 +397,14 @@ defmodule Ipdth.Accounts do
   end
 
   @doc """
-  Convenience function to seed an initial admin user.
-  You need to provide a map containing an "email" and "hashed_password".
-  The password must be hashed using bcrypt.
-  You can use `Bcrypt.hash_pwd_salt/1` on the iex console to obtain the hash.
+  Convenience function to create arbitrary users, for testing purposes.
 
   The email of this user will not be verified, so you need to be extra careful
   when using this function.
   """
-  def create_genesis_user(attrs) do
+  def seed_user(attrs) do
     %User{}
-    |> User.genesis_user_changeset(attrs)
+    |> User.seed_user_changeset(attrs)
     |> Repo.insert()
   end
 

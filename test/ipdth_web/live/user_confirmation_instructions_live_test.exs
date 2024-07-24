@@ -8,7 +8,11 @@ defmodule IpdthWeb.UserConfirmationInstructionsLiveTest do
   alias Ipdth.Repo
 
   setup do
-    %{user: user_fixture()}
+    {:ok, user} =
+      valid_user_attributes()
+      |> Accounts.register_user()
+
+    %{user: user}
   end
 
   describe "Resend confirmation" do
