@@ -9,6 +9,8 @@ defmodule Ipdth.TournamentsTest do
   import Ipdth.AccountsFixtures
   import Ipdth.AgentsFixtures
 
+  # TODO: 2024-07-24 - Refactor to "describe fuction/arity" blocks
+
   describe "tournaments" do
     @invalid_attrs %{
       name: nil,
@@ -118,8 +120,6 @@ defmodule Ipdth.TournamentsTest do
       assert {:error, :not_authorized} = Tournaments.publish_tournament(tournament, user.id)
     end
 
-    # TODO: 2024-04-28 - test update_tournament against status model
-
     test "update_tournament/2 as an admin with valid data updates the tournament" do
       admin = admin_user_fixture()
       tournament = tournament_fixture(admin.id)
@@ -141,6 +141,44 @@ defmodule Ipdth.TournamentsTest do
       assert tournament.start_date == ~U[2024-01-21 12:56:00.000000Z]
       assert tournament.round_number == 43
       assert tournament.random_seed == "some updated random_seed"
+    end
+
+    test "update_tournament/2 fails if tournament is in state :running" do
+      admin = admin_user_fixture()
+
+      tournament =
+        tournament_fixture(admin.id)
+        |> Tournaments.set_tournament_to_started()
+
+      update_attrs = %{
+        name: "some updated name",
+        description: "some updated description",
+        start_date: ~U[2024-01-21 12:56:00Z],
+        round_number: 43,
+        random_seed: "some updated random_seed"
+      }
+
+      assert {:error, :tournament_editing_locked} =
+               Tournaments.update_tournament(tournament, update_attrs, admin.id)
+    end
+
+    test "update_tournament/2 fails if tournament is finished" do
+      admin = admin_user_fixture()
+
+      {:ok, tournament} =
+        tournament_fixture(admin.id)
+        |> Tournaments.finish_tournament()
+
+      update_attrs = %{
+        name: "some updated name",
+        description: "some updated description",
+        start_date: ~U[2024-01-21 12:56:00Z],
+        round_number: 43,
+        random_seed: "some updated random_seed"
+      }
+
+      assert {:error, :tournament_editing_locked} =
+               Tournaments.update_tournament(tournament, update_attrs, admin.id)
     end
 
     test "update_tournament/2 as a normal user with valid data fails with :not_authorized" do
