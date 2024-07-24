@@ -93,6 +93,17 @@ defmodule Ipdth.AccountsTest do
       assert is_nil(user.confirmed_at)
       assert is_nil(user.password)
     end
+
+    test "makes the first user an admin but not the following users" do
+      {:ok, admin} = Accounts.register_user(valid_user_attributes())
+
+      assert admin.roles == [:tournament_admin, :user_admin]
+
+      for _ <- 1..100 do
+        {:ok, user} = Accounts.register_user(valid_user_attributes())
+        refute user.roles == [:tournament_admin, :user_admin]
+      end
+    end
   end
 
   describe "change_user_registration/2" do

@@ -76,8 +76,10 @@ defmodule Ipdth.Accounts do
 
   """
   def register_user(attrs) do
+    is_first_user = Repo.aggregate(User, :count, :id) == 0
+
     %User{}
-    |> User.registration_changeset(attrs)
+    |> User.registration_changeset(attrs, is_first_user: is_first_user)
     |> Repo.insert()
   end
 

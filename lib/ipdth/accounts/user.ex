@@ -52,10 +52,17 @@ defmodule Ipdth.Accounts.User do
       Defaults to `true`.
   """
   def registration_changeset(user, attrs, opts \\ []) do
-    user
-    |> cast(attrs, [:email, :password])
-    |> validate_email(opts)
-    |> validate_password(opts)
+    changeset =
+      user
+      |> cast(attrs, [:email, :password])
+      |> validate_email(opts)
+      |> validate_password(opts)
+
+    if Keyword.get(opts, :is_first_user, false) do
+      put_change(changeset, :roles, @valid_roles)
+    else
+      changeset
+    end
   end
 
   defp validate_email(changeset, opts) do
