@@ -46,3 +46,12 @@ config :ipdth,
        connect_options: [timeout: 6_000],
        pool_timeout: 1_000,
        receive_timeout: 3_000
+
+# Dependency injection config for the Tournaments Manager
+# Needs to be overidden for testing purposes
+config :ipdth,
+       Ipdth.Tournaments.Manager,
+       auto_mode: false,
+       get_tournaments: fn _timestamp -> [] end,
+       start_tournament: fn _tournament -> {:ok, nil} end,
+       check_interval: 1_000

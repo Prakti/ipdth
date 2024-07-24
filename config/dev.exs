@@ -77,3 +77,12 @@ config :phoenix, :plug_init_mode, :runtime
 
 # Disable swoosh api client as it is only required for production adapters.
 config :swoosh, :api_client, false
+
+# Dependency injection config for the Tournaments Manager
+# Disable auto_mode; must be triggered from iex
+config :ipdth,
+       Ipdth.Tournaments.Manager,
+       auto_mode: false,
+       get_tournaments: &Ipdth.Tournaments.list_due_and_overdue_tournaments/1,
+       start_tournament: &Ipdth.Tournaments.Runner.start/1,
+       check_interval: 1_000

@@ -10,7 +10,7 @@ import Config
 config :ipdth,
   ecto_repos: [Ipdth.Repo]
 
-# make the current environment
+# make the current environment accessible
 config :ipdth, :environment, config_env()
 
 # Configures the endpoint
@@ -67,16 +67,27 @@ config :ipdth,
        Ipdth.Repo,
        migration_timestamps: [type: :utc_datetime_usec]
 
+# Options for the ConnectionManager
 config :ipdth,
        Ipdth.Agents.ConnectionManager,
        backoff_duration: 5_000,
        max_retries: 3
 
+# Options for the connections to an agent
 config :ipdth,
        Ipdth.Agents.Connection,
        connect_options: [timeout: 30_000],
        pool_timeout: 5_000,
        receive_timeout: 15_000
+
+# Dependency injection config for the Tournaments Manager
+# Needs to be overidden for testing purposes
+config :ipdth,
+       Ipdth.Tournaments.Manager,
+       auto_mode: true,
+       get_tournaments: &Ipdth.Tournaments.list_due_and_overdue_tournaments/1,
+       start_tournament: &Ipdth.Tournaments.Runner.start/1,
+       check_interval: 1_000
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

@@ -10,42 +10,22 @@ defmodule Ipdth.Tournaments.Manager do
   alias Ipdth.Tournaments
   alias Ipdth.Tournaments.Runner
 
-  # TODO: 2024-06-25 - Make check_interval configurable
-  # One Second
-  @check_interval 1_000
-
   defmodule State do
     @moduledoc false
     defstruct auto_mode: true,
               get_tournaments: &Tournaments.list_due_and_overdue_tournaments/1,
-              start_tournament: &Runner.start/1
+              start_tournament: &Runner.start/1,
+              check_interval: 1_000
   end
 
   ## Client API
-
-  def start_link(%State{} = state) do
-    GenServer.start_link(__MODULE__, state, name: __MODULE__)
+  def start_link(:load_config) do
+    Application.get_env(:ipdth, __MODULE__)
+    |> start_link()
   end
 
-  def start_link(_) do
-    # TODO: 2024-07-23 - Think about loading initial state from config.
-    case Application.get_env(:ipdth, :environment, :prod) do
-      :test ->
-        start_link(%State{
-          auto_mode: false,
-          # TODO: 2024-06-25 - Replace dummy functions with better ones
-          get_tournaments: fn _timestamp -> [] end,
-          start_tournament: fn _tournament -> {:ok, nil} end
-        })
-
-      :dev ->
-        start_link(%State{
-          auto_mode: false
-        })
-
-      _ ->
-        start_link(%State{})
-    end
+  def start_link(config, id \\ __MODULE__) do
+    GenServer.start_link(__MODULE__, config, name: id)
   end
 
   def set_manual_mode do
@@ -57,15 +37,42 @@ defmodule Ipdth.Tournaments.Manager do
   end
 
   def check_and_start_tournaments(timestamp) do
-    GenServer.cast(__MODULE__, {:check_and_and_start_tournaments, timestamp})
+    check_and_start_tournaments(__MODULE__, timestamp)
+  end
+
+  def check_and_start_tournaments(server, timestamp) do
+    GenServer.cast(server, {:check_and_start_tournaments, timestamp})
   end
 
   ## Server Callbacks
-
   @impl true
-  def init(state) do
+  def init(config) do
+    init(config, %State{})
+  end
+
+  def init([{:check_interval, check_interval} | rest], %State{} = state) do
+    init(rest, %State{state | check_interval: check_interval})
+  end
+
+  def init([{:start_tournament, start_tournament} | rest], %State{} = state) do
+    init(rest, %State{state | start_tournament: start_tournament})
+  end
+
+  def init([{:get_tournaments, get_tournaments} | rest], %State{} = state) do
+    init(rest, %State{state | get_tournaments: get_tournaments})
+  end
+
+  def init([{:auto_mode, auto_mode} | rest], %State{} = state) do
+    init(rest, %State{state | auto_mode: auto_mode})
+  end
+
+  def init([_ | rest], %State{} = state) do
+    init(rest, state)
+  end
+
+  def init([], %State{} = state) do
     if state.auto_mode do
-      check_and_start_tournaments(DateTime.utc_now())
+      check_and_start_tournaments(self(), DateTime.utc_now())
     end
 
     {:ok, state}
@@ -78,7 +85,7 @@ defmodule Ipdth.Tournaments.Manager do
 
   @impl true
   def handle_call(:set_auto_mode, _from, state) do
-    schedule_next_check(@check_interval)
+    schedule_next_check(state.check_interval)
     {:reply, :ok, %State{state | auto_mode: true}}
   end
 
@@ -90,7 +97,7 @@ defmodule Ipdth.Tournaments.Manager do
     |> Enum.each(state.start_tournament)
 
     if state.auto_mode do
-      schedule_next_check(@check_interval)
+      schedule_next_check(state.check_interval)
     end
 
     {:noreply, state}
@@ -99,7 +106,7 @@ defmodule Ipdth.Tournaments.Manager do
   @impl true
   def handle_info(:trigger_check, state) do
     if state.auto_mode do
-      check_and_start_tournaments(DateTime.utc_now())
+      check_and_start_tournaments(self(), DateTime.utc_now())
     end
 
     {:noreply, state}
