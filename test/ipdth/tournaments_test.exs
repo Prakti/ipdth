@@ -120,6 +120,16 @@ defmodule Ipdth.TournamentsTest do
       assert {:error, :not_authorized} = Tournaments.publish_tournament(tournament, user.id)
     end
 
+    test "publish_tournament/2 is an idempotempt operation" do
+      admin = admin_user_fixture()
+
+      {:ok, tournament} =
+        tournament_fixture(admin.id)
+        |> Tournaments.publish_tournament(admin.id)
+
+      assert {:ok, tournament} == Tournaments.publish_tournament(tournament, admin.id)
+    end
+
     test "update_tournament/2 as an admin with valid data updates the tournament" do
       admin = admin_user_fixture()
       tournament = tournament_fixture(admin.id)

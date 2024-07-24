@@ -209,9 +209,6 @@ defmodule Ipdth.Tournaments do
 
   @doc """
   Publish a tournament (:created -> :published)
-
-  Once published only it's name and description may be changed.
-  TODO: 2024-04-30 - Write Test for publish_tournament!
   """
   def publish_tournament(%Tournament{status: :created} = tournament, actor_id) do
     if Accounts.has_role?(actor_id, :tournament_admin) do
@@ -223,8 +220,9 @@ defmodule Ipdth.Tournaments do
     end
   end
 
-  def publish_tournament(%Tournament{}, _actor_id) do
-    {:error, :already_published}
+  def publish_tournament(%Tournament{} = tournament, _actor_id) do
+    # publishing is and idempotempt operation
+    {:ok, tournament}
   end
 
   @doc """
