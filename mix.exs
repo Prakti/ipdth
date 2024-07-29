@@ -10,7 +10,12 @@ defmodule Ipdth.MixProject do
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
-      compilers: [:yecc] ++ Mix.compilers()
+      compilers: [:yecc] ++ Mix.compilers(),
+      test_coverage: [tool: ExCoveralls],
+      preferred_cli_env: [
+        coveralls: :test,
+        "coveralls.html": :test
+      ]
     ]
   end
 
@@ -54,6 +59,7 @@ defmodule Ipdth.MixProject do
       {:floki, ">= 0.30.0", only: :test},
       {:bypass, "~> 2.1", only: :test},
       {:stream_data, "~> 1.1.1", only: :test},
+      {:excoveralls, "~> 0.18", only: :test},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
       {:tailwind, "~> 0.2.0", runtime: Mix.env() == :dev},
