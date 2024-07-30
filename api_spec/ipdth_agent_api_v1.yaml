@@ -60,7 +60,7 @@ paths:
                     tournament_id:
                       type: string
                       description: |
-                        Unique ID of the tournament. Will be -1 in case of test matches.
+                        Unique ID of the tournament. Will be "" in case of test matches.
                     match_id:
                       type: string
                       description: Unique ID of the match.
@@ -102,7 +102,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  details: 
+                  details:
                     type: string
                     description: Details on why the request was considered bad.
         '401':
@@ -112,7 +112,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  details: 
+                  details:
                     type: string
                     description: Details on why authentication failed.
         '500':
@@ -128,7 +128,7 @@ paths:
                   details:
                     type: string
                     description: |
-                      Debug information about the error. 
+                      Debug information about the error.
                       This part should only be sent to authenticated clients and stay empty otherwise.
       security:
         - BearerAuth: []
