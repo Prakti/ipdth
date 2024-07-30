@@ -11,14 +11,8 @@ alias Ipdth.Accounts
 alias Ipdth.Agents
 
 create_user = fn user_params ->
-  with {:ok, user} <- Accounts.register_user(user_params) do
-    Accounts.deliver_user_confirmation_instructions(user, fn token ->
-      Accounts.confirm_user(token)
-      "<irrelevant>"
-    end)
-
-    user
-  end
+  {:ok, user} = Accounts.seed_user(user_params)
+  user
 end
 
 Faker.start()
@@ -27,7 +21,7 @@ create_users = fn count ->
   Enum.map(1..count, fn _ ->
     user_params = %{
       email: Faker.Internet.user_name() <> "@ipdth.org",
-      password: "0xBABAF0000000000000"
+      password: "BarbarasRhabarberBar"
     }
 
     create_user.(user_params)
@@ -104,9 +98,10 @@ end
 # Generate Users
 ###
 {:ok, genesis_user} =
-  Accounts.create_genesis_user(%{
+  Accounts.seed_user(%{
     "email" => "myself@prakti.org",
-    "hashed_password" => "$2b$12$E2hj2p9qfkX5jer5KESlF.9lTxbUgqXV1uwn3s69XmtJLs4HNtN/K"
+    "password" => "BarbarasRhabarberBar",
+    "roles" => [:tournament_admin, :user_admin]
   })
 
 users = create_users.(20)
