@@ -130,8 +130,6 @@
 
 <.back navigate={~p"/agents"}>Back to agents</.back>
 
-<pre><%= inspect(assigns, pretty: true) %></pre>
-
 <.modal
   :if={@live_action == :edit && @check_ownership.(@agent)}
   id="agent-modal"
