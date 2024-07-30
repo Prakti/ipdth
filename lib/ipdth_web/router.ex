@@ -3,6 +3,8 @@ defmodule IpdthWeb.Router do
 
   import IpdthWeb.AuthN
 
+  @content_security_policy "default-src 'self';img-src 'self' blob: data:;"
+
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -12,7 +14,7 @@ defmodule IpdthWeb.Router do
 
     plug(
       :put_secure_browser_headers,
-      %{"content-security-policy" => "default-src 'self'"}
+      %{"content-security-policy" => @content_security_policy}
     )
 
     plug(:fetch_current_user)
