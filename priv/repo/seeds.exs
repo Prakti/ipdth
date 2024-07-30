@@ -75,6 +75,23 @@ publish_tournaments = fn admin, tournaments, count ->
   end)
 end
 
+create_past_tournaments = fn admin, count ->
+  Enum.map(1..count, fn _ ->
+    tournament_attrs = %{
+      name: Faker.Fruit.En.fruit() <> " " <> Faker.Nato.callsign(),
+      description: Faker.Lorem.paragraph() |> String.slice(0, 254),
+      start_date: Faker.DateTime.backward(10),
+      round_number: Faker.random_between(50, 200),
+      random_seed: Faker.String.base64(20)
+    }
+
+    with {:ok, tournament} <- Tournaments.create_tournament(tournament_attrs, admin.id),
+         {:ok, published_tournament} <- Tournaments.publish_tournament(tournament, admin.id) do
+      published_tournament
+    end
+  end)
+end
+
 sign_up_agents = fn user, agents, published_tournaments ->
   tournament_count = div(length(published_tournaments), 2)
   agent_count = div(length(agents), 2)
@@ -117,6 +134,7 @@ users_with_agents = create_agents_for_users.(users, 10)
 ###
 tournaments = create_tournaments.(genesis_user, 50)
 published_tournaments = publish_tournaments.(genesis_user, tournaments, 25)
+published_past_tournaments = create_past_tournaments.(genesis_user, 50)
 
 ###
 # Sign Up Agents to Tournament
@@ -124,3 +142,6 @@ published_tournaments = publish_tournaments.(genesis_user, tournaments, 25)
 
 sign_up_agents.(genesis_user, admin_agents, published_tournaments)
 sign_up_all_agents.(users_with_agents, published_tournaments)
+
+sign_up_agents.(genesis_user, admin_agents, published_past_tournaments)
+sign_up_all_agents.(users_with_agents, published_past_tournaments)
