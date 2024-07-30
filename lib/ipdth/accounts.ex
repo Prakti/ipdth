@@ -61,6 +61,23 @@ defmodule Ipdth.Accounts do
   """
   def get_user!(id), do: Repo.get!(User, id)
 
+  @doc """
+  Gets a single user.
+
+  Returns `nil` if no user was found.
+
+  ## Examples
+
+      iex> get_user!(123)
+      %User{}
+
+      iex> get_user!(456)
+      nil
+
+  """
+  def get_user(id), do: Repo.get(User, id)
+
+
   ## User registration
 
   @doc """

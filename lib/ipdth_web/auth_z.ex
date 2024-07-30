@@ -17,7 +17,7 @@ defmodule IpdthWeb.AuthZ do
   end
 
   def user_admin?(user_id) when is_integer(user_id) do
-    user_admin?(Accounts.get_user!(user_id))
+    user_admin?(Accounts.get_user(user_id))
   end
 
   def user_admin?(_) do
@@ -34,7 +34,7 @@ defmodule IpdthWeb.AuthZ do
   end
 
   def tournament_admin?(user_id) when is_integer(user_id) do
-    tournament_admin?(Accounts.get_user!(user_id))
+    tournament_admin?(Accounts.get_user(user_id))
   end
 
   def tournament_admin?(_) do
