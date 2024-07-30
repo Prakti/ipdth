@@ -3,20 +3,27 @@
   <:subtitle><%= @agent.description %></:subtitle>
   <:actions>
     <.link
-      :if={@check_ownership.(@agent)}
-      patch={~p"/agents/#{@agent}/show/edit"}
-      phx-click={JS.push_focus()}
+      :if={@agent.status != :active && @check_ownership.(@agent)}
+      phx-click={JS.push("activate", value: %{id: @agent.id})}
     >
-      <.button>Edit agent</.button>
+      <.button>Activate</.button>
+    </.link>
+  </:actions>
+  <:actions>
+    <.link
+      :if={@agent.status == :active && @check_ownership.(@agent)}
+      phx-click={JS.push("deactivate", value: %{id: @agent.id})}
+    >
+      <.button>Deactivate</.button>
     </.link>
   </:actions>
   <:actions>
     <.link
       :if={@check_ownership.(@agent)}
-      patch={~p"/agents/#{@agent}/show/signup"}
+      patch={~p"/agents/#{@agent}/show/edit"}
       phx-click={JS.push_focus()}
     >
-      <.button>Signup agent</.button>
+      <.button>Edit</.button>
     </.link>
   </:actions>
 </.header>
@@ -33,11 +40,68 @@
   <:item title="Agent ID"><%= @agent.id %></:item>
 </.list>
 
+<div :if={@check_ownership.(@agent)}>
+  <.header class="mt-20">
+    Connection Errors
+    <:subtitle>
+      <.icon name="hero-information-circle" />
+      <span>Only the last 50 error messages are retained</span>
+    </:subtitle>
+    <:actions>
+      <.link phx-click={JS.push("clear_errors", value: %{id: @agent.id})}>
+        <.button>Clear Errors</.button>
+      </.link>
+    </:actions>
+  </.header>
+
+  <div
+    :if={Enum.empty?(@agent.connection_errors)}
+    class="flex flex-row flex-nowrap justify-center items-center p-8 mt-12 rounded-lg border border-zinc-200 shadow-md"
+  >
+    <.icon name="hero-inbox-solid text-zinc-600" class="mr-4 w-12 h-12" />
+    <div class="">No connection Errors!</div>
+  </div>
+  <.table
+    :if={not Enum.empty?(@agent.connection_errors)}
+    id="tournaments"
+    rows={@agent.connection_errors}
+  >
+    <:col :let={error} label="Error">
+      <span class="font-mono">
+        <%= error.error_message %>
+      </span>
+    </:col>
+    <:col :let={error} label="Timestamp">
+      <%= Calendar.strftime(error.inserted_at, "%Y-%m-%d %H:%M:%S") %>
+    </:col>
+  </.table>
+</div>
+
 <.header :if={not @signed_up_for_tournaments?} class="mt-20">
   Currently Not Signed Up for any Tournaments
+  <:actions>
+    <.link
+      :if={@check_ownership.(@agent)}
+      patch={~p"/agents/#{@agent}/show/signup"}
+      phx-click={JS.push_focus()}
+    >
+      <.button>Sign Up</.button>
+    </.link>
+  </:actions>
 </.header>
 
-<.header :if={@signed_up_for_tournaments?} class="mt-20">Signed Up for Tournaments</.header>
+<.header :if={@signed_up_for_tournaments?} class="mt-20">
+  Signed Up for Tournaments
+  <:actions>
+    <.link
+      :if={@check_ownership.(@agent)}
+      patch={~p"/agents/#{@agent}/show/signup"}
+      phx-click={JS.push_focus()}
+    >
+      <.button>Sign Up / Withdraw</.button>
+    </.link>
+  </:actions>
+</.header>
 
 <.table
   :if={@signed_up_for_tournaments?}
@@ -65,6 +129,8 @@
 </.table>
 
 <.back navigate={~p"/agents"}>Back to agents</.back>
+
+<pre><%= inspect(assigns, pretty: true) %></pre>
 
 <.modal
   :if={@live_action == :edit && @check_ownership.(@agent)}

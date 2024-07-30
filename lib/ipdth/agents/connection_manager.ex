@@ -298,6 +298,8 @@ defmodule Ipdth.Agents.ConnectionManager do
         |> ConnectionError.changeset(%{agent_id: agent_id, error_message: error_message})
         |> Repo.insert()
 
+        # TODO: 2024-07-30 - Make the offset below configurable
+
         query =
           from e in ConnectionError,
             where: e.agent_id == ^agent_id,

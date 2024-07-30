@@ -9,6 +9,7 @@ defmodule Ipdth.Agents do
   alias Ipdth.Accounts.User
 
   alias Ipdth.Agents.Agent
+  alias Ipdth.Agents.ConnectionError
   alias Ipdth.Agents.ConnectionManager
 
   alias Ipdth.Tournaments.Participation
@@ -118,6 +119,28 @@ defmodule Ipdth.Agents do
 
   """
   def get_agent!(id, preload \\ []), do: Repo.get!(Agent, id) |> Repo.preload(preload)
+
+  @doc """
+  Gets a single agent including its associated connection errors.
+
+  Raises `Ecto.NoResultsError` if the Agent does not exist.
+
+  ## Examples
+
+      iex> get_agent!(123)
+      %Agent{}
+
+      iex> get_agent!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_agent_with_connection_errors!(id) do
+    Agent
+    |> where(id: ^id)
+    |> preload(connection_errors: ^from(e in ConnectionError, order_by: [desc: e.id]))
+    |> preload(:owner)
+    |> Repo.one!()
+  end
 
   @doc """
   Loads the owner for a given Agent. Sometimes you already have a loaded agent
@@ -236,6 +259,18 @@ defmodule Ipdth.Agents do
       agent
       |> Agent.deactivate()
       |> Repo.update()
+    else
+      {:error, :not_authorized}
+    end
+  end
+
+  @doc """
+  Clears (i.e.: deletes) all Connection Errors of an Agent.
+  """
+  def clear_connection_errors(%Agent{} = agent, actor_id) do
+    if agent.owner_id == actor_id do
+      from(e in ConnectionError, where: e.agent_id == ^agent.id)
+      |> Repo.delete_all()
     else
       {:error, :not_authorized}
     end
