@@ -23,13 +23,13 @@ defmodule IpdthWeb.AuthZTest do
     end
 
     property "rejects integers that have no user" do
-      check all illegal <- integer() do
+      check all(illegal <- integer()) do
         refute AuthZ.user_admin?(illegal)
       end
     end
 
     property "rejects illegal values" do
-      check all illegal <- term() do
+      check all(illegal <- term()) do
         refute AuthZ.user_admin?(illegal)
       end
     end
@@ -51,13 +51,13 @@ defmodule IpdthWeb.AuthZTest do
     end
 
     property "rejects integers that have no user" do
-      check all illegal <- integer() do
+      check all(illegal <- integer()) do
         refute AuthZ.tournament_admin?(illegal)
       end
     end
 
     property "rejects illegal values" do
-      check all illegal <- term() do
+      check all(illegal <- term()) do
         refute AuthZ.tournament_admin?(illegal)
       end
     end
@@ -85,7 +85,7 @@ defmodule IpdthWeb.AuthZTest do
       user = user_fixture()
       agent = agent_fixture(user)
 
-      check all illegal <- integer() do
+      check all(illegal <- integer()) do
         refute AuthZ.agent_owner?(illegal, agent)
       end
     end
@@ -94,10 +94,9 @@ defmodule IpdthWeb.AuthZTest do
       user = user_fixture()
       agent = agent_fixture(user)
 
-      check all illegal <- term() do
+      check all(illegal <- term()) do
         refute AuthZ.agent_owner?(illegal, agent)
       end
     end
   end
-
 end
