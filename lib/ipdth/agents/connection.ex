@@ -43,29 +43,35 @@ defmodule Ipdth.Agents.Connection do
 
   def decide(agent, decision_request) do
     auth = {:bearer, agent.bearer_token}
+    dataset = validate_decision_request(decision_request)
 
-    # We can assertively use post! here because all error-handling is done
-    # in ConnectionManager
-    response =
-      Req.new(json: decision_request, auth: auth, url: agent.url)
-      |> Req.merge(get_config())
-      |> Req.post!()
+    # Do not send the request if it's malformed
+    if dataset.valid? do
+      # We can assertively use post! here because all error-handling is done
+      # in ConnectionManager
+      response =
+        Req.new(json: decision_request, auth: auth, url: agent.url)
+        |> Req.merge(get_config())
+        |> Req.post!()
 
-    case response.status do
-      200 ->
-        decision = evaluate_decision(response.body)
-        ConnectionManager.report_decision_result(self(), agent.id, decision)
+      case response.status do
+        200 ->
+          decision = evaluate_decision(response.body)
+          ConnectionManager.report_decision_result(self(), agent.id, decision)
 
-      # All error-handling is done in ConnectionManager, so we just let the
-      # process crash and let it handle backoff and retry
-      401 ->
-        raise "401 Unauthorized - #{inspect(response.body)}"
+        # All error-handling is done in ConnectionManager, so we just let the
+        # process crash and let it handle backoff and retry
+        401 ->
+          raise "401 Unauthorized - #{inspect(response.body)}"
 
-      500 ->
-        raise "500 Internal Server Error - #{inspect(response.body)}"
+        500 ->
+          raise "500 Internal Server Error - #{inspect(response.body)}"
 
-      status ->
-        raise "HTTP Error - #{inspect(status)} - #{inspect(response.body)}"
+        status ->
+          raise "HTTP Error - #{inspect(status)} - #{inspect(response.body)}"
+      end
+    else
+      raise "Malformed Request Error - #{inspect(dataset)}"
     end
   end
 
@@ -148,8 +154,44 @@ defmodule Ipdth.Agents.Connection do
 
     %Request{
       round_number: 1,
-      match_info: %MatchInfo{},
+      match_info: %MatchInfo{
+        tournament_id: "11",
+        match_id: "11"
+      },
       past_results: past_results
     }
+  end
+
+  def validate_decision_request(req_body) do
+    validate_past_result = fn past_result ->
+      validator_map = %{
+        action: &Dredd.validate_string/1,
+        points: &Dredd.validate_number(&1, :integer)
+      }
+
+      Dredd.validate_map(past_result, validator_map)
+    end
+
+    validate_past_results = fn past_results ->
+      Dredd.validate_list(past_results, validate_past_result)
+    end
+
+    validate_match_info = fn match_info ->
+      validator_map = %{
+        type: &Dredd.validate_string/1,
+        tournament_id: &Dredd.validate_string/1,
+        match_id: &Dredd.validate_string/1
+      }
+
+      Dredd.validate_map(match_info, validator_map)
+    end
+
+    validator_map = %{
+      round_number: &Dredd.validate_number(&1, :integer),
+      match_info: validate_match_info,
+      past_results: validate_past_results
+    }
+
+    Dredd.validate_map(req_body, validator_map)
   end
 end

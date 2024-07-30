@@ -52,8 +52,8 @@ defmodule Ipdth.Matches.Runner do
 
     match_info = %MatchInfo{
       type: "Tournament Match",
-      tournament_id: match.tournament_id,
-      match_id: match.id
+      tournament_id: to_string(match.tournament_id),
+      match_id: to_string(match.id)
     }
 
     task_a = Task.async(__MODULE__, :agent_a_decision_request, [match, round_no, match_info])
