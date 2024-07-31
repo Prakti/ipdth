@@ -200,6 +200,7 @@ defmodule Ipdth.Tournaments do
         tournament
         |> Tournament.update(attrs, actor_id)
         |> Repo.update()
+        |> send_pub_sub_on_update()
       else
         {:error, :tournament_editing_locked}
       end
@@ -216,6 +217,7 @@ defmodule Ipdth.Tournaments do
       tournament
       |> Tournament.publish(actor_id)
       |> Repo.update()
+      |> send_pub_sub_on_update()
     else
       {:error, :not_authorized}
     end
@@ -309,6 +311,7 @@ defmodule Ipdth.Tournaments do
     if agent.owner_id == actor_id do
       case find_or_create_participation(agent, tournament) do
         {:ok, {:ok, participation}} ->
+          send_pub_sub_on_update(tournament)
           {:ok, participation}
 
         {:error, details} ->
@@ -360,6 +363,8 @@ defmodule Ipdth.Tournaments do
       Participation
       |> where([p], p.tournament_id == ^tournament.id)
       |> Repo.update_all(set: [status: :participating])
+
+      send_pub_sub_on_update(tournament)
     end)
 
     Repo.get!(Tournament, tournament.id)
@@ -413,6 +418,9 @@ defmodule Ipdth.Tournaments do
         |> Repo.update()
       end)
     end)
+
+    send_pub_sub_on_update(tournament)
+    :ok
   end
 
   def compute_participant_scores(tournament_id) do
@@ -425,6 +433,12 @@ defmodule Ipdth.Tournaments do
         |> Repo.update()
       end)
     end)
+
+    # TODO: 2027-07-31 - Think about moving score computation and ranking computation int one function
+    # We do not send a PubSub message yet, because usually the ranking will be
+    # computed afterwards and that's more relevant
+
+    :ok
   end
 
   def compute_participant_ranking(tournament_id) do
@@ -443,6 +457,9 @@ defmodule Ipdth.Tournaments do
         |> Repo.update()
       end)
     end)
+
+    send_pub_sub_on_update(tournament_id)
+    :ok
   end
 
   def set_participations_to_done(tournament_id) do
@@ -452,6 +469,8 @@ defmodule Ipdth.Tournaments do
         where: p.status == :participating
 
     Repo.update_all(query, set: [status: :done])
+    send_pub_sub_on_update(tournament_id)
+    :ok
   end
 
   def finish_tournament(tournament) do
@@ -480,4 +499,31 @@ defmodule Ipdth.Tournaments do
 
     Repo.all(query)
   end
+
+  def send_pub_sub_on_update(id) when is_integer(id) do
+    message = {:tournament_updated, id}
+    Phoenix.PubSub.broadcast(Ipdth.PubSub, "tournament:#{id}", message)
+    message = :tournaments_updated
+    Phoenix.PubSub.broadcast(Ipdth.PubSub, "tournaments", message)
+    :ok
+  end
+
+  def send_pub_sub_on_update(%Tournament{id: id}) do
+    message = {:tournament_updated, id}
+    Phoenix.PubSub.broadcast(Ipdth.PubSub, "tournament:#{id}", message)
+    message = :tournaments_updated
+    Phoenix.PubSub.broadcast(Ipdth.PubSub, "tournaments", message)
+    :ok
+  end
+
+  def send_pub_sub_on_update({:ok, %Tournament{id: id}} = result) do
+    message = {:tournament_updated, id}
+    Phoenix.PubSub.broadcast(Ipdth.PubSub, "tournament:#{id}", message)
+    message = :tournaments_updated
+    Phoenix.PubSub.broadcast(Ipdth.PubSub, "tournaments", message)
+    result
+  end
+
+  # Do nothing in case its something else we do not want to react on
+  def send_pub_sub_on_update(result), do: result
 end

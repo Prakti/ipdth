@@ -13,6 +13,11 @@ defmodule Ipdth.Tournaments.Tournament do
 
   @status_values [:created, :published, :signup_closed, :running, :aborted, :finished]
 
+  # TODO: 2027-07-31 - Introduce progress field in percent (int)
+  # TODO: 2027-07-31 - Introduce tournament_rounds field (int)
+  # TODO: 2027-07-31 - Introduce current_tournament_round field (int)
+  # TODO: 2027-07-31 - Migrate round_number to rounds_per_match
+
   schema "tournaments" do
     field :name, :string
     field :status, Ecto.Enum, values: @status_values, default: :created

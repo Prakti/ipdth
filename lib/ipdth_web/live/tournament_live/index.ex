@@ -8,6 +8,7 @@ defmodule IpdthWeb.TournamentLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
+    Phoenix.PubSub.subscribe(Ipdth.PubSub, "tournaments")
     current_user = socket.assigns.current_user
 
     {:ok,
@@ -43,11 +44,6 @@ defmodule IpdthWeb.TournamentLive.Index do
   end
 
   @impl true
-  def handle_info({IpdthWeb.TournamentLive.FormComponent, {:saved, tournament}}, socket) do
-    {:noreply, stream_insert(socket, :tournaments, tournament)}
-  end
-
-  @impl true
   def handle_event("delete", %{"id" => id}, socket) do
     current_user = socket.assigns.current_user
     tournament = Tournaments.get_tournament!(id, current_user.id)
@@ -59,6 +55,20 @@ defmodule IpdthWeb.TournamentLive.Index do
       # TODO 2024-04-28 -- Show error flash about missing permission
       {:noreply, socket}
     end
+  end
+
+  @impl true
+  def handle_info({IpdthWeb.TournamentLive.FormComponent, {:saved, tournament}}, socket) do
+    {:noreply, stream_insert(socket, :tournaments, tournament)}
+  end
+
+  @impl true
+  def handle_info(:tournaments_updated, socket) do
+    current_user = socket.assigns.current_user
+
+    {:noreply,
+     socket
+     |> stream(:tournaments, list_tournaments(current_user))}
   end
 
   defp list_tournaments(nil) do

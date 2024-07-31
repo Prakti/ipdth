@@ -13,6 +13,35 @@ defmodule IpdthWeb.TournamentLive.Show do
 
   @impl true
   def handle_params(%{"id" => id}, _, socket) do
+    Phoenix.PubSub.subscribe(Ipdth.PubSub, "tournament:#{id}")
+    load_data_into_socket(id, socket)
+  end
+
+  @impl true
+  def handle_event("publish", %{"id" => id}, socket) do
+    current_user = socket.assigns.current_user
+    tournament = Tournaments.get_tournament!(id, current_user.id)
+
+    if current_user do
+      {:ok, tournament} = Tournaments.publish_tournament(tournament, current_user.id)
+      {:noreply, assign(socket, :tournament, tournament)}
+    else
+      # TODO 2024-04-28 -- Show error flash about missing permission
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_info({:tournament_updated, id}, socket) do
+    load_data_into_socket(id, socket)
+  end
+
+  @impl true
+  def handle_info({IpdthWeb.TournamentLive.FormComponent, {:saved, tournament}}, socket) do
+    load_data_into_socket(tournament.id, socket)
+  end
+
+  defp load_data_into_socket(id, socket) do
     current_user = socket.assigns.current_user
     tournament = get_tournament!(id, current_user)
 
@@ -38,20 +67,6 @@ defmodule IpdthWeb.TournamentLive.Show do
        |> assign(:show_ranking?, false)
        |> assign(:empty_agents?, Enum.empty?(agents))
        |> stream(:agents, agents)}
-    end
-  end
-
-  @impl true
-  def handle_event("publish", %{"id" => id}, socket) do
-    current_user = socket.assigns.current_user
-    tournament = Tournaments.get_tournament!(id, current_user.id)
-
-    if current_user do
-      {:ok, tournament} = Tournaments.publish_tournament(tournament, current_user.id)
-      {:noreply, assign(socket, :tournament, tournament)}
-    else
-      # TODO 2024-04-28 -- Show error flash about missing permission
-      {:noreply, socket}
     end
   end
 
