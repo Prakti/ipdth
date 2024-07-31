@@ -88,6 +88,7 @@ defmodule Ipdth.MixProject do
       "pre-commit": [
         "format --check-formatted",
         "credo",
+        "dialyzer",
         "sobelow --config",
         "deps.audit",
         "deps.unlock --check-unused"
