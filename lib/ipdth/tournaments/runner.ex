@@ -72,12 +72,12 @@ defmodule Ipdth.Tournaments.Runner do
     participant_count = Tournaments.get_participant_count(tournament.id)
     match_count = Matches.count_matches_in_tournament(tournament.id)
 
-    rounds_to_play = ceil(participant_count / 2)
+    rounds_to_play = participant_count - 1
 
-    if rounds_to_play * (participant_count - 1) == match_count do
+    if rounds_to_play * participant_count / 2 == match_count do
       # Correct number of Matches are found - continue tournament
       round_no = Matches.determine_current_tournament_round(tournament.id)
-      start_next_round(tournament, matches_supervisor, [round_no..rounds_to_play])
+      start_next_round(tournament, matches_supervisor, Enum.to_list(round_no..rounds_to_play))
     else
       # Tournament crashed while generating matches. Clean up and redo!
       Matches.delete_all_matches_of_tournament(tournament.id)

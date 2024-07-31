@@ -15,8 +15,8 @@ defmodule Ipdth.Tournaments.RunnerTest do
 
   alias Ipdth.Matches.Match
 
-  describe "tournaments/runner" do
-    test "run/1 correctly runs a tournament for even number of participants" do
+  describe "run/1" do
+    test "correctly runs a tournament for an even number of participants" do
       admin_user = admin_user_fixture()
 
       %{agents: agents} =
@@ -30,10 +30,12 @@ defmodule Ipdth.Tournaments.RunnerTest do
 
       matches_to_play_each = participant_count - 1
 
-      # vvvv----- Actual Test Call happens here
+      # -------------------------------------------------#
+      #      vvv----- Actual Test Call happens here     #
       Runner.run(tournament)
 
-      # vvvv----- Veryfiy Post-Conditions
+      # -------------------------------------------------#
+      # Here we stat veryfying all the Post-Conditions  #
       tournament = Repo.get!(Tournament, tournament.id)
 
       assert :finished == tournament.status
@@ -82,7 +84,99 @@ defmodule Ipdth.Tournaments.RunnerTest do
           where: m.status == :finished,
           select: count(m.id)
 
-      assert Repo.one(query) == 45
+      match_count = participant_count * matches_to_play_each / 2
+      assert Repo.one(query) == match_count
+      # assert Repo.one(query) == 45
+
+      query =
+        from p in Participation,
+          where: p.tournament_id == ^tournament.id,
+          select: p
+
+      # All Agents cooperate so each gets 3 points in ever round every match
+      expected_score = 3 * tournament.round_number * matches_to_play_each
+
+      participations = Repo.all(query)
+
+      Enum.each(participations, fn p ->
+        # All agents should have same score
+        assert expected_score == p.score
+        # All agents should be tied for 1st rank
+        assert 1 == p.ranking
+        assert :done == p.status
+      end)
+    end
+
+    test "correctly runs a tournament for an odd number of participants" do
+      admin_user = admin_user_fixture()
+
+      %{agents: agents} =
+        multiple_activated_agents_one_bypass_fixture(admin_user, 9)
+
+      %{tournament: tournament, participations: participations} =
+        published_tournament_with_participants_fixture(admin_user.id, agents, %{round_number: 10})
+
+      participant_count = Enum.count(participations)
+      assert Enum.count(agents) == participant_count
+
+      matches_to_play_each = participant_count - 1
+
+      # -------------------------------------------------#
+      #      vvv----- Actual Test Call happens here     #
+      Runner.run(tournament)
+
+      # -------------------------------------------------#
+      # Here we stat veryfying all the Post-Conditions  #
+      tournament = Repo.get!(Tournament, tournament.id)
+
+      assert :finished == tournament.status
+
+      # Each agent should have played once against the others
+      Enum.each(participations, fn participation ->
+        query =
+          from m in Match,
+            where: m.tournament_id == ^participation.tournament_id,
+            where:
+              m.agent_a_id == ^participation.agent_id or
+                m.agent_b_id == ^participation.agent_id,
+            select: count(m.id)
+
+        assert Repo.one(query) == matches_to_play_each
+      end)
+
+      # There must be no match where agent_a has no participation record
+      query =
+        from m in Match,
+          left_join: p in Participation,
+          on:
+            p.tournament_id == m.tournament_id and
+              p.agent_id == m.agent_a_id,
+          where: m.tournament_id == ^tournament.id,
+          where: is_nil(p.id),
+          select: count(m.id)
+
+      assert Repo.one(query) == 0
+
+      # There must be no match where agent_b has no participation record
+      query =
+        from m in Match,
+          left_join: p in Participation,
+          on: p.tournament_id == m.tournament_id and p.agent_id == m.agent_b_id,
+          where: m.tournament_id == ^tournament.id,
+          where: is_nil(p.id),
+          select: count(m.id)
+
+      assert Repo.one(query) == 0
+
+      # Check if the matches were all successful
+      query =
+        from m in Match,
+          where: m.tournament_id == ^tournament.id,
+          where: m.status == :finished,
+          select: count(m.id)
+
+      match_count = participant_count * matches_to_play_each / 2
+      assert Repo.one(query) == match_count
 
       query =
         from p in Participation,
@@ -104,7 +198,7 @@ defmodule Ipdth.Tournaments.RunnerTest do
     end
 
     @tag silence_logger: true
-    test "run/1 invalidates matches of failing agents" do
+    test "invalidates matches of failing agents" do
       admin_user = admin_user_fixture()
 
       %{agents: agents} =
@@ -241,7 +335,7 @@ defmodule Ipdth.Tournaments.RunnerTest do
       end)
     end
 
-    test "run/1 computes correct scores and ranking" do
+    test "computes correct scores and ranking" do
       admin_user = admin_user_fixture()
 
       # Create tournament with three agents and two rounds
@@ -304,6 +398,154 @@ defmodule Ipdth.Tournaments.RunnerTest do
           1 -> assert 9 == participation.score
           2 -> assert 3 == participation.score
         end
+      end)
+    end
+
+    @tag silence_logger: true
+    test "can resume an interrupted tournament" do
+      admin_user = admin_user_fixture()
+
+      %{agents: agents, bypass: bypass} =
+        multiple_agents_one_bypass_fixture(admin_user, 6)
+
+      agents = Enum.to_list(agents)
+
+      %{tournament: tournament, participations: participations} =
+        published_tournament_with_participants_fixture(admin_user.id, agents, %{round_number: 10})
+
+      participant_count = Enum.count(participations)
+      assert Enum.count(agents) == participant_count
+
+      matches_to_play_each = participant_count - 1
+
+      # We set up the Bypass to kill the Process running the tournament after
+      # the second tournament round; this translates to 3 * 6 * 10 = 180 calls
+      # to the bypass since it is shared by all 6 agents
+
+      # Set up a Shelf (Elixir Agent) for counting the calls to the Bypass
+      {:ok, counter} = Shelf.start_link(fn -> 0 end)
+      {:ok, runner} = Shelf.start_link(fn -> nil end)
+
+      test_pid = self()
+
+      Bypass.stub(bypass, "POST", "/decide", fn conn ->
+        count =
+          Shelf.get_and_update(counter, fn round ->
+            {round, round + 1}
+          end)
+
+        if count == 180 do
+          # Kill the Process running the tournament (stored in a shelf)
+          Shelf.update(runner, fn pid ->
+            Process.exit(pid, :kill)
+            nil
+          end)
+
+          # Now that we have killed the Runner, we notify the test,
+          # So it can restart it and perform checks
+          send(test_pid, :killed)
+        end
+
+        conn
+        |> Plug.Conn.merge_resp_headers([{"content-type", "application/json"}])
+        |> Plug.Conn.resp(200, agent_service_success_response())
+      end)
+
+      # We need to delay the start of the tournament, so we have time for
+      # all the necessary preparations. We have to start the tournament in
+      # a Task so we can kill the corresponding process
+      {:ok, pid} =
+        Task.start(fn ->
+          receive do
+            :start -> Runner.run(tournament)
+          end
+        end)
+
+      # Store the runner-pid for later retrieval by the Bypass
+      # see the Bypass setup above
+      Shelf.update(runner, fn _ -> pid end)
+
+      Ecto.Adapters.SQL.Sandbox.allow(Repo, self(), pid)
+
+      # ---------------------------------------------------------------------#
+      # Now the Tournament.Runner should start working until it gets killed
+      send(pid, :start)
+
+      # The Bypass will send us a message once it killed the Runner
+      receive do
+        # For now: restart the tournament and see if it completes
+        :killed -> Runner.run(tournament)
+      end
+
+      # -------------------------------------------------#
+      # Here we stat veryfying all the Post-Conditions  #
+      tournament = Repo.get!(Tournament, tournament.id)
+
+      assert :finished == tournament.status
+
+      # Each agent should have played once against the others
+      Enum.each(participations, fn participation ->
+        query =
+          from m in Match,
+            where: m.tournament_id == ^participation.tournament_id,
+            where:
+              m.agent_a_id == ^participation.agent_id or
+                m.agent_b_id == ^participation.agent_id,
+            select: count(m.id)
+
+        assert Repo.one(query) == matches_to_play_each
+      end)
+
+      # There must be no match where agent_a has no participation record
+      query =
+        from m in Match,
+          left_join: p in Participation,
+          on:
+            p.tournament_id == m.tournament_id and
+              p.agent_id == m.agent_a_id,
+          where: m.tournament_id == ^tournament.id,
+          where: is_nil(p.id),
+          select: count(m.id)
+
+      assert Repo.one(query) == 0
+
+      # There must be no match where agent_b has no participation record
+      query =
+        from m in Match,
+          left_join: p in Participation,
+          on: p.tournament_id == m.tournament_id and p.agent_id == m.agent_b_id,
+          where: m.tournament_id == ^tournament.id,
+          where: is_nil(p.id),
+          select: count(m.id)
+
+      assert Repo.one(query) == 0
+
+      # Check if the matches were all successful
+      query =
+        from m in Match,
+          where: m.tournament_id == ^tournament.id,
+          where: m.status == :finished,
+          select: count(m.id)
+
+      match_count = participant_count * matches_to_play_each / 2
+      assert Repo.one(query) == match_count
+
+      query =
+        from p in Participation,
+          where: p.tournament_id == ^tournament.id,
+          select: p
+
+      # All Agents cooperate so each gets 3 points in ever round every match
+      expected_score = 3 * tournament.round_number * matches_to_play_each
+
+      participations = Repo.all(query)
+
+      Enum.each(participations, fn p ->
+        # All agents should have same score
+        assert expected_score == p.score
+        # All agents should be tied for 1st rank
+        assert 1 == p.ranking
+        assert :done == p.status
       end)
     end
   end
