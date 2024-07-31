@@ -22,6 +22,21 @@ defmodule Ipdth.Matches do
   end
 
   @doc """
+  Returns a list of matches with IDs corresponding to the ones
+  given in as a list via `match_ids`. It will retrieve matches on a
+  best-effort base, ignoring unkown ids that are still of type integer.
+
+  It will raise an error in case one of the ids is not of type integer.
+  """
+  def list_matches_by_ids(match_ids) do
+    query =
+      from m in Match,
+      where: m.id in ^match_ids
+
+    Repo.all(query)
+  end
+
+  @doc """
   Gets a single match.
 
   Raises `Ecto.NoResultsError` if the Match does not exist.

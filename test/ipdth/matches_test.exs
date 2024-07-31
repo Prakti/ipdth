@@ -22,6 +22,42 @@ defmodule Ipdth.MatchesTest do
       assert Matches.list_matches() == [match]
     end
 
+    test "list_matches_by_ids/1 returns the desired matches" do
+      admin_user = admin_user_fixture()
+      agent_a = agent_fixture(admin_user)
+      agent_b = agent_fixture(admin_user)
+      tournament = published_tournament_fixture(admin_user.id)
+
+      matches = Enum.map(1..100, fn _ ->
+        match_fixture(agent_a, agent_b, tournament, 1, 1)
+      end)
+
+      match_ids = Enum.map(matches, fn match -> match.id end)
+
+      match_list = Matches.list_matches_by_ids(match_ids)
+      # we have to compare ids here since a direct comparison would
+      # fail due to missing associations to agents and tournament
+      # we could to a preload but I do not wand to bloat the query
+      # nor the test
+      assert match_ids == Enum.map(match_list, fn match -> match.id end)
+    end
+
+    test "list_matches_by_ids/1 can handle wrong ids" do
+      admin_user = admin_user_fixture()
+      agent_a = agent_fixture(admin_user)
+      agent_b = agent_fixture(admin_user)
+      tournament = published_tournament_fixture(admin_user.id)
+
+      matches = Enum.map(1..100, fn _ ->
+        match_fixture(agent_a, agent_b, tournament, 1, 1)
+      end)
+
+      match_ids = Enum.map(matches, fn match -> match.id end)
+
+      match_list = Matches.list_matches_by_ids(match_ids ++ [-1])
+      assert match_ids == Enum.map(match_list, fn match -> match.id end)
+    end
+
     test "get_match!/1 returns the match with given id" do
       admin_user = admin_user_fixture()
       agent_a = agent_fixture(admin_user)

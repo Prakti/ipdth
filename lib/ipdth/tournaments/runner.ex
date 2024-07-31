@@ -16,7 +16,6 @@ defmodule Ipdth.Tournaments.Runner do
   alias Ipdth.Tournaments
   alias Ipdth.Tournaments.Tournament
 
-  # TODO: 2024-06-19 - Idea: register all Runners via name "Tournament.Runner-#ID"
   # TODO: 2024-06-29 - Idea: recompute scores and ranks after each tournament round and send PubSub message for live-updates in the UI
 
   @supervisor_name Ipdth.Tournaments.Supervisor
@@ -34,7 +33,6 @@ defmodule Ipdth.Tournaments.Runner do
   def run(tournament_id) do
     # Our runner might have crashed and been restarted.
     # We re-fetch the tournament from DB to avoid working on stale data
-    # tournament = Repo.get!(Tournament, tournament_id)
     tournament = Tournaments.get_tournament!(tournament_id)
 
     case tournament.status do
@@ -117,6 +115,8 @@ defmodule Ipdth.Tournaments.Runner do
   end
 
   defp wait_for_matches(running_matches, tournament, matches_supervisor, more_rounds) do
+    timeout = compute_tournament_round_timeout(tournament)
+
     receive do
       {:match_finished, match} ->
         remaining_matches = Enum.filter(running_matches, fn m -> m != match.id end)
@@ -126,11 +126,7 @@ defmodule Ipdth.Tournaments.Runner do
             wait_for_matches(remaining_matches, tournament, matches_supervisor, more_rounds)
 
           :aborted ->
-            errored_agents = determine_errored_agents(match)
-            Matches.cancel_open_matches_for_errored_agents(errored_agents, tournament)
-            Matches.invalidate_past_matches_for_errored_agents(errored_agents, tournament)
-            Tournaments.set_participation_to_error_for_errored_agents(errored_agents, tournament)
-
+            handle_aborted_match(match, tournament)
             wait_for_matches(remaining_matches, tournament, matches_supervisor, more_rounds)
 
           other ->
@@ -144,11 +140,42 @@ defmodule Ipdth.Tournaments.Runner do
         )
 
         wait_for_matches(running_matches, tournament, matches_supervisor, more_rounds)
+    after
+      # Messages can get lost. For those edge-cases we resort to the database
+      # as the source of truth and resume operations from tere
+      # The timeout is the maximum time a match can theoertically run, given
+      # the possible timeouts for each match round
+      timeout ->
+        Logger.warning(
+          "Tournament.Runner for tournament #{tournament.id} waited for matches to report back for #{timeout} ms. Checking DB."
+        )
+        remaining_matches = check_for_stalled_matches(running_matches, tournament)
+        wait_for_matches(remaining_matches, tournament, matches_supervisor, more_rounds)
     end
   end
 
+  defp check_for_stalled_matches(running_matches, tournament) do
+    matches = Matches.list_matches_by_ids(running_matches)
+    matches_by_status = Enum.group_by(matches, fn match -> match.status end)
+
+    # We need to handle all the aborted matches
+    Enum.each(matches_by_status.aborted, fn match ->
+      handle_aborted_match(match, tournament)
+    end)
+
+    # Return the matches that could potentially still report back
+    matches_by_status.open ++ matches_by_status.running
+  end
+
+  defp handle_aborted_match(match, tournament) do
+    # TODO: 2024-07-31 - Ensure that all those operations are idempotent
+    errored_agents = determine_errored_agents(match)
+    Matches.cancel_open_matches_for_errored_agents(errored_agents, tournament)
+    Matches.invalidate_past_matches_for_errored_agents(errored_agents, tournament)
+    Tournaments.set_participation_to_error_for_errored_agents(errored_agents, tournament)
+  end
+
   defp start_matches(matches, matches_supervisor) do
-    # TODO: change result to {status, result} code
     errors =
       Enum.map(matches, fn match ->
         Matches.Runner.start(matches_supervisor, [match, self()])
@@ -179,5 +206,9 @@ defmodule Ipdth.Tournaments.Runner do
       {_, :error} ->
         [agent_b]
     end
+  end
+
+  def compute_tournament_round_timeout(tournament) do
+    Agents.ConnectionManager.compute_timeout() * tournament.round_number
   end
 end
