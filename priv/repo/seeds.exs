@@ -10,12 +10,33 @@ alias Ipdth.Tournaments
 alias Ipdth.Accounts
 alias Ipdth.Agents
 
+gen_agent_url = fn ->
+  Enum.random([
+    "http://localhost:4004/api/examples/pushover",
+    "http://localhost:4004/api/examples/pushover",
+    "http://localhost:4004/api/examples/pushover",
+    "http://localhost:4004/api/examples/hardass",
+    "http://localhost:4004/api/examples/hardass",
+    "http://localhost:4004/api/examples/hardass",
+    "http://localhost:4004/api/examples/random",
+    "http://localhost:4004/api/examples/random",
+    "http://localhost:4004/api/examples/random",
+    "http://localhost:4004/api/examples/random",
+    "http://localhost:4004/api/examples/random",
+    "http://localhost:4004/api/examples/random",
+    "http://localhost:4004/api/examples/random",
+    "http://localhost:4004/api/examples/random",
+    "http://localhost:4004/api/examples/random",
+    "http://localhost:4004/api/failure/server_error"
+  ])
+end
+
+Faker.start()
+
 create_user = fn user_params ->
   {:ok, user} = Accounts.seed_user(user_params)
   user
 end
-
-Faker.start()
 
 create_users = fn count ->
   Enum.map(1..count, fn _ ->
@@ -34,7 +55,7 @@ create_agents_for_user = fn user, count ->
       bearer_token: "some bearer_token",
       description: Faker.Lorem.paragraph() |> String.slice(0, 254),
       name: Faker.Pokemon.name(),
-      url: "http://localhost:4004/api/examples/pushover"
+      url: gen_agent_url.()
     }
 
     with {:ok, agent} = Agents.create_agent(user.id, agent_attrs) do
