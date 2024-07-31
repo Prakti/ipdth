@@ -31,7 +31,7 @@ defmodule Ipdth.Matches do
   def list_matches_by_ids(match_ids) do
     query =
       from m in Match,
-      where: m.id in ^match_ids
+        where: m.id in ^match_ids
 
     Repo.all(query)
   end

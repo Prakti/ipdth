@@ -71,11 +71,6 @@ defmodule IpdthWeb.Router do
       live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
       live "/users/:id/edit_roles", UserLive.Index, :edit_roles
 
-      # Agent Managemet for Users
-      # live "/my/agents/", MyAgentLive.Index, :index
-      # live "/my/agents/new", MyAgentLive.Index, :new
-      # live "/my/agents/:id/edit", MyAgentLive.Index, :edit
-
       # Global Agent Management
       # TODO: 2021-01-21 - Create permission to globally edit agents (Admin)
       live "/agents/new", AgentLive.Index, :new
@@ -83,20 +78,11 @@ defmodule IpdthWeb.Router do
       live "/agents/:id/show/edit", AgentLive.Show, :edit
       live "/agents/:id/show/signup", AgentLive.Signup, :signup
 
-      # Tournament Management - Global View
-      # TODO: 2024-01-21 - Create permission for managing tournaments
+      # Tournament Management
       live "/tournaments/new", TournamentLive.Index, :new
       live "/tournaments/:id/edit", TournamentLive.Index, :edit
       live "/tournaments/:id/show/edit", TournamentLive.Show, :edit
       live "/tournaments/:id/show/signup", TournamentLive.Signup, :edit
-
-      # Tourmanent Participation Management - Global View
-      # TODO: 2024-01-21 - Remove this in favour of Embedded views in Agent
-      # TODO: 2024-01-21 - Remove this in favour of Embedded views in Tournament
-
-      # Match Management - Global View
-      # TODO: 2024-06-13 - Move this under TournamentLive and AgentLive
-      live "/matches/:id", MatchLive.Show, :show
     end
   end
 
@@ -117,6 +103,10 @@ defmodule IpdthWeb.Router do
       # Global List and View of Tournaments
       live "/tournaments", TournamentLive.Index, :index
       live "/tournaments/:id", TournamentLive.Show, :show
+      # TODO: 2024-07-31 - List Matches of a Tournament
+      # live "/tournaments/:id/matches", TournamentLive.ListMatches, :index
+      # TODO: 2024-07-31 - Show single Matche of a Tournament
+      # live "/tournaments/:tournament_id/matches/:match_id", TournamentLive.ShowMatch, :index
 
       # Global List and View of Users
       live "/users", UserLive.Index, :index

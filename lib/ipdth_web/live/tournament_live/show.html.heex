@@ -44,7 +44,10 @@
 
 <.header :if={not @empty_agents?} class="mt-20">Signed-Up Agents</.header>
 
-<.header :if={@empty_agents? && @tournament.status != :created} class="mt-20">
+<.header
+  :if={@empty_agents? and @tournament.status != :created and not @show_ranking?}
+  class="mt-20"
+>
   No Agents have Signed Up Yet!
 </.header>
 
@@ -53,7 +56,7 @@
 </.header>
 
 <.table
-  :if={not @empty_agents?}
+  :if={not (@show_ranking? or @empty_agents?)}
   id="agents"
   rows={@streams.agents}
   row_click={fn {_id, agent} -> JS.navigate(~p"/agents/#{agent}") end}
@@ -71,6 +74,38 @@
   <:action :let={{_id, agent}}>
     <div class="sr-only">
       <.link navigate={~p"/agents/#{agent}"}>Show</.link>
+    </div>
+  </:action>
+</.table>
+
+<.header :if={@show_ranking?} class="mt-20">Tournament Ranking</.header>
+
+<.table
+  :if={@show_ranking?}
+  id="agents"
+  rows={@ranking}
+  row_click={fn ranking -> JS.navigate(~p"/agents/#{ranking.agent_id}") end}
+>
+  <:col :let={ranking} label="Rank">
+    <%!-- TODO: 2024-07-31 - Display Rank as a round badge --%>
+    <span class="font-semibold"><%= ranking.ranking %></span>
+  </:col>
+  <:col :let={ranking} label="Name">
+    <span class="font-semibold"><%= ranking.agent_name %></span>
+  </:col>
+  <:col :let={ranking} label="Score">
+    <%= ranking.score %>
+  </:col>
+  <:col :let={ranking} label="Status">
+    <.agent_status_badge status={ranking.agent_status} />
+  </:col>
+  <:col :let={ranking} label="Owner"><%= ranking.owner_email %></:col>
+  <:col :let={ranking} label="Description">
+    <%= ranking.agent_description %>
+  </:col>
+  <:action :let={ranking}>
+    <div class="sr-only">
+      <.link navigate={~p"/agents/#{ranking.agent_id}"}>Show</.link>
     </div>
   </:action>
 </.table>

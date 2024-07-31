@@ -149,6 +149,7 @@ defmodule Ipdth.Tournaments.Runner do
         Logger.warning(
           "Tournament.Runner for tournament #{tournament.id} waited for matches to report back for #{timeout} ms. Checking DB."
         )
+
         remaining_matches = check_for_stalled_matches(running_matches, tournament)
         wait_for_matches(remaining_matches, tournament, matches_supervisor, more_rounds)
     end

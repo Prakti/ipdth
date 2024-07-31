@@ -14,15 +14,31 @@ defmodule IpdthWeb.TournamentLive.Show do
   @impl true
   def handle_params(%{"id" => id}, _, socket) do
     current_user = socket.assigns.current_user
-    agents = Agents.list_agents_by_tournament(id)
+    tournament = get_tournament!(id, current_user)
 
-    {:noreply,
-     socket
-     |> assign(:page_title, page_title(socket.assigns.live_action))
-     |> assign(:tournament, get_tournament!(id, current_user))
-     |> assign(:user_is_tournament_admin, tournament_admin?(current_user))
-     |> assign(:empty_agents?, Enum.empty?(agents))
-     |> stream(:agents, agents)}
+    if Enum.member?([:finished, :running], tournament.status) do
+      ranking = Tournaments.list_ranking_for_tournament(id)
+
+      {:noreply,
+       socket
+       |> assign(:page_title, page_title(socket.assigns.live_action))
+       |> assign(:tournament, tournament)
+       |> assign(:user_is_tournament_admin, tournament_admin?(current_user))
+       |> assign(:show_ranking?, true)
+       |> assign(:empty_agents?, true)
+       |> assign(:ranking, ranking)}
+    else
+      agents = Agents.list_agents_by_tournament(id)
+
+      {:noreply,
+       socket
+       |> assign(:page_title, page_title(socket.assigns.live_action))
+       |> assign(:tournament, tournament)
+       |> assign(:user_is_tournament_admin, tournament_admin?(current_user))
+       |> assign(:show_ranking?, false)
+       |> assign(:empty_agents?, Enum.empty?(agents))
+       |> stream(:agents, agents)}
+    end
   end
 
   @impl true

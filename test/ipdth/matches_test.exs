@@ -28,9 +28,10 @@ defmodule Ipdth.MatchesTest do
       agent_b = agent_fixture(admin_user)
       tournament = published_tournament_fixture(admin_user.id)
 
-      matches = Enum.map(1..100, fn _ ->
-        match_fixture(agent_a, agent_b, tournament, 1, 1)
-      end)
+      matches =
+        Enum.map(1..100, fn _ ->
+          match_fixture(agent_a, agent_b, tournament, 1, 1)
+        end)
 
       match_ids = Enum.map(matches, fn match -> match.id end)
 
@@ -48,9 +49,10 @@ defmodule Ipdth.MatchesTest do
       agent_b = agent_fixture(admin_user)
       tournament = published_tournament_fixture(admin_user.id)
 
-      matches = Enum.map(1..100, fn _ ->
-        match_fixture(agent_a, agent_b, tournament, 1, 1)
-      end)
+      matches =
+        Enum.map(1..100, fn _ ->
+          match_fixture(agent_a, agent_b, tournament, 1, 1)
+        end)
 
       match_ids = Enum.map(matches, fn match -> match.id end)
 

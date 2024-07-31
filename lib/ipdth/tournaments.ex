@@ -10,6 +10,7 @@ defmodule Ipdth.Tournaments do
   alias Ipdth.Agents.Agent
   alias Ipdth.Accounts
   alias Ipdth.Matches
+  alias Ipdth.Accounts.User
 
   @doc """
   Returns the list of tournaments.
@@ -455,5 +456,28 @@ defmodule Ipdth.Tournaments do
 
   def finish_tournament(tournament) do
     Tournament.finish(tournament) |> Repo.update()
+  end
+
+  # TODO: 2024-07-31 - Write test for query
+  def list_ranking_for_tournament(tournament_id) do
+    query =
+      from p in Participation,
+        join: a in Agent,
+        on: a.id == p.agent_id,
+        join: u in User,
+        on: a.owner_id == u.id,
+        where: p.tournament_id == ^tournament_id,
+        select: %{
+          agent_id: a.id,
+          agent_name: a.name,
+          agent_description: a.description,
+          agent_status: a.status,
+          owner_email: u.email,
+          ranking: p.ranking,
+          score: p.score
+        },
+        order_by: [asc: p.ranking]
+
+    Repo.all(query)
   end
 end
