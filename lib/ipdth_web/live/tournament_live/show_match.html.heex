@@ -1,0 +1,63 @@
+<.header :if={@error != nil}><%= @error %></.header>
+
+<.header :if={@error == nil}>
+  Showing Tournament Match (<%= @match.id %>) in Tournament <%= @tournament.name %>
+</.header>
+
+<.header :if={@error == nil} class="mt-12">Tournament Details</.header>
+<.list :if={@error == nil}>
+  <:item title="Description"><%= @tournament.description %></:item>
+  <:item title="Start date">
+    <%= Calendar.strftime(@tournament.start_date, "%Y-%m-%d %H:%M:%S") %>
+  </:item>
+  <:item title="End date">
+    <%= @tournament.end_date && Calendar.strftime(@tournament.end_date, "%Y-%m-%d %H:%M:%S") %>
+  </:item>
+  <:item title="Round number"><%= @tournament.round_number %></:item>
+  <:item title="Random seed"><%= @tournament.random_seed %></:item>
+  <:item title="Random trace"><%= @tournament.random_trace %></:item>
+  <%!-- TODO: 2024-07-03 - Status Badge for Tournaments --%>
+  <:item title="Status"><%= @tournament.status %></:item>
+</.list>
+
+<.header :if={@error == nil} class="mt-12">Match Details</.header>
+<.list :if={@error == nil}>
+  <%!-- TODO: 2024-07-03 - Link to Agents --%>
+  <:item title="Agent A"><%= @match.agent_a.name %></:item>
+  <:item title="Score A"><%= @match.score_a %></:item>
+  <:item title="Agent B"><%= @match.agent_b.name %></:item>
+  <:item title="Score B"><%= @match.score_b %></:item>
+  <:item title="Status"><%= @match.status %></:item>
+  <%!-- TODO: 2024-07-03 - Status Badge for Matches --%>
+  <:item title="Start date">
+    <%= @match.start_date && Calendar.strftime(@match.start_date, "%Y-%m-%d %H:%M:%S") %>
+  </:item>
+  <:item title="End date">
+    <%= @match.end_date && Calendar.strftime(@match.end_date, "%Y-%m-%d %H:%M:%S") %>
+  </:item>
+</.list>
+
+<.header :if={@error == nil} class="mt-12">Match Rounds</.header>
+<div
+  :if={@empty_rounds? and @error == nil}
+  class="flex flex-row flex-nowrap justify-center items-center p-8 mt-12 rounded-lg border border-zinc-200 shadow-md"
+>
+  <.icon name="hero-inbox-solid text-zinc-600" class="mr-4 w-12 h-12" />
+  <div :if={@match.status == :finished}>No Rounds have been played!</div>
+  <div :if={@match.status != :finished}>No Rounds have been played yet!</div>
+</div>
+<.table :if={@error == nil and not @empty_rounds?} id="matches" rows={@rounds}>
+  <:col :let={round} label="ID"><%= round.id %></:col>
+  <:col :let={round} label="Action A"><%= round.action_a %></:col>
+  <:col :let={round} label="Score A"><%= round.score_a %></:col>
+  <:col :let={round} label="Action B"><%= round.action_b %></:col>
+  <:col :let={round} label="Score B"><%= round.score_b %></:col>
+  <:col :let={round} label="Start date">
+    <%= round.start_date && Calendar.strftime(round.start_date, "%Y-%m-%d %H:%M:%S") %>
+  </:col>
+  <:col :let={round} label="End date">
+    <%= round.end_date && Calendar.strftime(round.end_date, "%Y-%m-%d %H:%M:%S") %>
+  </:col>
+</.table>
+
+<.back navigate={~p"/tournaments/#{@tournament.id}/matches"}>Back to list of matches</.back>

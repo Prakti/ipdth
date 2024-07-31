@@ -103,10 +103,8 @@ defmodule IpdthWeb.Router do
       # Global List and View of Tournaments
       live "/tournaments", TournamentLive.Index, :index
       live "/tournaments/:id", TournamentLive.Show, :show
-      # TODO: 2024-07-31 - List Matches of a Tournament
-      # live "/tournaments/:id/matches", TournamentLive.ListMatches, :index
-      # TODO: 2024-07-31 - Show single Matche of a Tournament
-      # live "/tournaments/:tournament_id/matches/:match_id", TournamentLive.ShowMatch, :index
+      live "/tournaments/:id/matches", TournamentLive.ListMatches, :index
+      live "/tournaments/:tournament_id/matches/:match_id", TournamentLive.ShowMatch, :index
 
       # Global List and View of Users
       live "/users", UserLive.Index, :index

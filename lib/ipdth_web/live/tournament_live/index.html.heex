@@ -18,6 +18,7 @@
   <:col :let={{_id, tournament}} label="Name"><%= tournament.name %></:col>
   <:col :let={{_id, tournament}} label="Description"><%= tournament.description %></:col>
   <:col :let={{_id, tournament}} label="Status">
+    <%!-- TODO: 2024-07-03 - Status Badge for Matches --%>
     <.badge color="green"><%= tournament.status %></.badge>
   </:col>
   <:col :let={{_id, tournament}} label="Start date">

@@ -6,7 +6,7 @@ defmodule Ipdth.Matches do
   import Ecto.Query, warn: false
   alias Ipdth.Repo
 
-  alias Ipdth.Matches.Match
+  alias Ipdth.Matches.{Match, Round}
 
   @doc """
   Returns the list of matches.
@@ -32,6 +32,17 @@ defmodule Ipdth.Matches do
     query =
       from m in Match,
         where: m.id in ^match_ids
+
+    Repo.all(query)
+  end
+
+  def list_matches_by_tournament(tournament_id) do
+    query =
+      from m in Match,
+        where: m.tournament_id == ^tournament_id,
+        order_by: [asc: m.id],
+        preload: [:agent_a, :agent_b],
+        select: m
 
     Repo.all(query)
   end
@@ -128,23 +139,6 @@ defmodule Ipdth.Matches do
   end
 
   def sum_tournament_score_for_agents(tournament_id) do
-    query_a_s =
-      from m in Match,
-        where: m.tournament_id == ^tournament_id,
-        where: m.status == :finished,
-        # order_by: [asc: :agent_a_id, asc: :agent_b_id],
-        order_by: [asc: :id],
-        select: %{
-          no: row_number() |> over(order_by: m.id),
-          agent_a_id: m.agent_a_id,
-          score_a: m.score_a,
-          agent_b_id: m.agent_b_id,
-          score_b: m.score_b,
-          id: m.id
-        }
-
-    Repo.all(query_a_s)
-
     query_a =
       from m in Match,
         where: m.tournament_id == ^tournament_id,
@@ -199,5 +193,19 @@ defmodule Ipdth.Matches do
         Repo.update_all(query, [])
       end)
     end)
+  end
+
+  @doc """
+  Fetches all Rounds for a given Match ID.
+  Returns an empty list if nothing was found.
+  """
+  def get_rounds_for_match(match_id) do
+    query =
+      from r in Round,
+        where: r.match_id == ^match_id,
+        order_by: [asc: r.start_date],
+        select: r
+
+    Repo.all(query)
   end
 end

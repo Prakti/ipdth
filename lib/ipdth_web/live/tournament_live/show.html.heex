@@ -1,6 +1,6 @@
 <.header>
   Tournament - <%= @tournament.name %>
-  <:subtitle>(#<%= @tournament.id %>)</:subtitle>
+  <:subtitle>#<%= @tournament.description %></:subtitle>
   <:actions>
     <.link
       :if={@tournament.status == :published}
@@ -25,11 +25,19 @@
       <.button>Publish tournament</.button>
     </.link>
   </:actions>
+  <:actions>
+    <.link
+      :if={Enum.member?([:running, :finished], @tournament.status)}
+      patch={~p"/tournaments/#{@tournament}/matches"}
+      phx-click={JS.push_focus()}
+    >
+      <.button>Show Matches</.button>
+    </.link>
+  </:actions>
 </.header>
 
 <.list>
-  <:item title="Name"><%= @tournament.name %></:item>
-  <:item title="Description"><%= @tournament.description %></:item>
+  <:item title="ID"><%= @tournament.id %></:item>
   <:item title="Start date">
     <%= Calendar.strftime(@tournament.start_date, "%Y-%m-%d %H:%M:%S") %>
   </:item>
@@ -39,6 +47,7 @@
   <:item title="Round number"><%= @tournament.round_number %></:item>
   <:item title="Random seed"><%= @tournament.random_seed %></:item>
   <:item title="Random trace"><%= @tournament.random_trace %></:item>
+  <%!-- TODO: 2024-07-03 - Status Badge for Tournaments --%>
   <:item title="Status"><%= @tournament.status %></:item>
 </.list>
 
@@ -82,7 +91,7 @@
 
 <.table
   :if={@show_ranking?}
-  id="agents"
+  id="ranking"
   rows={@ranking}
   row_click={fn ranking -> JS.navigate(~p"/agents/#{ranking.agent_id}") end}
 >

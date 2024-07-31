@@ -130,9 +130,6 @@ defmodule Ipdth.Matches.Runner do
     ConnectionManager.decide(match.agent_b, request_b)
   end
 
-  def compute_timeout() do
-  end
-
   defp tally_round(match_id, action_a, action_b, start_date) do
     {score_a, score_b} =
       case {action_a, action_b} do
