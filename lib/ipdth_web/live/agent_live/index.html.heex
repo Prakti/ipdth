@@ -7,53 +7,143 @@
   </:actions>
 </.header>
 
-<.table
-  id="agents"
-  rows={@streams.agents}
-  row_click={fn {_id, agent} -> JS.navigate(~p"/agents/#{agent}") end}
+<.form for={@meta_form} phx-change="filter">
+  <div class="flex flex-row gap-4">
+    <Flop.Phoenix.filter_fields
+      :let={i}
+      form={@meta_form}
+      fields={[
+        name: [
+          op: :ilike_and
+        ],
+        description: [
+          op: :ilike_and
+        ],
+        status: [
+          type: "select",
+          options: [
+            {"active", :active},
+            {"inactive", :inactive},
+            {"error", :error},
+            {"backoff", :testing}
+          ]
+        ],
+        owner_email: [
+          op: :ilike_and
+        ]
+      ]}
+    >
+      <.input field={i.field} label={i.label} type={i.type} class="" {i.rest} />
+    </Flop.Phoenix.filter_fields>
+  </div>
+</.form>
+
+<div
+  :if={Enum.count(@streams.agents) == 0}
+  class="flex flex-row flex-nowrap justify-center items-center p-8 mt-12 rounded-lg border border-zinc-200 shadow-md"
 >
-  <:col :let={{_id, agent}} label="Name">
-    <span class="font-semibold"><%= agent.name %></span>
-  </:col>
-  <:col :let={{_id, agent}} label="Status">
-    <.agent_status_badge status={agent.status} />
-  </:col>
-  <:col :let={{_id, agent}} label="Owner"><%= agent.owner.email %></:col>
-  <:col :let={{_id, agent}} label="Description">
-    <%= agent.description %>
-  </:col>
-  <:action :let={{_id, agent}}>
-    <.link
-      :if={agent.status != :active && @check_ownership.(agent)}
-      phx-click={JS.push("activate", value: %{id: agent.id})}
-    >
-      Activate
-    </.link>
-    <.link
-      :if={agent.status == :active && @check_ownership.(agent)}
-      phx-click={JS.push("deactivate", value: %{id: agent.id})}
-    >
-      Deactivate
-    </.link>
-  </:action>
-  <:action :let={{_id, agent}}>
-    <div class="sr-only">
-      <.link navigate={~p"/agents/#{agent}"}>Show</.link>
-    </div>
-    <.link :if={@check_ownership.(agent)} patch={~p"/agents/#{agent}/edit"}>
-      Edit
-    </.link>
-  </:action>
-  <:action :let={{id, agent}}>
-    <.link
-      :if={@check_ownership.(agent)}
-      phx-click={JS.push("delete", value: %{id: agent.id}) |> hide("##{id}")}
-      data-confirm="Are you sure?"
-    >
-      Delete
-    </.link>
-  </:action>
-</.table>
+  <.icon name="hero-inbox-solid text-zinc-600" class="mr-4 w-12 h-12" />
+  <div class="">No agents found!</div>
+</div>
+<div
+  :if={not (Enum.count(@streams.agents) == 0)}
+  class="overflow-hidden rounded-lg border border-zinc-200 shadow-md mt-12"
+>
+  <Flop.Phoenix.table
+    items={@streams.agents}
+    row_click={fn {_id, agent} -> JS.navigate(~p"/agents/#{agent}") end}
+    meta={@meta}
+    path={~p"/agents/"}
+    opts={[
+      symbol_asc: ~H"""
+      <i class="hero-chevron-up-mini ml-1" />
+      """,
+      symbol_desc: ~H"""
+      <i class="hero-chevron-down-mini ml-1" />
+      """,
+      symbol_unsorted: ~H"""
+      <i class="hero-chevron-up-down-mini ml-1" />
+      """,
+      table_attrs: [
+        class: "w-full border-collapse bg-white text-left text-sm"
+      ],
+      thead_attrs: [
+        class: "bg-zinc-50 border-b-2 border-zinc-200"
+      ],
+      thead_th_attrs: [
+        class: "px-6 py-4 font-medium text-zinc-900"
+      ],
+      th_wrapper_attrs: [
+        class: "flex flex-row"
+      ],
+      tbody_attrs: [
+        class: "divide-y divide-zinc-100"
+      ],
+      tbody_tr_attrs: [
+        class: "hover:bg-zinc-50 group"
+      ],
+      tbody_td_attrs: [
+        class: "px-6 py-4 truncate whitespace-nowrap max-w-xl hover:cursor-pointer"
+      ]
+    ]}
+  >
+    <:col :let={{_, agent}} label="Name" field={:name}><%= agent.name %></:col>
+    <:col :let={{_, agent}} label="Description" field={:description}>
+      <%= agent.description %>
+    </:col>
+    <:col :let={{_, agent}} label="Status" field={:status}><%= agent.status %></:col>
+    <:col :let={{_, agent}} label="Owner" field={:owner_email}><%= agent.owner.email %></:col>
+
+    <:action :let={{_id, agent}}>
+      <div class="sr-only">
+        <.link navigate={~p"/agents/#{agent}"}>Show</.link>
+      </div>
+      <.link :if={@check_ownership.(agent)} patch={~p"/agents/#{agent}/edit"}>
+        Edit
+      </.link>
+    </:action>
+    <:action :let={{id, agent}}>
+      <.link
+        :if={@check_ownership.(agent)}
+        phx-click={JS.push("delete", value: %{id: agent.id}) |> hide("##{id}")}
+        data-confirm="Are you sure?"
+      >
+        Delete
+      </.link>
+    </:action>
+  </Flop.Phoenix.table>
+</div>
+
+<div class="flex flex-row mt-3 text-sm justify-between place-items-baseline">
+  <Flop.Phoenix.cursor_pagination
+    meta={@meta}
+    path={~p"/agents"}
+    opts={[
+      disabled_class: "text-zinc-500 border",
+      wrapper_attrs: [
+        class: "flex flex-row place-items-center"
+      ],
+      previous_link_content: ~H"""
+      <i class="hero-chevron-left" />
+      """,
+      previous_link_attrs: [
+        class: "px-2 py-1 border-l border-y border-zinc-200 rounded-l-md shadow-sm"
+      ],
+      next_link_content: ~H"""
+      <i class="hero-chevron-right" />
+      """,
+      next_link_attrs: [
+        class: "px-2 py-1 border border-zinc-200 rounded-r-md shadow-sm"
+      ]
+    ]}
+  />
+  <div>
+    <span class="px-1">Items per Page:</span>
+    <.form for={@meta_form} phx-change="limit" class="inline-block">
+      <.input field={@meta_form[:first]} type="select" options={[10, 20, 50, 100]} />
+    </.form>
+  </div>
+</div>
 
 <.modal
   :if={@live_action in [:new, :edit]}

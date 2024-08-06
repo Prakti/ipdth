@@ -27,6 +27,20 @@ defmodule Ipdth.Agents do
     Repo.all(from a in Agent, preload: :owner)
   end
 
+  def list_agents_with_filter_and_sort(params \\ %{}) do
+    queryable =
+      Agent
+      |> join(:inner, [a], o in assoc(a, :owner), as: :owner)
+      |> preload([owner: o], owner: o)
+
+    Flop.validate_and_run(queryable, params,
+      for: Agent,
+      repo: Repo,
+      default_pagination_type: :first,
+      pagination_types: [:first, :last]
+    )
+  end
+
   @doc """
   Lists agents that are associated with a specific user and tournament.
   Used for signing up a user's Agent to a given tournamen.t

@@ -11,6 +11,31 @@ defmodule Ipdth.Agents.Agent do
   alias Ipdth.Accounts.User
   alias Ipdth.Agents.{Agent, ConnectionError}
 
+  @derive {
+    Flop.Schema,
+    filterable: [:name, :description, :status, :owner_email],
+    sortable: [:name, :status, :owner_email],
+    default_order: %{
+      order_by: [:name, :status, :owner_email],
+      order_directions: [:asc, :asc, :asc]
+    },
+    default_limit: 10,
+    adapter_opts: [
+      join_fields: [
+        owner_id: [
+          binding: :owner,
+          field: :id,
+          ecto_type: :integer
+        ],
+        owner_email: [
+          binding: :owner,
+          field: :email,
+          ecto_type: :string
+        ]
+      ]
+    ]
+  }
+
   schema "agents" do
     field :name, :string
     field :status, Ecto.Enum, values: [:inactive, :testing, :active, :backoff, :error]

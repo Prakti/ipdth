@@ -11,7 +11,6 @@ defmodule IpdthWeb.AgentLive.Index do
     {:ok,
      socket
      |> assign(:active_page, "agents")
-     |> stream(:agents, Agents.list_agents())
      |> assign(:check_ownership, fn agent ->
        agent_owner?(socket.assigns.current_user, agent)
      end)}
@@ -34,16 +33,49 @@ defmodule IpdthWeb.AgentLive.Index do
     |> assign(:agent, %Agent{})
   end
 
-  defp apply_action(socket, :index, _params) do
-    socket
-    |> assign(:page_title, "Listing Agents")
-    |> assign(:agent, nil)
+  defp apply_action(socket, :index, params) do
+    case Agents.list_agents_with_filter_and_sort(params) do
+      {:ok, {agents, meta}} ->
+        socket
+        |> assign(:page_title, "Listing Agents")
+        |> assign(:agent, nil)
+        |> assign(:meta, meta)
+        |> assign(:meta_form, Phoenix.Component.to_form(meta))
+        |> stream(:agents, agents, reset: true)
+
+      {:error, _meta} ->
+        {:noreply,
+         socket
+         |> put_flash(
+           :error,
+           "Could not Load data specified filters and sorts. Reverting to Defaults."
+         )
+         |> push_patch(to: ~p"/agents")}
+    end
   end
 
   @impl true
   def handle_info({IpdthWeb.AgentLive.FormComponent, {:saved, agent}}, socket) do
     agent = Agents.load_owner(agent)
     {:noreply, stream_insert(socket, :agents, agent)}
+  end
+
+  @impl true
+  def handle_event("filter", params, socket) do
+    case Flop.validate(params) do
+      {:ok, flop} ->
+        {:noreply, push_patch(socket, to: Flop.Phoenix.build_path(~p"/agents", flop))}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Could not apply Filter!")}
+    end
+  end
+
+  @impl true
+  def handle_event("limit", %{"first" => limit}, socket) do
+    flop = %Flop{socket.assigns.meta.flop | first: limit}
+    path = Flop.Phoenix.build_path(~p"/agents", flop)
+    {:noreply, push_patch(socket, to: path)}
   end
 
   @impl true
