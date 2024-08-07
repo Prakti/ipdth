@@ -23,7 +23,9 @@ defmodule Ipdth.Tournaments.RunnerTest do
         multiple_activated_agents_one_bypass_fixture(admin_user, 10)
 
       %{tournament: tournament, participations: participations} =
-        published_tournament_with_participants_fixture(admin_user.id, agents, %{round_number: 10})
+        published_tournament_with_participants_fixture(admin_user.id, agents, %{
+          rounds_per_match: 10
+        })
 
       participant_count = Enum.count(participations)
       assert Enum.count(agents) == participant_count
@@ -94,7 +96,7 @@ defmodule Ipdth.Tournaments.RunnerTest do
           select: p
 
       # All Agents cooperate so each gets 3 points in ever round every match
-      expected_score = 3 * tournament.round_number * matches_to_play_each
+      expected_score = 3 * tournament.rounds_per_match * matches_to_play_each
 
       participations = Repo.all(query)
 
@@ -114,7 +116,9 @@ defmodule Ipdth.Tournaments.RunnerTest do
         multiple_activated_agents_one_bypass_fixture(admin_user, 9)
 
       %{tournament: tournament, participations: participations} =
-        published_tournament_with_participants_fixture(admin_user.id, agents, %{round_number: 10})
+        published_tournament_with_participants_fixture(admin_user.id, agents, %{
+          rounds_per_match: 10
+        })
 
       participant_count = Enum.count(participations)
       assert Enum.count(agents) == participant_count
@@ -184,7 +188,7 @@ defmodule Ipdth.Tournaments.RunnerTest do
           select: p
 
       # All Agents cooperate so each gets 3 points in ever round every match
-      expected_score = 3 * tournament.round_number * matches_to_play_each
+      expected_score = 3 * tournament.rounds_per_match * matches_to_play_each
 
       participations = Repo.all(query)
 
@@ -211,7 +215,9 @@ defmodule Ipdth.Tournaments.RunnerTest do
       agents = [error_agent | Enum.to_list(agents)]
 
       %{tournament: tournament, participations: participations} =
-        published_tournament_with_participants_fixture(admin_user.id, agents, %{round_number: 10})
+        published_tournament_with_participants_fixture(admin_user.id, agents, %{
+          rounds_per_match: 10
+        })
 
       # Set up an Agent to fail in the third tournament round.
       # An Agent plays 10 Rounds per match, 1 match per tournament round
@@ -322,7 +328,7 @@ defmodule Ipdth.Tournaments.RunnerTest do
       finished_matches_each = matches_to_play_each - 1
 
       # All Agents cooperate so each gets 3 points in ever round every match
-      expected_score = 3 * tournament.round_number * finished_matches_each
+      expected_score = 3 * tournament.rounds_per_match * finished_matches_each
 
       participations = Repo.all(query)
 
@@ -374,7 +380,9 @@ defmodule Ipdth.Tournaments.RunnerTest do
         |> Enum.unzip()
 
       %{tournament: tournament, participations: participations} =
-        published_tournament_with_participants_fixture(admin_user.id, agents, %{round_number: 2})
+        published_tournament_with_participants_fixture(admin_user.id, agents, %{
+          rounds_per_match: 2
+        })
 
       participant_count = Enum.count(participations)
       assert Enum.count(agents) == participant_count
@@ -411,7 +419,9 @@ defmodule Ipdth.Tournaments.RunnerTest do
       agents = Enum.to_list(agents)
 
       %{tournament: tournament, participations: participations} =
-        published_tournament_with_participants_fixture(admin_user.id, agents, %{round_number: 10})
+        published_tournament_with_participants_fixture(admin_user.id, agents, %{
+          rounds_per_match: 10
+        })
 
       participant_count = Enum.count(participations)
       assert Enum.count(agents) == participant_count
@@ -536,7 +546,7 @@ defmodule Ipdth.Tournaments.RunnerTest do
           select: p
 
       # All Agents cooperate so each gets 3 points in ever round every match
-      expected_score = 3 * tournament.round_number * matches_to_play_each
+      expected_score = 3 * tournament.rounds_per_match * matches_to_play_each
 
       participations = Repo.all(query)
 

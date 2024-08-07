@@ -14,7 +14,9 @@
   <:col :let={{_id, tournament}} label="Start date">
     <%= Calendar.strftime(tournament.start_date, "%Y-%m-%d %H:%M:%S") %>
   </:col>
-  <:col :let={{_id, tournament}} label="Number of Rounds"><%= tournament.round_number %></:col>
+  <:col :let={{_id, tournament}} label="Number of rounds per match">
+    <%= tournament.rounds_per_match %>
+  </:col>
   <:col :let={{_id, tournament}} label="Signed Up">
     <input
       class="w-5 h-5 rounded text-sky-600 focus:ring-sky-500 border-sky-300"

@@ -22,7 +22,7 @@ defmodule IpdthWeb.TournamentLive.FormComponent do
         <.input field={@form[:name]} type="text" label="Name" />
         <.input field={@form[:description]} type="text" label="Description" />
         <.input field={@form[:start_date]} type="datetime-local" label="Start date" />
-        <.input field={@form[:round_number]} type="number" label="Round number" />
+        <.input field={@form[:rounds_per_match]} type="number" label="Number of rounds per match" />
         <.input field={@form[:random_seed]} type="text" label="Random seed" />
         <:actions>
           <.button phx-disable-with="Saving...">Save Tournament</.button>

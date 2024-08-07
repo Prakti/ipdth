@@ -77,7 +77,7 @@ create_tournaments = fn admin, count ->
       name: Faker.Fruit.En.fruit() <> " " <> Faker.Nato.callsign(),
       description: Faker.Lorem.paragraph() |> String.slice(0, 254),
       start_date: Faker.DateTime.forward(100),
-      round_number: Faker.random_between(50, 200),
+      rounds_per_match: Faker.random_between(50, 200),
       random_seed: Faker.String.base64(20)
     }
 
@@ -102,7 +102,7 @@ create_past_tournaments = fn admin, count ->
       name: Faker.Fruit.En.fruit() <> " " <> Faker.Nato.callsign(),
       description: Faker.Lorem.paragraph() |> String.slice(0, 254),
       start_date: Faker.DateTime.backward(10),
-      round_number: Faker.random_between(50, 200),
+      rounds_per_match: Faker.random_between(50, 200),
       random_seed: Faker.String.base64(20)
     }
 

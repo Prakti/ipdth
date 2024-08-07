@@ -13,18 +13,12 @@ defmodule Ipdth.Tournaments.Tournament do
 
   @status_values [:created, :published, :signup_closed, :running, :aborted, :finished]
 
-  # TODO: 2027-07-31 - Introduce progress field in percent (int)
-  # TODO: 2027-07-31 - Introduce tournament_rounds field (int)
-  # TODO: 2027-07-31 - Introduce current_tournament_round field (int)
-  # TODO: 2027-07-31 - Migrate round_number to rounds_per_match
-
   schema "tournaments" do
     field :name, :string
     field :status, Ecto.Enum, values: @status_values, default: :created
     field :description, :string
     field :start_date, :utc_datetime_usec
     field :end_date, :utc_datetime_usec
-    field :round_number, :integer
     field :random_seed, :string
     field :random_trace, :string
     field :progress, :integer
@@ -48,18 +42,18 @@ defmodule Ipdth.Tournaments.Tournament do
       :name,
       :description,
       :start_date,
-      :round_number,
+      :rounds_per_match,
       :random_seed,
       :status
     ])
-    |> validate_required([:name, :start_date, :round_number])
+    |> validate_required([:name, :start_date, :rounds_per_match])
   end
 
   def update(%Tournament{status: :created} = tournament, attrs, actor_id) do
     tournament
-    |> cast(attrs, [:name, :description, :start_date, :round_number, :random_seed])
+    |> cast(attrs, [:name, :description, :start_date, :rounds_per_match, :random_seed])
     |> put_change(:last_modified_by_id, actor_id)
-    |> validate_required([:name, :start_date, :round_number])
+    |> validate_required([:name, :start_date, :rounds_per_match])
 
     # TODO: 2024-08-28 - We need a 'signup_deadline' field
     # TODO: 2024-08-28 - We need a validator ensuring that 'signup_deadline' is earlier than start_date
@@ -69,7 +63,7 @@ defmodule Ipdth.Tournaments.Tournament do
     tournament
     |> cast(attrs, [:name, :description])
     |> put_change(:last_modified_by_id, actor_id)
-    |> validate_required([:name, :start_date, :round_number])
+    |> validate_required([:name, :start_date, :rounds_per_match])
   end
 
   def new(tournament, attrs, creator_id) do

@@ -12,7 +12,7 @@
   <:item title="End date">
     <%= @tournament.end_date && Calendar.strftime(@tournament.end_date, "%Y-%m-%d %H:%M:%S") %>
   </:item>
-  <:item title="Round number"><%= @tournament.round_number %></:item>
+  <:item title="Number of rounds per match"><%= @tournament.rounds_per_match %></:item>
   <:item title="Status"><%= @tournament.status %></:item>
   <%!-- TODO: 2024-07-03 - Status Badge for Tournaments --%>
 </.list>

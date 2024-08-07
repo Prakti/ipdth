@@ -49,14 +49,16 @@ defmodule Ipdth.Tournaments do
     - :name - The name of the tournament.
     - :description - A description of the tournament.
     - :start_date - The start date of the tournament.
-    - :round_number - The current round number of the tournament.
+    - :rounds_per_match - How many rounds will be played in each match
     - :signed_up - A boolean indicating whether the agent is signed up for the tournament.
 
   ## Example
       iex> Tournaments.list_tournaments_for_signup(1)
       [
-        %{id: 2, name: "Open Championship", description: "Annual open chess tournament.", start_date: ~D[2023-06-15], round_number: 1, signed_up: false},
-        %{id: 3, name: "Regional Qualifier", description: "Qualifier for the national finals.", start_date: ~D[2023-07-20], round_number: 2, signed_up: true}
+        %{id: 2, name: "Open Championship", description: "Annual open chess
+        tournament.", start_date: ~D[2023-06-15], rounds_per_match: 10, signed_up: false},
+        %{id: 3, name: "Regional Qualifier", description: "Qualifier for the
+        national finals.", start_date: ~D[2023-07-20], rounds_per_match: 20, signed_up: true}
       ]
   """
   def list_tournaments_for_signup(agent_id) do
@@ -71,7 +73,7 @@ defmodule Ipdth.Tournaments do
           name: t.name,
           description: t.description,
           start_date: t.start_date,
-          round_number: t.round_number,
+          rounds_per_match: t.rounds_per_match,
           signed_up: not is_nil(p.id)
         }
 
@@ -398,7 +400,7 @@ defmodule Ipdth.Tournaments do
             agent_b_id: agent_b,
             tournament_id: tournament.id,
             tournament_round: round_no,
-            rounds_to_play: tournament.round_number,
+            rounds_to_play: tournament.rounds_per_match,
             inserted_at: NaiveDateTime.utc_now(:second),
             updated_at: NaiveDateTime.utc_now(:second)
           }

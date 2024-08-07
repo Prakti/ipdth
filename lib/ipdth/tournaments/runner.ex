@@ -210,6 +210,6 @@ defmodule Ipdth.Tournaments.Runner do
   end
 
   def compute_tournament_round_timeout(tournament) do
-    Agents.ConnectionManager.compute_timeout() * tournament.round_number
+    Agents.ConnectionManager.compute_timeout() * tournament.rounds_per_match
   end
 end

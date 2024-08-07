@@ -17,7 +17,7 @@ defmodule Ipdth.TournamentsTest do
       status: nil,
       description: nil,
       start_date: nil,
-      round_number: nil,
+      rounds_per_match: nil,
       random_seed: nil
     }
 
@@ -62,7 +62,7 @@ defmodule Ipdth.TournamentsTest do
         name: "some name",
         description: "some description",
         start_date: ~U[2024-01-20 12:56:00Z],
-        round_number: 42,
+        rounds_per_match: 42,
         random_seed: "some random_seed"
       }
 
@@ -73,7 +73,7 @@ defmodule Ipdth.TournamentsTest do
       assert tournament.status == :created
       assert tournament.description == "some description"
       assert tournament.start_date == ~U[2024-01-20 12:56:00.000000Z]
-      assert tournament.round_number == 42
+      assert tournament.rounds_per_match == 42
       assert tournament.random_seed == "some random_seed"
     end
 
@@ -84,7 +84,7 @@ defmodule Ipdth.TournamentsTest do
         name: "some name",
         description: "some description",
         start_date: ~U[2024-01-20 12:56:00Z],
-        round_number: 42,
+        rounds_per_match: 42,
         random_seed: "some random_seed"
       }
 
@@ -138,7 +138,7 @@ defmodule Ipdth.TournamentsTest do
         name: "some updated name",
         description: "some updated description",
         start_date: ~U[2024-01-21 12:56:00Z],
-        round_number: 43,
+        rounds_per_match: 43,
         random_seed: "some updated random_seed"
       }
 
@@ -149,7 +149,7 @@ defmodule Ipdth.TournamentsTest do
       assert tournament.status == :created
       assert tournament.description == "some updated description"
       assert tournament.start_date == ~U[2024-01-21 12:56:00.000000Z]
-      assert tournament.round_number == 43
+      assert tournament.rounds_per_match == 43
       assert tournament.random_seed == "some updated random_seed"
     end
 
@@ -164,7 +164,7 @@ defmodule Ipdth.TournamentsTest do
         name: "some updated name",
         description: "some updated description",
         start_date: ~U[2024-01-21 12:56:00Z],
-        round_number: 43,
+        rounds_per_match: 42,
         random_seed: "some updated random_seed"
       }
 
@@ -183,7 +183,7 @@ defmodule Ipdth.TournamentsTest do
         name: "some updated name",
         description: "some updated description",
         start_date: ~U[2024-01-21 12:56:00Z],
-        round_number: 43,
+        rounds_per_match: 42,
         random_seed: "some updated random_seed"
       }
 
@@ -200,7 +200,7 @@ defmodule Ipdth.TournamentsTest do
         name: "some updated name",
         description: "some updated description",
         start_date: ~U[2024-01-21 12:56:00Z],
-        round_number: 43,
+        rounds_per_match: 43,
         random_seed: "some updated random_seed"
       }
 

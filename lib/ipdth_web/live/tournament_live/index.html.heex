@@ -27,7 +27,9 @@
   <:col :let={{_id, tournament}} label="End date">
     <%= tournament.end_date && Calendar.strftime(tournament.end_date, "%Y-%m-%d %H:%M:%S") %>
   </:col>
-  <:col :let={{_id, tournament}} label="Number of Rounds"><%= tournament.round_number %></:col>
+  <:col :let={{_id, tournament}} label="Number of rounds per match">
+    <%= tournament.rounds_per_match %>
+  </:col>
   <:action :let={{_id, tournament}}>
     <div class="sr-only">
       <.link navigate={~p"/tournaments/#{tournament}"}>Show</.link>

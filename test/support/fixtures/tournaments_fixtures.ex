@@ -16,7 +16,7 @@ defmodule Ipdth.TournamentsFixtures do
         description: "some description",
         name: "some name",
         random_seed: "some random_seed",
-        round_number: 42,
+        rounds_per_match: 42,
         start_date: ~U[2024-01-20 12:56:00Z]
       })
       |> Tournaments.create_tournament(admin_id)
