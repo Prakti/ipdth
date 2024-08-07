@@ -27,6 +27,10 @@ defmodule Ipdth.Tournaments.Tournament do
     field :round_number, :integer
     field :random_seed, :string
     field :random_trace, :string
+    field :progress, :integer
+    field :total_rounds, :integer
+    field :current_round, :integer
+    field :rounds_per_match, :integer
     has_many :participations, Participation
     has_many :matches, Match
     belongs_to :creator, User
