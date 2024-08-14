@@ -14,8 +14,7 @@ defmodule IpdthWeb.TournamentLive.Index do
     {:ok,
      socket
      |> assign(:active_page, "tournaments")
-     |> assign(:user_is_tournament_admin, tournament_admin?(current_user))
-     |> stream(:tournaments, list_tournaments(current_user))}
+     |> assign(:user_is_tournament_admin, tournament_admin?(current_user))}
   end
 
   @impl true
@@ -37,10 +36,26 @@ defmodule IpdthWeb.TournamentLive.Index do
     |> assign(:tournament, %Tournament{})
   end
 
-  defp apply_action(socket, :index, _params) do
-    socket
-    |> assign(:page_title, "Listing Tournaments")
-    |> assign(:tournament, nil)
+  defp apply_action(socket, :index, params) do
+    current_user = socket.assigns.current_user
+
+    case Tournaments.list_tournaments_with_filter_and_sort(current_user.id, %{order_by: [:name]}) do
+      {:ok, {tournaments, meta}} ->
+        socket
+        |> assign(:page_title, "Listing Tournaments")
+        |> assign(:tournament, nil)
+        |> assign(:meta, meta)
+        |> assign(:meta_form, Phoenix.Component.to_form(meta))
+        |> stream(:tournaments, tournaments, reset: true)
+
+      {:error, meta} ->
+        socket
+        |> put_flash(
+          :error,
+          "Could not Load data with specified filter and sorting. Reverting to Defaults."
+        )
+        |> push_patch(to: ~p"/tournaments")
+    end
   end
 
   @impl true

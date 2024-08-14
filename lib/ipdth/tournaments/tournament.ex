@@ -13,6 +13,39 @@ defmodule Ipdth.Tournaments.Tournament do
 
   @status_values [:created, :published, :signup_closed, :running, :aborted, :finished]
 
+  @derive {
+    Flop.Schema,
+    filterable: [
+      :name,
+      :description,
+      :status,
+      :creator_email,
+      :editor_email,
+      :start_date,
+      :rounds_per_match
+    ],
+    sortable: [:name],
+    default_order: %{
+      order_by: [:name],
+      order_directions: [:asc]
+    },
+    default_limit: 10,
+    adapter_opts: [
+      join_fields: [
+        creator_email: [
+          binding: :creator,
+          field: :email,
+          ecto_type: :string
+        ],
+        editor_email: [
+          binding: :last_modified_by,
+          field: :email,
+          ecto_type: :string
+        ]
+      ]
+    ]
+  }
+
   schema "tournaments" do
     field :name, :string
     field :status, Ecto.Enum, values: @status_values, default: :created

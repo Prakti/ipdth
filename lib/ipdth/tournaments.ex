@@ -33,6 +33,35 @@ defmodule Ipdth.Tournaments do
     end
   end
 
+  defp list_tournament_query(actor_id) when is_integer(actor_id) do
+    if Accounts.has_role?(actor_id, :tournament_admin) do
+      Tournament
+    else
+      list_tournament_query(nil)
+    end
+  end
+
+  defp list_tournament_query(_) do
+    Tournament
+    |> where([t], t.status != :created)
+  end
+
+  def list_tournaments_with_filter_and_sort(actor_id, params \\ %{}) do
+    query =
+      list_tournament_query(actor_id)
+      |> join(:inner, [t], c in assoc(t, :creator), as: :creator)
+      |> join(:inner, [t], e in assoc(t, :last_modified_by), as: :last_modified_by)
+      |> preload([creator: c], creator: c)
+      |> preload([last_modified_by: e], last_modified_by: e)
+
+    Flop.validate_and_run(query, params,
+      for: Tournament,
+      repo: Repo,
+      default_pagination_type: :first,
+      pagination_types: [:first, :last]
+    )
+  end
+
   @doc """
   Lists published tournaments along with a flag indicating whether a given agent is already signed up.
 
@@ -437,7 +466,7 @@ defmodule Ipdth.Tournaments do
     end)
 
     # TODO: 2027-07-31 - Think about moving score computation and ranking computation int one function
-    # We do not send a PubSub message yet, because usually the ranking will be
+    # NOTE: We do not send a PubSub message yet, because usually the ranking will be
     # computed afterwards and that's more relevant
 
     :ok

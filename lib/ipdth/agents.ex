@@ -28,12 +28,12 @@ defmodule Ipdth.Agents do
   end
 
   def list_agents_with_filter_and_sort(params \\ %{}) do
-    queryable =
+    query =
       Agent
       |> join(:inner, [a], o in assoc(a, :owner), as: :owner)
       |> preload([owner: o], owner: o)
 
-    Flop.validate_and_run(queryable, params,
+    Flop.validate_and_run(query, params,
       for: Agent,
       repo: Repo,
       default_pagination_type: :first,

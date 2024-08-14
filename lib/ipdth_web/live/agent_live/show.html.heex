@@ -121,7 +121,7 @@
     <%= tournament.end_date && Calendar.strftime(tournament.end_date, "%Y-%m-%d %H:%M:%S") %>
   </:col>
   <:col :let={{_id, tournament}} label="Rounds to play per match">
-    <%= tournament.rounds_to_play %>
+    <%= tournament.rounds_per_match %>
   </:col>
   <:action :let={{_id, tournament}}>
     <div class="sr-only">

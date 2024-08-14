@@ -17,6 +17,7 @@ defmodule IpdthWeb.CoreComponents do
   use Phoenix.Component
 
   alias Phoenix.LiveView.JS
+
   import IpdthWeb.Gettext
 
   @badge_styles %{
@@ -572,7 +573,8 @@ defmodule IpdthWeb.CoreComponents do
       <select
         id={@id}
         name={@name}
-        class="mt-2 block w-full rounded-md border border-gray-300 bg-white shadow-sm focus:border-zinc-400 focus:ring-0 sm:text-sm"
+        class="mt-2 block w-full rounded-md border border-gray-300 bg-white
+        shadow-sm focus:border-zinc-400 focus:ring-0 sm:text-sm"
         multiple={@multiple}
         {@rest}
       >
@@ -680,7 +682,67 @@ defmodule IpdthWeb.CoreComponents do
     """
   end
 
-  @doc ~S"""
+  @doc """
+  Render the filters for a flop_table.
+  """
+  attr :meta, Flop.Meta, required: true
+  attr :fields, :list, required: true
+
+  def flop_table_filters(assigns) do
+    assigns = assign(assigns, :meta_form, Phoenix.Component.to_form(assigns.meta))
+
+    ~H"""
+    <.form id="agent-filter" for={@meta_form} phx-change="filter">
+      <div class="flex flex-row gap-4">
+        <Flop.Phoenix.filter_fields :let={i} form={@meta_form} fields={@fields}>
+          <.input field={i.field} label={i.label} type={i.type} class="" {i.rest} />
+        </Flop.Phoenix.filter_fields>
+      </div>
+    </.form>
+    """
+  end
+
+  @doc """
+  Render frame for the table, that can show an empty state image in case there
+  is not content to be shown in the table.
+  """
+  attr :meta, Flop.Meta, required: true
+  attr :path, :string, required: true
+  attr :page_sizes, :list, default: [10, 20, 50, 100]
+  attr :filter_fields, :list, default: []
+  attr :empty?, :boolean, required: true
+  attr :empty_icon, :string, default: "hero-inbox-solid"
+  attr :empty_message, :string, required: true
+
+  slot :inner_block, required: true
+
+  def table_frame(assigns) do
+    if assigns.empty? do
+      ~H"""
+      <.flop_table_filters :if={@filter_fields != []} meta={@meta} fields={@filter_fields} />
+      <div class={[
+        "flex flex-row flex-nowrap justify-center items-center",
+        "p-8 mt-12 rounded-lg border border-zinc-200 shadow-md"
+      ]}>
+        <.icon name={@empty_icon} class="text-zinc-600 mr-4 w-12 h-12" />
+        <div class=""><%= @empty_message %></div>
+      </div>
+      """
+    else
+      ~H"""
+      <.flop_table_filters :if={@filter_fields != []} meta={@meta} fields={@filter_fields} />
+      <div class="mt-12">
+        <.pagination meta={@meta} path={@path} page_sizes={@page_sizes} />
+        <div class="overflow-hidden rounded-lg border border-zinc-200 shadow-md mt-2">
+          <%= render_slot(@inner_block) %>
+        </div>
+        <.pagination meta={@meta} path={@path} page_sizes={@page_sizes} />
+      </div>
+      """
+    end
+  end
+
+  @doc """
   Renders a table with generic styling.
 
   TODO: 2024-04-28 - Rethink display of table-actions
@@ -747,6 +809,75 @@ defmodule IpdthWeb.CoreComponents do
           </tr>
         </tbody>
       </table>
+    </div>
+    """
+  end
+
+  defdelegate flop_table(assigns), to: Flop.Phoenix, as: :table
+
+  def prev_page_link_content(assigns) do
+    ~H"""
+    <i class="hero-chevron-left" />
+    """
+  end
+
+  def next_page_link_content(assigns) do
+    ~H"""
+    <i class="hero-chevron-right" />
+    """
+  end
+
+  defp page_size_class(old, old) do
+    ["font-bold rounded bg-amber-500 text-white"]
+  end
+
+  defp page_size_class(_old, _new) do
+    []
+  end
+
+  @doc """
+  Render a cursor pagination bar including page size control
+  """
+  attr :meta, Flop.Meta, required: true
+  attr :path, :string, required: true
+  attr :page_sizes, :list, required: true
+  attr :current_size, :integer, required: true
+
+  def pagination(assigns) do
+    ~H"""
+    <div class="flex flex-row mt-3 text-sm justify-between place-items-baseline">
+      <Flop.Phoenix.cursor_pagination
+        meta={@meta}
+        path={@path}
+        opts={[
+          disabled_class: "text-zinc-500 border",
+          wrapper_attrs: [
+            class: "flex flex-row place-items-center"
+          ],
+          previous_link_content: prev_page_link_content(assigns),
+          previous_link_attrs: [
+            class: "px-2 py-1 border-l border-y border-zinc-200 rounded-l-md shadow-sm"
+          ],
+          next_link_content: next_page_link_content(assigns),
+          next_link_attrs: [
+            class: "px-2 py-1 border border-zinc-200 rounded-r-md shadow-sm"
+          ]
+        ]}
+      />
+      <div class="flex flex-row flex-nowrap space-x-1">
+        <span class="px-1">Page size:</span>
+        <.link
+          :for={size <- @page_sizes}
+          phx-click="page-size"
+          phx-value-size={size}
+          class={[
+            "px-1",
+            page_size_class(@meta.page_size, size)
+          ]}
+        >
+          <%= size %>
+        </.link>
+      </div>
     </div>
     """
   end
@@ -882,6 +1013,41 @@ defmodule IpdthWeb.CoreComponents do
     |> JS.hide(to: "##{id}", transition: {"block", "block", "hidden"})
     |> JS.remove_class("overflow-hidden", to: "body")
     |> JS.pop_focus()
+  end
+
+  def flop_table_options(assigns) do
+    [
+      symbol_asc: ~H"""
+      <i class="hero-chevron-up-mini ml-1" />
+      """,
+      symbol_desc: ~H"""
+      <i class="hero-chevron-down-mini ml-1" />
+      """,
+      symbol_unsorted: ~H"""
+      <i class="hero-chevron-up-down-mini ml-1" />
+      """,
+      table_attrs: [
+        class: "w-full border-collapse bg-white text-left text-sm"
+      ],
+      thead_attrs: [
+        class: "bg-zinc-50 border-b-2 border-zinc-200"
+      ],
+      thead_th_attrs: [
+        class: "px-6 py-4 font-medium text-zinc-900"
+      ],
+      th_wrapper_attrs: [
+        class: "flex flex-row"
+      ],
+      tbody_attrs: [
+        class: "divide-y divide-zinc-100"
+      ],
+      tbody_tr_attrs: [
+        class: "hover:bg-zinc-50 group"
+      ],
+      tbody_td_attrs: [
+        class: "px-6 py-4 truncate whitespace-nowrap max-w-xl hover:cursor-pointer"
+      ]
+    ]
   end
 
   @doc """
