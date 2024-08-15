@@ -841,7 +841,6 @@ defmodule IpdthWeb.CoreComponents do
   attr :meta, Flop.Meta, required: true
   attr :path, :string, required: true
   attr :page_sizes, :list, required: true
-  attr :current_size, :integer, required: true
 
   def pagination(assigns) do
     ~H"""
@@ -1045,7 +1044,8 @@ defmodule IpdthWeb.CoreComponents do
         class: "hover:bg-zinc-50 group"
       ],
       tbody_td_attrs: [
-        class: "px-6 py-4 truncate whitespace-nowrap max-w-xl hover:cursor-pointer"
+        # TODO: 2024-08-14 - Make max-w-md configurable!
+        class: "px-6 py-4 truncate whitespace-nowrap max-w-md hover:cursor-pointer"
       ]
     ]
   end

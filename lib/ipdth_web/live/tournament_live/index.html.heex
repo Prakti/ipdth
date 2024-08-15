@@ -10,44 +10,55 @@
 <%!-- TODO: 2024-02-03 - Think on how to format dates according to  user's timezone --%>
 <%!-- TODO: 2024-02-03 - Think on how to format dates according to  user's locale --%>
 
-<.table
-  id="tournaments"
-  rows={@streams.tournaments}
-  row_click={fn {_id, tournament} -> JS.navigate(~p"/tournaments/#{tournament}") end}
+<.table_frame
+  empty_message="No tournaments found!"
+  empty?={Enum.count(@streams.tournaments) == 0}
+  meta={@meta}
+  path={~p"/tournaments/"}
+  filter_fields={@filter_fields}
 >
-  <:col :let={{_id, tournament}} label="Name"><%= tournament.name %></:col>
-  <:col :let={{_id, tournament}} label="Description"><%= tournament.description %></:col>
-  <:col :let={{_id, tournament}} label="Status">
-    <%!-- TODO: 2024-07-03 - Status Badge for Matches --%>
-    <.badge color="green"><%= tournament.status %></.badge>
-  </:col>
-  <:col :let={{_id, tournament}} label="Start date">
-    <%= Calendar.strftime(tournament.start_date, "%Y-%m-%d %H:%M:%S") %>
-  </:col>
-  <:col :let={{_id, tournament}} label="End date">
-    <%= tournament.end_date && Calendar.strftime(tournament.end_date, "%Y-%m-%d %H:%M:%S") %>
-  </:col>
-  <:col :let={{_id, tournament}} label="Number of rounds per match">
-    <%= tournament.rounds_per_match %>
-  </:col>
-  <:action :let={{_id, tournament}}>
-    <div class="sr-only">
-      <.link navigate={~p"/tournaments/#{tournament}"}>Show</.link>
-    </div>
-    <.link :if={@user_is_tournament_admin} patch={~p"/tournaments/#{tournament}/edit"}>
-      Edit
-    </.link>
-  </:action>
-  <:action :let={{id, tournament}}>
-    <.link
-      :if={@user_is_tournament_admin}
-      phx-click={JS.push("delete", value: %{id: tournament.id}) |> hide("##{id}")}
-      data-confirm="Are you sure?"
-    >
-      Delete
-    </.link>
-  </:action>
-</.table>
+  <.flop_table
+    items={@streams.tournaments}
+    row_click={fn {_id, tournament} -> JS.navigate(~p"/tournaments/#{tournament}") end}
+    meta={@meta}
+    path={~p"/tournaments/"}
+    opts={flop_table_options(assigns)}
+  >
+    <:col :let={{_id, tournament}} label="Name" field={:name}><%= tournament.name %></:col>
+    <:col :let={{_id, tournament}} label="Description" field={:description}>
+      <%= tournament.description %>
+    </:col>
+    <:col :let={{_id, tournament}} label="Status" field={:status}>
+      <.badge color="green"><%= tournament.status %></.badge>
+    </:col>
+    <:col :let={{_id, tournament}} label="Start date" field={:start_date}>
+      <%= Calendar.strftime(tournament.start_date, "%Y-%m-%d %H:%M:%S") %>
+    </:col>
+    <:col :let={{_id, tournament}} label="End date" field={:end_date}>
+      <%= tournament.end_date && Calendar.strftime(tournament.end_date, "%Y-%m-%d %H:%M:%S") %>
+    </:col>
+    <:col :let={{_id, tournament}} label="Rounds per match" field={:rounds_per_match}>
+      <%= tournament.rounds_per_match %>
+    </:col>
+    <:action :let={{_id, tournament}}>
+      <div class="sr-only">
+        <.link navigate={~p"/tournaments/#{tournament}"}>Show</.link>
+      </div>
+      <.link :if={@user_is_tournament_admin} patch={~p"/tournaments/#{tournament}/edit"}>
+        Edit
+      </.link>
+    </:action>
+    <:action :let={{id, tournament}}>
+      <.link
+        :if={@user_is_tournament_admin}
+        phx-click={JS.push("delete", value: %{id: tournament.id}) |> hide("##{id}")}
+        data-confirm="Are you sure?"
+      >
+        Delete
+      </.link>
+    </:action>
+  </.flop_table>
+</.table_frame>
 
 <.modal
   :if={@live_action in [:new, :edit] && @user_is_tournament_admin}

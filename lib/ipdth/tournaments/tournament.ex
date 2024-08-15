@@ -24,10 +24,22 @@ defmodule Ipdth.Tournaments.Tournament do
       :start_date,
       :rounds_per_match
     ],
-    sortable: [:name],
+    sortable: [
+      :name,
+      :status,
+      :start_date,
+      :end_date,
+      :rounds_per_match
+    ],
     default_order: %{
-      order_by: [:name],
-      order_directions: [:asc]
+      order_by: [
+        :name,
+        :status,
+        :start_date,
+        :end_date,
+        :rounds_per_match
+      ],
+      order_directions: [:asc, :asc, :desc, :desc, :asc]
     },
     default_limit: 10,
     adapter_opts: [

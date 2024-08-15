@@ -51,7 +51,7 @@ defmodule IpdthWeb.AgentLive.Index do
     |> assign(:agent, %Agent{})
   end
 
-  defp apply_action(socket, :index, params) do
+  defp apply_action(socket, :index, _params) do
     socket
     |> assign(:page_title, "Listing Agents")
     |> assign(:agent, nil)

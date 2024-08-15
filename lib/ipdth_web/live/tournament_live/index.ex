@@ -14,12 +14,34 @@ defmodule IpdthWeb.TournamentLive.Index do
     {:ok,
      socket
      |> assign(:active_page, "tournaments")
+     |> assign(:filter_fields, filter_field_config())
      |> assign(:user_is_tournament_admin, tournament_admin?(current_user))}
   end
 
   @impl true
   def handle_params(params, _url, socket) do
-    {:noreply, apply_action(socket, socket.assigns.live_action, params)}
+    current_user = socket.assigns.current_user
+
+    case Tournaments.list_tournaments_with_filter_and_sort(current_user.id, params) do
+      {:ok, {tournaments, meta}} ->
+        {:noreply,
+         socket
+         |> assign(:page_title, "Listing Tournaments")
+         |> assign(:tournament, nil)
+         |> assign(:meta, meta)
+         |> stream(:tournaments, tournaments, reset: true)
+         |> apply_action(socket.assigns.live_action, params)}
+
+      {:error, _meta} ->
+        {:noreply,
+         socket
+         |> put_flash(
+           :error,
+           "Could not Load data with specified filter and sorting. Reverting to Defaults."
+         )
+         |> apply_action(socket.assigns.live_action, params)
+         |> push_patch(to: ~p"/tournaments")}
+    end
   end
 
   defp apply_action(socket, :edit, %{"id" => id}) do
@@ -36,26 +58,10 @@ defmodule IpdthWeb.TournamentLive.Index do
     |> assign(:tournament, %Tournament{})
   end
 
-  defp apply_action(socket, :index, params) do
-    current_user = socket.assigns.current_user
-
-    case Tournaments.list_tournaments_with_filter_and_sort(current_user.id, %{order_by: [:name]}) do
-      {:ok, {tournaments, meta}} ->
-        socket
-        |> assign(:page_title, "Listing Tournaments")
-        |> assign(:tournament, nil)
-        |> assign(:meta, meta)
-        |> assign(:meta_form, Phoenix.Component.to_form(meta))
-        |> stream(:tournaments, tournaments, reset: true)
-
-      {:error, meta} ->
-        socket
-        |> put_flash(
-          :error,
-          "Could not Load data with specified filter and sorting. Reverting to Defaults."
-        )
-        |> push_patch(to: ~p"/tournaments")
-    end
+  defp apply_action(socket, :index, _params) do
+    socket
+    |> assign(:page_title, "Listing Tournaments")
+    |> assign(:tournament, nil)
   end
 
   @impl true
@@ -73,6 +79,23 @@ defmodule IpdthWeb.TournamentLive.Index do
   end
 
   @impl true
+  def handle_event("filter", params, socket) do
+    case Flop.validate(params) do
+      {:ok, flop} ->
+        {:noreply, push_patch(socket, to: Flop.Phoenix.build_path(~p"/tournaments", flop))}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Could not apply Filter!")}
+    end
+  end
+
+  @impl true
+  def handle_event("page-size", %{"size" => size}, socket) do
+    flop = %Flop{socket.assigns.meta.flop | first: size}
+    {:noreply, push_patch(socket, to: Flop.Phoenix.build_path(~p"/tournaments", flop))}
+  end
+
+  @impl true
   def handle_info({IpdthWeb.TournamentLive.FormComponent, {:saved, tournament}}, socket) do
     {:noreply, stream_insert(socket, :tournaments, tournament)}
   end
@@ -80,17 +103,45 @@ defmodule IpdthWeb.TournamentLive.Index do
   @impl true
   def handle_info(:tournaments_updated, socket) do
     current_user = socket.assigns.current_user
+    flop = socket.assigns.meta.flop
 
-    {:noreply,
-     socket
-     |> stream(:tournaments, list_tournaments(current_user))}
+    case Tournaments.list_tournaments_with_filter_and_sort(current_user.id, flop) do
+      {:ok, {tournaments, meta}} ->
+        {:noreply,
+         socket
+         |> assign(:meta, meta)
+         |> stream(:tournaments, tournaments, reset: true)}
+
+      {:error, _meta} ->
+        {:noreply,
+         socket
+         |> put_flash(
+           :error,
+           "Could not Load data with specified filter and sorting. Reverting to Defaults."
+         )
+         |> push_patch(to: ~p"/tournaments")}
+    end
   end
 
-  defp list_tournaments(nil) do
-    Tournaments.list_tournaments()
-  end
-
-  defp list_tournaments(user) do
-    Tournaments.list_tournaments(user.id)
+  defp filter_field_config() do
+    [
+      name: [
+        op: :ilike_and
+      ],
+      description: [
+        op: :ilike_and
+      ],
+      status: [
+        type: "select",
+        options: [
+          {"", nil},
+          {"created", :created},
+          {"published", :published},
+          {"running", :running},
+          {"aborted", :aborted},
+          {"finished", :aborted}
+        ]
+      ]
+    ]
   end
 end
