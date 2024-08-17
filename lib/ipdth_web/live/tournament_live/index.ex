@@ -22,7 +22,7 @@ defmodule IpdthWeb.TournamentLive.Index do
   def handle_params(params, _url, socket) do
     current_user = socket.assigns.current_user
 
-    case Tournaments.list_tournaments_with_filter_and_sort(current_user.id, params) do
+    case list_tournaments(current_user, params) do
       {:ok, {tournaments, meta}} ->
         {:noreply,
          socket
@@ -105,7 +105,7 @@ defmodule IpdthWeb.TournamentLive.Index do
     current_user = socket.assigns.current_user
     flop = socket.assigns.meta.flop
 
-    case Tournaments.list_tournaments_with_filter_and_sort(current_user.id, flop) do
+    case list_tournaments(current_user, flop) do
       {:ok, {tournaments, meta}} ->
         {:noreply,
          socket
@@ -121,6 +121,14 @@ defmodule IpdthWeb.TournamentLive.Index do
          )
          |> push_patch(to: ~p"/tournaments")}
     end
+  end
+
+  defp list_tournaments(nil, flop) do
+    Tournaments.list_tournaments_with_filter_and_sort(nil, flop)
+  end
+
+  defp list_tournaments(user, flop) do
+    Tournaments.list_tournaments_with_filter_and_sort(user.id, flop)
   end
 
   defp filter_field_config() do

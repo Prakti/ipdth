@@ -43,4 +43,22 @@ defmodule Ipdth.TournamentsFixtures do
 
     %{participations: participations, agents: agents, tournament: tournament}
   end
+
+  def tournament_list_fixture(admin_id, total_count, published_count) do
+    Enum.map(1..total_count, fn n ->
+      tournament_fixture(admin_id, %{
+        name: "Tournament-#{n}"
+      })
+    end)
+    |> Enum.split(published_count)
+    |> then(fn {to_publish, tournaments} ->
+      {
+        tournaments,
+        Enum.map(to_publish, fn t ->
+          {:ok, p} = Ipdth.Tournaments.publish_tournament(t, admin_id)
+          p
+        end)
+      }
+    end)
+  end
 end

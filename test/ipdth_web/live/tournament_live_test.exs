@@ -33,10 +33,21 @@ defmodule IpdthWeb.TournamentLiveTest do
     %{admin: admin, tournament: tournament}
   end
 
-  # TODO: 20204-04-29 -- Test with normal user!
-  # TODO: 20204-04-29 -- Test with anonymous user!
+  def create_tournaments(_) do
+    admin = admin_user_fixture()
+    {created_tournaments, published_tournaments} = tournament_list_fixture(admin.id, 10, 2)
+
+    %{
+      admin: admin,
+      created_tournaments: created_tournaments,
+      published_tournaments: published_tournaments
+    }
+  end
+
+  # TODO: 2024-04-29 -- Test with anonymous user!
   describe "Index (with admin user)" do
     setup [:create_tournament, :register_and_log_in_admin]
+    # TODO 2024-08-17 - Test with more than one tournament
 
     test "lists all tournaments", %{conn: conn, tournament: tournament} do
       {:ok, _index_live, html} = live(conn, ~p"/tournaments")
@@ -96,6 +107,58 @@ defmodule IpdthWeb.TournamentLiveTest do
 
       assert index_live |> element("#tournaments-#{tournament.id} a", "Delete") |> render_click()
       refute has_element?(index_live, "#tournaments-#{tournament.id}")
+    end
+  end
+
+  describe "Index (with normal user)" do
+    setup [:create_tournaments, :register_and_log_in_user]
+
+    test "lists all tournaments in state published or later", %{
+      conn: conn,
+      created_tournaments: created_tournaments,
+      published_tournaments: published_tournaments
+    } do
+      {:ok, _index_live, html} = live(conn, ~p"/tournaments")
+
+      assert html =~ "Listing Tournaments"
+
+      # Assert that all published tournaments are visible
+      Enum.each(published_tournaments, fn tournament ->
+        assert html =~ tournament.name
+      end)
+
+      # Assert that no create tournament is visible
+      Enum.each(created_tournaments, fn tournament ->
+        refute html =~ tournament.name
+      end)
+    end
+
+    # TODO 2024-08-17 - Test sorting
+    # TODO 2024-08-17 - Test filtering
+    # TODO 2024-08-17 - Test paging
+  end
+
+  describe "Index (with anonymous user)" do
+    setup [:create_tournaments]
+
+    test "lists all tournaments in state published or later", %{
+      conn: conn,
+      created_tournaments: created_tournaments,
+      published_tournaments: published_tournaments
+    } do
+      {:ok, _index_live, html} = live(conn, ~p"/tournaments")
+
+      assert html =~ "Listing Tournaments"
+
+      # Assert that all published tournaments are visible
+      Enum.each(published_tournaments, fn tournament ->
+        assert html =~ tournament.name
+      end)
+
+      # Assert that no create tournament is visible
+      Enum.each(created_tournaments, fn tournament ->
+        refute html =~ tournament.name
+      end)
     end
   end
 
