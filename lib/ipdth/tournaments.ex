@@ -12,27 +12,6 @@ defmodule Ipdth.Tournaments do
   alias Ipdth.Matches
   alias Ipdth.Accounts.User
 
-  @doc """
-  Returns the list of tournaments.
-
-  ## Examples
-
-      iex> list_tournaments()
-      [%Tournament{}, ...]
-
-  """
-  def list_tournaments() do
-    Repo.all(from t in Tournament, where: t.status != ^:created)
-  end
-
-  def list_tournaments(actor_id) do
-    if Accounts.has_role?(actor_id, :tournament_admin) do
-      Repo.all(Tournament)
-    else
-      list_tournaments()
-    end
-  end
-
   defp list_tournament_query(actor_id) when is_integer(actor_id) do
     if Accounts.has_role?(actor_id, :tournament_admin) do
       Tournament

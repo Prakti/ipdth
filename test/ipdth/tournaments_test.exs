@@ -21,21 +21,6 @@ defmodule Ipdth.TournamentsTest do
       random_seed: nil
     }
 
-    test "list_tournaments/0 returns all tournaments for admins" do
-      admin = admin_user_fixture()
-      tournament = tournament_fixture(admin.id)
-      assert Tournaments.list_tournaments(admin.id) == [tournament]
-    end
-
-    test "list_tournaments/0 returns no tournaments in status :created for anonymous users" do
-      assert Tournaments.list_tournaments() == []
-    end
-
-    test "list_tournaments/0 returns no tournaments in status :created for normal users" do
-      user = user_fixture()
-      assert Tournaments.list_tournaments(user.id) == []
-    end
-
     test "get_tournament!/1 returns the tournament with given id for an admin" do
       admin = admin_user_fixture()
       tournament = tournament_fixture(admin.id)
