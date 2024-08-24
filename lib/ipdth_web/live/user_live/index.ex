@@ -10,17 +10,38 @@ defmodule IpdthWeb.UserLive.Index do
   @impl true
   def mount(_params, _session, socket) do
     current_user = socket.assigns.current_user
+    is_user_admin = user_admin?(current_user)
 
     {:ok,
      socket
      |> assign(:active_page, "users")
-     |> assign(:is_user_admin, user_admin?(current_user))
-     |> stream(:users, Accounts.list_users_with_agent_count_and_status())}
+     |> assign(:filter_fields, filter_field_config(is_user_admin))
+     |> assign(:is_user_admin, is_user_admin)}
   end
 
   @impl true
   def handle_params(params, _url, socket) do
-    {:noreply, apply_action(socket, socket.assigns.live_action, params)}
+    case Accounts.list_users_with_filter_and_sort(params) do
+      {:ok, {users, meta}} ->
+        {:noreply,
+         socket
+         |> assign(:user, nil)
+         |> assign(:meta, meta)
+         |> stream(:users, users, reset: true)
+         |> apply_action(socket.assigns.live_action, params)}
+
+      {:error, meta} ->
+        Logger.debug("Could not apply filters: #{inspect(meta)}")
+
+        {:noreply,
+         socket
+         |> put_flash(
+           :error,
+           "Could not Load data with specified filter and sorting. Reverting to defaults."
+         )
+         |> apply_action(socket.assigns.live_action, params)
+         |> push_patch(to: ~p"/users")}
+    end
   end
 
   defp apply_action(socket, :index, _params) do
@@ -85,5 +106,39 @@ defmodule IpdthWeb.UserLive.Index do
         Logger.warning(details)
         {:noreply, put_flash(socket, :error, "Could not remove role")}
     end
+  end
+
+  @impl true
+  def handle_event("filter", params, socket) do
+    case Flop.validate(params) do
+      {:ok, flop} ->
+        {:noreply, push_patch(socket, to: Flop.Phoenix.build_path(~p"/users", flop))}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Could not apply Filter!")}
+    end
+  end
+
+  @impl true
+  def handle_event("page-size", %{"size" => size}, socket) do
+    flop = %Flop{socket.assigns.meta.flop | first: size}
+    {:noreply, push_patch(socket, to: Flop.Phoenix.build_path(~p"/users", flop))}
+  end
+
+  defp filter_field_config(false) do
+    [
+      email: [
+        op: :ilike_and
+      ]
+    ]
+  end
+
+  defp filter_field_config(true) do
+    [
+      email: [
+        op: :ilike_and
+      ]
+      # TODO: 2024-08-22 - Turn status into a proper field to enable filtering and sorting
+    ]
   end
 end

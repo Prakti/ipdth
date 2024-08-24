@@ -457,6 +457,27 @@ defmodule Ipdth.Accounts do
     )
   end
 
+  # TODO: 2024-08-20 - restrict/scope fields depending on user's permissions
+  def list_users_with_filter_and_sort(params \\ %{}) do
+    User
+    |> join(:left, [u], a in assoc(u, :agents), as: :agents)
+    |> group_by([u], u.id)
+    |> select_merge([u, agents: a], %{
+      agent_count:
+        count([u.id, a.id])
+        |> selected_as(:agent_count),
+      status:
+        fragment("CASE WHEN ? < now() THEN 'confirmed' ELSE 'unconfirmed' END", u.confirmed_at)
+        |> selected_as(:status)
+    })
+    |> Flop.validate_and_run(params,
+      for: User,
+      repo: Repo,
+      default_pagination_type: :first,
+      pagination_types: [:first, :last]
+    )
+  end
+
   @doc """
   Check if a user has a certain role. Fetches a user by id first.
   """

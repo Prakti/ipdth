@@ -38,6 +38,23 @@ defmodule Ipdth.AccountsFixtures do
     user
   end
 
+  def user_list_fixture(user_count, admin_count) do
+    %{
+      users:
+        Enum.map(1..user_count, fn n ->
+          user_fixture(%{
+            email: "user_#{n}@ipdth.org"
+          })
+        end),
+      admins:
+        Enum.map(1..admin_count, fn n ->
+          admin_user_fixture(%{
+            email: "admin_#{n}@ipdth.org"
+          })
+        end)
+    }
+  end
+
   def extract_user_token(fun) do
     {:ok, captured_email} = fun.(&"[TOKEN]#{&1}[TOKEN]")
     [_, token | _] = String.split(captured_email.text_body, "[TOKEN]")

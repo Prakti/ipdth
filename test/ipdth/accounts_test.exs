@@ -665,6 +665,28 @@ defmodule Ipdth.AccountsTest do
     end
   end
 
+  describe "list_users_with_filter_and_sort/2" do
+    test "correctly returns values with only default parameters" do
+      %{users: user_list, admins: admin_list} = user_list_fixture(20, 5)
+      assert Enum.count(user_list) == 20
+      assert Enum.count(admin_list) == 5
+
+      assert {:ok, {results, _meta}} = Accounts.list_users_with_filter_and_sort()
+      assert Enum.count(results) == 10
+
+      # Based on the default sorting the first 5 users should have admin
+      # privileges
+      Enum.with_index(results, fn user, i ->
+        if i < 5 do
+          assert Enum.member?(user.roles, :user_admin) and
+                   Enum.member?(user.roles, :tournament_admin)
+        else
+          assert user.roles == []
+        end
+      end)
+    end
+  end
+
   defp user_role_gen() do
     member_of(User.get_available_roles())
   end

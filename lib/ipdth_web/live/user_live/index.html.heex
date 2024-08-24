@@ -2,23 +2,37 @@
   Listing Users
 </.header>
 
-<.table id="users" rows={@streams.users}>
-  <:col :let={{_id, user}} label="E-Mail"><%= user.email %></:col>
-  <:col :let={{_id, user}} :if={@is_user_admin} label="Status">
-    <.user_status_badge user_status={user.status} />
-  </:col>
-  <:col :let={{_id, user}} :if={@is_user_admin} label="Roles">
-    <div class="grid grid-cols-2 gap-4">
-      <.user_role_badge :for={role <- user.roles} role={role} />
-    </div>
-  </:col>
-  <:col :let={{_id, user}} label="#Agents"><%= user.agent_count %></:col>
-  <:action :let={{_id, user}}>
-    <.link :if={@is_user_admin} patch={~p"/users/#{user.id}/edit_roles"}>
-      Edit Roles
-    </.link>
-  </:action>
-</.table>
+<.table_frame
+  empty_message="No users found!"
+  empty?={Enum.count(@streams.users) == 0}
+  meta={@meta}
+  path={~p"/users"}
+  filter_fields={@filter_fields}
+>
+  <.flop_table
+    id="users"
+    items={@streams.users}
+    meta={@meta}
+    path={~p"/users"}
+    opts={flop_table_options(assigns)}
+  >
+    <:col :let={{_id, user}} label="E-Mail" field={:email}><%= user.email %></:col>
+    <:col :let={{_id, user}} :if={@is_user_admin} label="Status" field={:status}>
+      <.user_status_badge user_status={user.status} />
+    </:col>
+    <:col :let={{_id, user}} :if={@is_user_admin} label="Roles" field={:roles}>
+      <div class="grid grid-cols-2 gap-4">
+        <.user_role_badge :for={role <- user.roles} role={role} />
+      </div>
+    </:col>
+    <:col :let={{_id, user}} label="#Agents" field={:agent_count}><%= user.agent_count %></:col>
+    <:action :let={{_id, user}}>
+      <.link :if={@is_user_admin} patch={~p"/users/#{user.id}/edit_roles"}>
+        Edit Roles
+      </.link>
+    </:action>
+  </.flop_table>
+</.table_frame>
 
 <.modal
   :if={@live_action in [:edit_roles]}

@@ -26,7 +26,6 @@ defmodule IpdthWeb.TournamentLive.Index do
       {:ok, {tournaments, meta}} ->
         {:noreply,
          socket
-         |> assign(:page_title, "Listing Tournaments")
          |> assign(:tournament, nil)
          |> assign(:meta, meta)
          |> stream(:tournaments, tournaments, reset: true)

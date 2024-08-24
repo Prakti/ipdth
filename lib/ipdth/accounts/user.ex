@@ -16,12 +16,28 @@ defmodule Ipdth.Accounts.User do
   # TODO: 2024-04-11 - extend schema with :name, :string field (required)
   # TODO: 2024-04-11 - extend schema with timezone and language of user
 
+  @derive {
+    Flop.Schema,
+    filterable: [:email, :roles],
+    sortable: [:email, :roles],
+    default_order: %{
+      order_by: [:email, :roles],
+      order_directions: [:asc, :asc]
+    },
+    default_limit: 10,
+    adapter_opts: [
+      alias_fields: [:status, :agent_count]
+    ]
+  }
+
   schema "users" do
     field :email, :string
     field :password, :string, virtual: true, redact: true
     field :hashed_password, :string, redact: true
     field :confirmed_at, :utc_datetime_usec
     field :roles, {:array, Ecto.Enum}, values: @valid_roles, default: []
+    field :status, :string, virtual: true
+    field :agent_count, :integer, virtual: true
     has_many :agents, Agent, foreign_key: :owner_id
     has_many :tournaments, Tournament, foreign_key: :creator_id
 
