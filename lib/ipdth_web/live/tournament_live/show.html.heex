@@ -89,35 +89,49 @@
 
 <.header :if={@show_ranking?} class="mt-20">Tournament Ranking</.header>
 
-<.table
+<.table_frame
   :if={@show_ranking?}
-  id="ranking"
-  rows={@ranking}
-  row_click={fn ranking -> JS.navigate(~p"/agents/#{ranking.agent_id}") end}
+  empty_message="No Ranking found!"
+  empty?={Enum.count(@ranking) == 0}
+  meta={@meta}
+  path={~p"/tournaments/#{@id}"}
+  filter_fields={[]}
 >
-  <:col :let={ranking} label="Rank">
-    <%!-- TODO: 2024-07-31 - Display Rank as a round badge --%>
-    <span class="font-semibold"><%= ranking.ranking %></span>
-  </:col>
-  <:col :let={ranking} label="Name">
-    <span class="font-semibold"><%= ranking.agent_name %></span>
-  </:col>
-  <:col :let={ranking} label="Score">
-    <%= ranking.score %>
-  </:col>
-  <:col :let={ranking} label="Status">
-    <.agent_status_badge status={ranking.agent_status} />
-  </:col>
-  <:col :let={ranking} label="Owner"><%= ranking.owner_email %></:col>
-  <:col :let={ranking} label="Description">
-    <%= ranking.agent_description %>
-  </:col>
-  <:action :let={ranking}>
-    <div class="sr-only">
-      <.link navigate={~p"/agents/#{ranking.agent_id}"}>Show</.link>
-    </div>
-  </:action>
-</.table>
+  <%!-- TODO: naviate to separate participation view instead of agent --%>
+  <.flop_table
+    id="ranking"
+    items={@ranking}
+    row_click={fn ranking -> JS.navigate(~p"/agents/#{ranking.agent_id}") end}
+    meta={@meta}
+    path={~p"/tournaments/#{@id}"}
+    opts={flop_table_options(assigns)}
+  >
+    <:col :let={ranking} label="Rank" field={:ranking}>
+      <%!-- TODO: 2024-07-31 - Display Rank as a round badge --%>
+      <span class="font-semibold"><%= ranking.ranking %></span>
+    </:col>
+    <:col :let={ranking} label="Name" field={:agent_name}>
+      <span class="font-semibold"><%= ranking.agent.name %></span>
+    </:col>
+    <:col :let={ranking} label="Score" field={:score}>
+      <%= ranking.score %>
+    </:col>
+    <:col :let={ranking} label="Status" field={:agent_status}>
+      <.agent_status_badge status={ranking.agent.status} />
+    </:col>
+    <:col :let={ranking} label="Owner" field={:owner_email}>
+      <%= ranking.agent.owner.email %>
+    </:col>
+    <:col :let={ranking} label="Description" field={:agent_description}>
+      <%= ranking.agent.description %>
+    </:col>
+    <:action :let={ranking}>
+      <div class="sr-only">
+        <.link navigate={~p"/agents/#{ranking.agent.id}"}>Show</.link>
+      </div>
+    </:action>
+  </.flop_table>
+</.table_frame>
 
 <.back navigate={~p"/tournaments"}>Back to tournaments</.back>
 

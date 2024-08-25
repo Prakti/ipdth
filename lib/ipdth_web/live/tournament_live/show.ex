@@ -3,6 +3,8 @@ defmodule IpdthWeb.TournamentLive.Show do
 
   import IpdthWeb.AuthZ
 
+  require Logger
+
   alias Ipdth.Tournaments
   alias Ipdth.Agents
 
@@ -12,9 +14,9 @@ defmodule IpdthWeb.TournamentLive.Show do
   end
 
   @impl true
-  def handle_params(%{"id" => id}, _, socket) do
+  def handle_params(%{"id" => id} = params, _, socket) do
     Phoenix.PubSub.subscribe(Ipdth.PubSub, "tournament:#{id}")
-    load_data_into_socket(id, socket)
+    load_data_into_socket(id, socket, Map.delete(params, "id"))
   end
 
   @impl true
@@ -32,30 +34,66 @@ defmodule IpdthWeb.TournamentLive.Show do
   end
 
   @impl true
+  def handle_event("filter", params, socket) do
+    id = socket.assigns.id
+
+    case Flop.validate(params) do
+      {:ok, flop} ->
+        {:noreply, push_patch(socket, to: Flop.Phoenix.build_path(~p"/tournaments/#{id}", flop))}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Could not apply Filter!")}
+    end
+  end
+
+  @impl true
+  def handle_event("page-size", %{"size" => size}, socket) do
+    flop = %Flop{socket.assigns.meta.flop | first: size}
+    id = socket.assigns.id
+    {:noreply, push_patch(socket, to: Flop.Phoenix.build_path(~p"/tournaments/#{id}", flop))}
+  end
+
+  @impl true
   def handle_info({:tournament_updated, id}, socket) do
-    load_data_into_socket(id, socket)
+    meta = Map.get(socket.assigns, :meta, %{flop: %{}})
+    load_data_into_socket(id, socket, meta.flop)
   end
 
   @impl true
   def handle_info({IpdthWeb.TournamentLive.FormComponent, {:saved, tournament}}, socket) do
-    load_data_into_socket(tournament.id, socket)
+    meta = Map.get(socket.assigns, :meta, %{flop: %{}})
+    load_data_into_socket(tournament.id, socket, meta.flop)
   end
 
-  defp load_data_into_socket(id, socket) do
+  defp load_data_into_socket(id, socket, map_or_flop) do
     current_user = socket.assigns.current_user
     tournament = get_tournament!(id, current_user)
 
     if Enum.member?([:finished, :running], tournament.status) do
-      ranking = Tournaments.list_ranking_for_tournament(id)
+      case Tournaments.list_ranking_for_tournament(id, map_or_flop) do
+        {:ok, {ranking, meta}} ->
+          {:noreply,
+           socket
+           |> assign(:page_title, page_title(socket.assigns.live_action))
+           |> assign(:tournament, tournament)
+           |> assign(:meta, meta)
+           |> assign(:id, id)
+           |> assign(:user_is_tournament_admin, tournament_admin?(current_user))
+           |> assign(:show_ranking?, true)
+           |> assign(:empty_agents?, true)
+           |> assign(:ranking, ranking)}
 
-      {:noreply,
-       socket
-       |> assign(:page_title, page_title(socket.assigns.live_action))
-       |> assign(:tournament, tournament)
-       |> assign(:user_is_tournament_admin, tournament_admin?(current_user))
-       |> assign(:show_ranking?, true)
-       |> assign(:empty_agents?, true)
-       |> assign(:ranking, ranking)}
+        {:error, meta} ->
+          Logger.debug("Could not apply filters: #{inspect(meta)}")
+
+          {:noreply,
+           socket
+           |> put_flash(
+             :error,
+             "Could not Load data with specified filter and sorting. Reverting to defaults."
+           )
+           |> push_patch(to: ~p"/tournaments/#{id}")}
+      end
     else
       agents = Agents.list_agents_by_tournament(id)
 

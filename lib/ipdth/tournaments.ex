@@ -10,7 +10,6 @@ defmodule Ipdth.Tournaments do
   alias Ipdth.Agents.Agent
   alias Ipdth.Accounts
   alias Ipdth.Matches
-  alias Ipdth.Accounts.User
 
   defp list_tournament_query(actor_id) when is_integer(actor_id) do
     if Accounts.has_role?(actor_id, :tournament_admin) do
@@ -488,26 +487,21 @@ defmodule Ipdth.Tournaments do
   end
 
   # TODO: 2024-07-31 - Write test for query
-  def list_ranking_for_tournament(tournament_id) do
+  def list_ranking_for_tournament(tournament_id, map_or_flop \\ %{}) do
     query =
-      from p in Participation,
-        join: a in Agent,
-        on: a.id == p.agent_id,
-        join: u in User,
-        on: a.owner_id == u.id,
-        where: p.tournament_id == ^tournament_id,
-        select: %{
-          agent_id: a.id,
-          agent_name: a.name,
-          agent_description: a.description,
-          agent_status: a.status,
-          owner_email: u.email,
-          ranking: p.ranking,
-          score: p.score
-        },
-        order_by: [asc: p.ranking]
+      Participation
+      |> where([p], p.tournament_id == ^tournament_id)
+      |> join(:inner, [p], a in assoc(p, :agent), as: :agent)
+      |> preload([agent: a], agent: a)
+      |> join(:inner, [agent: a], o in assoc(a, :owner), as: :owner)
+      |> preload([p, agent: a, owner: o], agent: {a, owner: o})
 
-    Repo.all(query)
+    Flop.validate_and_run(query, map_or_flop,
+      for: Participation,
+      repo: Repo,
+      default_pagination_type: :first,
+      pagination_types: [:first, :last]
+    )
   end
 
   def send_pub_sub_on_update(id) when is_integer(id) do

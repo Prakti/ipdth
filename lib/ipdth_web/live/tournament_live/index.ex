@@ -146,7 +146,7 @@ defmodule IpdthWeb.TournamentLive.Index do
           {"published", :published},
           {"running", :running},
           {"aborted", :aborted},
-          {"finished", :aborted}
+          {"finished", :finished}
         ]
       ]
     ]

@@ -11,6 +11,51 @@ defmodule Ipdth.Tournaments.Participation do
   alias Ipdth.Agents.Agent
   alias Ipdth.Tournaments.Tournament
 
+  @derive {
+    Flop.Schema,
+    filterable: [
+      :owner_email
+    ],
+    sortable: [
+      :ranking
+    ],
+    default_order: %{
+      order_by: [:ranking],
+      order_directions: [:asc]
+    },
+    default_limit: 50,
+    adapter_opts: [
+      join_fields: [
+        agent_id: [
+          binding: :agent,
+          field: :id,
+          ecto_type: :integer
+        ],
+        agent_name: [
+          binding: :agent,
+          field: :name,
+          ecto_type: :string
+        ],
+        agent_status: [
+          binding: :agent,
+          field: :status,
+          ecto_type: Ecto.Enum
+        ],
+        agent_description: [
+          binding: :agent,
+          field: :description,
+          ecto_type: :string
+        ],
+        owner_email: [
+          binding: :owner,
+          field: :email,
+          ecto_type: :string,
+          path: [:agent, :owner, :email]
+        ]
+      ]
+    ]
+  }
+
   schema "participations" do
     field :status, Ecto.Enum, values: [:signed_up, :participating, :done, :disqualified, :error]
     field :score, :integer
