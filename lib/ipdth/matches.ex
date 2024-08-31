@@ -36,15 +36,21 @@ defmodule Ipdth.Matches do
     Repo.all(query)
   end
 
-  def list_matches_by_tournament(tournament_id) do
+  def list_matches_by_tournament(tournament_id, map_or_flop \\ %{}) do
     query =
-      from m in Match,
-        where: m.tournament_id == ^tournament_id,
-        order_by: [asc: m.id],
-        preload: [:agent_a, :agent_b],
-        select: m
+      Match
+      |> where([m], m.tournament_id == ^tournament_id)
+      |> join(:inner, [m], a in assoc(m, :agent_a), as: :agent_a)
+      |> preload([agent_a: a], agent_a: a)
+      |> join(:inner, [m], b in assoc(m, :agent_b), as: :agent_b)
+      |> preload([agent_b: b], agent_b: b)
 
-    Repo.all(query)
+    Flop.validate_and_run(query, map_or_flop,
+      for: Match,
+      repo: Repo,
+      default_pagination_type: :first,
+      pagination_types: [:first, :last]
+    )
   end
 
   @doc """

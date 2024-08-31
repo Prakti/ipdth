@@ -12,6 +12,54 @@ defmodule Ipdth.Matches.Match do
   alias Ipdth.Agents.Agent
   alias Ipdth.Tournaments.Tournament
 
+  @derive {
+    Flop.Schema,
+    filterable: [
+      :agent_name,
+      :agent_a_name,
+      :agent_b_name
+    ],
+    sortable: [
+      :id,
+      :score_a,
+      :score_b,
+      :agent_a_name,
+      :agent_b_name
+    ],
+    default_order: %{
+      order_by: [:id],
+      order_directions: [:asc]
+    },
+    default_limit: 50,
+    adapter_opts: [
+      compound_fields: [
+        agent_name: [:agent_a_name, :agent_b_name]
+      ],
+      join_fields: [
+        agent_a_id: [
+          binding: :agent_a,
+          field: :id,
+          ecto_type: :integer
+        ],
+        agent_b_id: [
+          binding: :agent_b,
+          field: :id,
+          ecto_type: :integer
+        ],
+        agent_a_name: [
+          binding: :agent_a,
+          field: :name,
+          ecto_type: :string
+        ],
+        agent_b_name: [
+          binding: :agent_b,
+          field: :name,
+          ecto_type: :string
+        ]
+      ]
+    ]
+  }
+
   schema "matches" do
     field :start_date, :utc_datetime_usec
     field :end_date, :utc_datetime_usec

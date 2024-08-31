@@ -25,31 +25,44 @@
   <.icon name="hero-inbox-solid text-zinc-600" class="mr-4 w-12 h-12" />
   <div>No Matches have been created yet!</div>
 </div>
-<.table
-  :if={@error == nil and not @empty_matches?}
-  id="matches"
-  rows={@matches}
-  row_click={fn match -> JS.navigate(~p"/tournaments/#{@tournament.id}/matches/#{match.id}") end}
+<.table_frame
+  empty_message="No matches found!"
+  empty?={Enum.count(@matches) == 0}
+  meta={@meta}
+  path={~p"/tournaments/#{@id}/matches"}
+  filter_fields={@filter_fields}
 >
-  <:col :let={match} label="ID"><%= match.id %></:col>
-  <%!-- TODO: 2024-07-03 - Status Badge for Matches --%>
-  <:col :let={match} label="Status"><%= match.status %></:col>
-  <:col :let={match} label="Agent A"><%= match.agent_a.name %></:col>
-  <:col :let={match} label="Score A"><%= match.score_a %></:col>
-  <:col :let={match} label="Agent B"><%= match.agent_b.name %></:col>
-  <:col :let={match} label="Score B"><%= match.score_b %></:col>
-  <:col :let={match} label="Start date">
-    <%= match.start_date && Calendar.strftime(match.start_date, "%Y-%m-%d %H:%M:%S") %>
-  </:col>
-  <:col :let={match} label="End date">
-    <%= match.end_date && Calendar.strftime(match.end_date, "%Y-%m-%d %H:%M:%S") %>
-  </:col>
-  <:action :let={match}>
-    <div class="sr-only">
-      <.link navigate={~p"/tournaments/#{@tournament.id}/matches/#{match.id}"}>Show</.link>
-    </div>
-  </:action>
-</.table>
+  <.flop_table
+    :if={@error == nil and not @empty_matches?}
+    id="matches"
+    items={@matches}
+    row_click={
+      fn match -> JS.navigate(~p"/tournaments/#{@tournament.id}/matches/#{match.id}") end
+    }
+    meta={@meta}
+    path={~p"/tournaments/#{@id}/matches"}
+    opts={flop_table_options(assigns)}
+  >
+    <:col :let={match} label="ID" field={:id}><%= match.id %></:col>
+    <%!-- TODO: 2024-07-03 - Status Badge for Matches --%>
+    <:col :let={match} label="Status" field={:status}><%= match.status %></:col>
+    <:col :let={match} label="Agent A" field={:agent_a_name}><%= match.agent_a.name %></:col>
+    <:col :let={match} label="Score A" field={:score_a}><%= match.score_a %></:col>
+    <:col :let={match} label="Agent B" field={:agent_b_name}><%= match.agent_b.name %></:col>
+    <:col :let={match} label="Score B" field={:score_b}><%= match.score_b %></:col>
+    <:col :let={match} label="Start date">
+      <%= match.start_date && Calendar.strftime(match.start_date, "%Y-%m-%d %H:%M:%S") %>
+    </:col>
+    <:col :let={match} label="End date">
+      <%= match.end_date && Calendar.strftime(match.end_date, "%Y-%m-%d %H:%M:%S") %>
+    </:col>
+    <:action :let={match}>
+      <div class="sr-only">
+        <.link navigate={~p"/tournaments/#{@tournament.id}/matches/#{match.id}"}>Show</.link>
+      </div>
+    </:action>
+  </.flop_table>
+</.table_frame>
 
 <%!-- TODO: 2024-07-03 - Replace these with breadcrumbs in header --%>
 <.back navigate={~p"/tournaments/#{@tournament.id}"}>Back to tournament</.back>
