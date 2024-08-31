@@ -9,6 +9,29 @@ defmodule Ipdth.Matches.Round do
   alias Ipdth.Matches.Round
   alias Ipdth.Matches.Match
 
+  @derive {
+    Flop.Schema,
+    filterable: [
+      :action_a,
+      :action_b,
+      :score_a,
+      :score_b
+    ],
+    sortable: [
+      :id,
+      :score_a,
+      :score_b,
+      :action_a,
+      :action_b
+    ],
+    default_order: %{
+      order_by: [:id],
+      order_directions: [:asc]
+    },
+    default_limit: 50,
+    adapter_opts: []
+  }
+
   schema "rounds" do
     field :action_a, Ecto.Enum, values: [:cooperate, :defect]
     field :action_b, Ecto.Enum, values: [:cooperate, :defect]

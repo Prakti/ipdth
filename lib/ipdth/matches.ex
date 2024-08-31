@@ -205,13 +205,14 @@ defmodule Ipdth.Matches do
   Fetches all Rounds for a given Match ID.
   Returns an empty list if nothing was found.
   """
-  def get_rounds_for_match(match_id) do
-    query =
-      from r in Round,
-        where: r.match_id == ^match_id,
-        order_by: [asc: r.start_date],
-        select: r
-
-    Repo.all(query)
+  def get_rounds_for_match(match_id, params \\ %{}) do
+    Round
+    |> where(match_id: ^match_id)
+    |> Flop.validate_and_run(params,
+      for: Round,
+      repo: Repo,
+      default_pagination_type: :first,
+      pagination_types: [:first, :last]
+    )
   end
 end

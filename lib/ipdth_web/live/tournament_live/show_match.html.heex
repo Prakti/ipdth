@@ -14,8 +14,6 @@
     <%= @tournament.end_date && Calendar.strftime(@tournament.end_date, "%Y-%m-%d %H:%M:%S") %>
   </:item>
   <:item title="Rounds per match"><%= @tournament.rounds_per_match %></:item>
-  <:item title="Random seed"><%= @tournament.random_seed %></:item>
-  <:item title="Random trace"><%= @tournament.random_trace %></:item>
   <%!-- TODO: 2024-07-03 - Status Badge for Tournaments --%>
   <:item title="Status"><%= @tournament.status %></:item>
 </.list>
@@ -38,26 +36,33 @@
 </.list>
 
 <.header :if={@error == nil} class="mt-12">Match Rounds</.header>
-<div
-  :if={@empty_rounds? and @error == nil}
-  class="flex flex-row flex-nowrap justify-center items-center p-8 mt-12 rounded-lg border border-zinc-200 shadow-md"
+<.table_frame
+  :if={@error == nil and not @empty_rounds?}
+  empty_message="No rounds found!"
+  empty?={@empty_rounds?}
+  meta={@meta}
+  path={~p"/tournaments/#{@tournament}/matches/#{@match}"}
+  filter_fields={@filter_fields}
 >
-  <.icon name="hero-inbox-solid text-zinc-600" class="mr-4 w-12 h-12" />
-  <div :if={@match.status == :finished}>No Rounds have been played!</div>
-  <div :if={@match.status != :finished}>No Rounds have been played yet!</div>
-</div>
-<.table :if={@error == nil and not @empty_rounds?} id="matches" rows={@rounds}>
-  <:col :let={round} label="ID"><%= round.id %></:col>
-  <:col :let={round} label="Action A"><%= round.action_a %></:col>
-  <:col :let={round} label="Score A"><%= round.score_a %></:col>
-  <:col :let={round} label="Action B"><%= round.action_b %></:col>
-  <:col :let={round} label="Score B"><%= round.score_b %></:col>
-  <:col :let={round} label="Start date">
-    <%= round.start_date && Calendar.strftime(round.start_date, "%Y-%m-%d %H:%M:%S") %>
-  </:col>
-  <:col :let={round} label="End date">
-    <%= round.end_date && Calendar.strftime(round.end_date, "%Y-%m-%d %H:%M:%S") %>
-  </:col>
-</.table>
+  <.flop_table
+    id="matches"
+    items={@rounds}
+    meta={@meta}
+    path={~p"/tournaments/#{@tournament}/matches/#{@match}"}
+    opts={flop_table_options(assigns)}
+  >
+    <:col :let={round} field={:id} label="ID"><%= round.id %></:col>
+    <:col :let={round} field={:action_a} label="Action A"><%= round.action_a %></:col>
+    <:col :let={round} field={:score_a} label="Score A"><%= round.score_a %></:col>
+    <:col :let={round} field={:action_b} label="Action B"><%= round.action_b %></:col>
+    <:col :let={round} field={:score_b} label="Score B"><%= round.score_b %></:col>
+    <:col :let={round} field={:start_date} label="Start date">
+      <%= round.start_date && Calendar.strftime(round.start_date, "%Y-%m-%d %H:%M:%S") %>
+    </:col>
+    <:col :let={round} field={:end_date} label="End date">
+      <%= round.end_date && Calendar.strftime(round.end_date, "%Y-%m-%d %H:%M:%S") %>
+    </:col>
+  </.flop_table>
+</.table_frame>
 
 <.back navigate={~p"/tournaments/#{@tournament.id}/matches"}>Back to list of matches</.back>

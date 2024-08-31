@@ -26,6 +26,7 @@
   <div>No Matches have been created yet!</div>
 </div>
 <.table_frame
+  :if={@error == nil and not @empty_matches?}
   empty_message="No matches found!"
   empty?={Enum.count(@matches) == 0}
   meta={@meta}
@@ -33,7 +34,6 @@
   filter_fields={@filter_fields}
 >
   <.flop_table
-    :if={@error == nil and not @empty_matches?}
     id="matches"
     items={@matches}
     row_click={
