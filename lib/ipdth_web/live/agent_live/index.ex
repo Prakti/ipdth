@@ -6,6 +6,8 @@ defmodule IpdthWeb.AgentLive.Index do
   alias Ipdth.Agents
   alias Ipdth.Agents.Agent
 
+  require Logger
+
   @impl true
   def mount(_params, _session, socket) do
     {:ok,
@@ -65,19 +67,29 @@ defmodule IpdthWeb.AgentLive.Index do
 
   @impl true
   def handle_event("filter", params, socket) do
-    case Flop.validate(params) do
-      {:ok, flop} ->
-        {:noreply, push_patch(socket, to: Flop.Phoenix.build_path(~p"/agents", flop))}
+    meta = socket.assigns.meta
+    filters = Map.values(params["filters"])
+    flop? = %Flop{socket.assigns.meta.flop | filters: filters}
 
-      {:error, _} ->
+    case Flop.validate(flop?) do
+      {:ok, flop} ->
+        path =
+          Flop.Phoenix.build_path(~p"/agents", flop, backend: meta.backend, for: meta.schema)
+
+        {:noreply, push_patch(socket, to: path)}
+
+      {:error, meta} ->
+        Logger.debug("Cannot filter Agents: #{inspect(meta, pretty: true)}")
         {:noreply, put_flash(socket, :error, "Could not apply Filter!")}
     end
   end
 
   @impl true
   def handle_event("page-size", %{"size" => size}, socket) do
+    meta = socket.assigns.meta
     flop = %Flop{socket.assigns.meta.flop | first: size}
-    {:noreply, push_patch(socket, to: Flop.Phoenix.build_path(~p"/agents", flop))}
+    path = Flop.Phoenix.build_path(~p"/agents", flop, backend: meta.backend, for: meta.schema)
+    {:noreply, push_patch(socket, to: path)}
   end
 
   @impl true
