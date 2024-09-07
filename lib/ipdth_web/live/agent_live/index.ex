@@ -6,6 +6,8 @@ defmodule IpdthWeb.AgentLive.Index do
   alias Ipdth.Agents
   alias Ipdth.Agents.Agent
 
+  alias Phoenix.LiveView.Socket
+
   require Logger
 
   @impl true
@@ -21,42 +23,42 @@ defmodule IpdthWeb.AgentLive.Index do
 
   @impl true
   def handle_params(params, _url, socket) do
-    case Agents.list_agents_with_filter_and_sort(params) do
-      {:ok, {agents, meta}} ->
-        {:noreply,
-         socket
-         |> assign(:meta, meta)
-         |> stream(:agents, agents, reset: true)
-         |> apply_action(socket.assigns.live_action, params)}
-
-      {:error, _meta} ->
-        {:noreply,
-         socket
-         |> put_flash(
-           :error,
-           "Could not Load data with specified filter and sorting. Reverting to Defaults."
-         )
-         |> apply_action(socket.assigns.live_action, params)
-         |> push_patch(to: ~p"/agents")}
-    end
+    {:noreply, apply_action(socket, socket.assigns.live_action, params)}
   end
 
   defp apply_action(socket, :edit, %{"id" => id}) do
     socket
     |> assign(:page_title, "Edit Agent")
     |> assign(:agent, Agents.get_agent!(id))
+    |> assign(:back_url, build_path(socket))
   end
 
   defp apply_action(socket, :new, _params) do
     socket
     |> assign(:page_title, "New Agent")
     |> assign(:agent, %Agent{})
+    |> assign(:back_url, build_path(socket))
   end
 
-  defp apply_action(socket, :index, _params) do
-    socket
-    |> assign(:page_title, "Listing Agents")
-    |> assign(:agent, nil)
+  defp apply_action(socket, :index, params) do
+    case Agents.list_agents_with_filter_and_sort(params) do
+      {:ok, {agents, meta}} ->
+        socket
+        |> assign(:page_title, "Listing Agents")
+        |> assign(:agent, nil)
+        |> assign(:meta, meta)
+        |> assign(:back_url, build_path(meta))
+        |> stream(:agents, agents, reset: true)
+
+      {:error, _meta} ->
+        socket
+        |> put_flash(
+          :error,
+          "Could not Load data with specified filter and sorting. Reverting to Defaults."
+        )
+        |> apply_action(socket.assigns.live_action, params)
+        |> push_patch(to: build_path(socket))
+    end
   end
 
   @impl true
@@ -73,9 +75,7 @@ defmodule IpdthWeb.AgentLive.Index do
 
     case Flop.validate(flop?) do
       {:ok, flop} ->
-        path =
-          Flop.Phoenix.build_path(~p"/agents", flop, backend: meta.backend, for: meta.schema)
-
+        path = build_path(flop, backend: meta.backend, for: meta.schema)
         {:noreply, push_patch(socket, to: path)}
 
       {:error, meta} ->
@@ -88,7 +88,7 @@ defmodule IpdthWeb.AgentLive.Index do
   def handle_event("page-size", %{"size" => size}, socket) do
     meta = socket.assigns.meta
     flop = %Flop{socket.assigns.meta.flop | first: size}
-    path = Flop.Phoenix.build_path(~p"/agents", flop, backend: meta.backend, for: meta.schema)
+    path = build_path(flop, backend: meta.backend, for: meta.schema)
     {:noreply, push_patch(socket, to: path)}
   end
 
@@ -98,7 +98,7 @@ defmodule IpdthWeb.AgentLive.Index do
     user = socket.assigns.current_user
     {:ok, _} = Agents.delete_agent(agent, user.id)
 
-    {:noreply, stream_delete(socket, :agents, agent)}
+    {:noreply, push_patch(socket, to: socket.assigns.back_url)}
   end
 
   @impl true
@@ -112,7 +112,7 @@ defmodule IpdthWeb.AgentLive.Index do
          socket
          |> stream(:agents, Agents.list_agents())
          |> put_flash(:info, "Agent #{agent.name} activated")
-         |> push_patch(to: ~p"/agents")}
+         |> push_patch(to: build_path(socket))}
 
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Could not activate Agent #{agent.name}")}
@@ -130,7 +130,7 @@ defmodule IpdthWeb.AgentLive.Index do
          socket
          |> stream(:agents, Agents.list_agents())
          |> put_flash(:info, "Agent #{agent.name} deactivated")
-         |> push_patch(to: ~p"/agents")}
+         |> push_patch(to: build_path(socket))}
 
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Could not deactivate Agent #{agent.name}")}
@@ -159,5 +159,28 @@ defmodule IpdthWeb.AgentLive.Index do
         op: :ilike_and
       ]
     ]
+  end
+
+  defp build_path(meta_or_flop_or_params, opts \\ [])
+
+  defp build_path(%Socket{} = socket, _opts) do
+    build_path(Map.get(socket.assigns, :meta, nil))
+  end
+
+  # TODO 2024-09-04 - Get rid of magic string
+  defp build_path(%Flop.Meta{} = meta, _opts) do
+    Flop.Phoenix.build_path(~p"/agents", meta.flop, backend: meta.backend, for: meta.schema)
+  end
+
+  defp build_path(%Flop{} = flop, opts) do
+    Flop.Phoenix.build_path(~p"/agents", flop, opts)
+  end
+
+  defp build_path(params, opts) when is_map(params) do
+    Flop.Phoenix.build_path(~p"/agents", params, opts)
+  end
+
+  defp build_path(_, _) do
+    ~p"/agents"
   end
 end
