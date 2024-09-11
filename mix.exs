@@ -56,7 +56,7 @@ defmodule Ipdth.MixProject do
       {:req, "~> 0.5.4"},
       {:dredd, "~> 2.0"},
       {:flop, "~> 0.25.0"},
-      {:flop_phoenix, "~> 0.22.9"},
+      {:flop_phoenix, "~> 0.23.0"},
       {:faker, "~> 0.18", only: [:dev, :test]},
       {:floki, ">= 0.30.0", only: :test},
       {:bypass, "~> 2.1", only: :test},
