@@ -20,27 +20,7 @@ defmodule IpdthWeb.TournamentLive.Index do
 
   @impl true
   def handle_params(params, _url, socket) do
-    current_user = socket.assigns.current_user
-
-    case list_tournaments(current_user, params) do
-      {:ok, {tournaments, meta}} ->
-        {:noreply,
-         socket
-         |> assign(:tournament, nil)
-         |> assign(:meta, meta)
-         |> stream(:tournaments, tournaments, reset: true)
-         |> apply_action(socket.assigns.live_action, params)}
-
-      {:error, _meta} ->
-        {:noreply,
-         socket
-         |> put_flash(
-           :error,
-           "Could not Load data with specified filter and sorting. Reverting to Defaults."
-         )
-         |> apply_action(socket.assigns.live_action, params)
-         |> push_patch(to: ~p"/tournaments")}
-    end
+    {:noreply, apply_action(socket, socket.assigns.live_action, params)}
   end
 
   defp apply_action(socket, :edit, %{"id" => id}) do
@@ -49,18 +29,36 @@ defmodule IpdthWeb.TournamentLive.Index do
     socket
     |> assign(:page_title, "Edit Tournament")
     |> assign(:tournament, Tournaments.get_tournament!(id, current_user.id))
+    |> assign(:back_url, build_path(socket))
   end
 
   defp apply_action(socket, :new, _params) do
     socket
     |> assign(:page_title, "New Tournament")
     |> assign(:tournament, %Tournament{})
+    |> assign(:back_url, build_path(socket))
   end
 
-  defp apply_action(socket, :index, _params) do
-    socket
-    |> assign(:page_title, "Listing Tournaments")
-    |> assign(:tournament, nil)
+  defp apply_action(socket, :index, params) do
+    current_user = socket.assigns.current_user
+
+    case list_tournaments(current_user, params) do
+      {:ok, {tournaments, meta}} ->
+        socket
+        |> assign(:page_title, "Listing Tournaments")
+        |> assign(:tournament, nil)
+        |> assign(:meta, meta)
+        |> assign(:back_url, build_path(meta))
+        |> stream(:tournaments, tournaments, reset: true)
+
+      {:error, _meta} ->
+        socket
+        |> put_flash(
+          :error,
+          "Could not Load data with specified filter and sorting. Reverting to Defaults."
+        )
+        |> push_patch(to: ~p"/tournaments")
+    end
   end
 
   @impl true
@@ -79,9 +77,12 @@ defmodule IpdthWeb.TournamentLive.Index do
 
   @impl true
   def handle_event("filter", params, socket) do
+    meta = socket.assigns.meta
+
     case Flop.validate(params) do
       {:ok, flop} ->
-        {:noreply, push_patch(socket, to: Flop.Phoenix.build_path(~p"/tournaments", flop))}
+        {:noreply,
+         push_patch(socket, to: build_path(flop, backend: meta.backend, for: meta.schema))}
 
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Could not apply Filter!")}
@@ -90,8 +91,10 @@ defmodule IpdthWeb.TournamentLive.Index do
 
   @impl true
   def handle_event("page-size", %{"size" => size}, socket) do
-    flop = %Flop{socket.assigns.meta.flop | first: size}
-    {:noreply, push_patch(socket, to: Flop.Phoenix.build_path(~p"/tournaments", flop))}
+    meta = socket.assigns.meta
+    flop = %Flop{meta.flop | first: size}
+    path = build_path(flop, backend: meta.backend, for: meta.schema)
+    {:noreply, push_patch(socket, to: path)}
   end
 
   @impl true
@@ -150,5 +153,9 @@ defmodule IpdthWeb.TournamentLive.Index do
         ]
       ]
     ]
+  end
+
+  defp build_path(socket_or_meta_or_flop_or_params, opts \\ []) do
+    IpdthWeb.Utils.build_path(~p"/tournaments", socket_or_meta_or_flop_or_params, opts)
   end
 end

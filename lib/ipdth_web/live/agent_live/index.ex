@@ -3,10 +3,10 @@ defmodule IpdthWeb.AgentLive.Index do
 
   import IpdthWeb.AuthZ
 
+  alias IpdthWeb.Utils
+
   alias Ipdth.Agents
   alias Ipdth.Agents.Agent
-
-  alias Phoenix.LiveView.Socket
 
   require Logger
 
@@ -56,7 +56,6 @@ defmodule IpdthWeb.AgentLive.Index do
           :error,
           "Could not Load data with specified filter and sorting. Reverting to Defaults."
         )
-        |> apply_action(socket.assigns.live_action, params)
         |> push_patch(to: build_path(socket))
     end
   end
@@ -87,7 +86,7 @@ defmodule IpdthWeb.AgentLive.Index do
   @impl true
   def handle_event("page-size", %{"size" => size}, socket) do
     meta = socket.assigns.meta
-    flop = %Flop{socket.assigns.meta.flop | first: size}
+    flop = %Flop{meta.flop | first: size}
     path = build_path(flop, backend: meta.backend, for: meta.schema)
     {:noreply, push_patch(socket, to: path)}
   end
@@ -161,26 +160,7 @@ defmodule IpdthWeb.AgentLive.Index do
     ]
   end
 
-  defp build_path(meta_or_flop_or_params, opts \\ [])
-
-  defp build_path(%Socket{} = socket, _opts) do
-    build_path(Map.get(socket.assigns, :meta, nil))
-  end
-
-  # TODO 2024-09-04 - Get rid of magic string
-  defp build_path(%Flop.Meta{} = meta, _opts) do
-    Flop.Phoenix.build_path(~p"/agents", meta.flop, backend: meta.backend, for: meta.schema)
-  end
-
-  defp build_path(%Flop{} = flop, opts) do
-    Flop.Phoenix.build_path(~p"/agents", flop, opts)
-  end
-
-  defp build_path(params, opts) when is_map(params) do
-    Flop.Phoenix.build_path(~p"/agents", params, opts)
-  end
-
-  defp build_path(_, _) do
-    ~p"/agents"
+  defp build_path(socket_or_meta_or_flop_or_params, opts \\ []) do
+    Utils.build_path(~p"/agents", socket_or_meta_or_flop_or_params, opts)
   end
 end
