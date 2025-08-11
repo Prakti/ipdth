@@ -19,14 +19,14 @@
 
 <.header :if={@error == nil} class="mt-12">Matches</.header>
 <div
-  :if={@empty_matches? and @error == nil}
+  :if={@empty_matches? and @error == nil and @empty_filters?}
   class="flex flex-row flex-nowrap justify-center items-center p-8 mt-4 rounded-lg border border-zinc-200 shadow-md"
 >
   <.icon name="hero-inbox-solid text-zinc-600" class="mr-4 w-12 h-12" />
   <div>No Matches have been created yet!</div>
 </div>
 <.table_frame
-  :if={@error == nil and not @empty_matches?}
+  :if={@error == nil and not (@empty_matches? and @empty_filters?)}
   empty_message="No matches found!"
   empty?={Enum.count(@matches) == 0}
   meta={@meta}

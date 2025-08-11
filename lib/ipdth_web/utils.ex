@@ -28,4 +28,13 @@ defmodule IpdthWeb.Utils do
   end
 
   def build_path(base_path, _, _), do: base_path
+
+  def page_size_to_path(base_path, meta, size) do
+    flop = %Flop{meta.flop | first: size}
+    build_path(base_path, flop, backend: meta.backend, for: meta.schema)
+  end
+
+  def empty_filters?(flop) do
+    Enum.all?(flop.filters, fn filter -> filter.value == nil end)
+  end
 end

@@ -110,9 +110,14 @@ defmodule IpdthWeb.UserLive.Index do
 
   @impl true
   def handle_event("filter", params, socket) do
-    case Flop.validate(params) do
+    meta = socket.assigns.meta
+    filters = Map.values(params["filters"])
+    maybe_flop = %Flop{meta.flop | filters: filters}
+
+    case Flop.validate(maybe_flop) do
       {:ok, flop} ->
-        {:noreply, push_patch(socket, to: Flop.Phoenix.build_path(~p"/users", flop))}
+        path = build_path(flop, backend: meta.backend, for: meta.schema)
+        {:noreply, push_patch(socket, to: path)}
 
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Could not apply Filter!")}
@@ -121,8 +126,8 @@ defmodule IpdthWeb.UserLive.Index do
 
   @impl true
   def handle_event("page-size", %{"size" => size}, socket) do
-    flop = %Flop{socket.assigns.meta.flop | first: size}
-    {:noreply, push_patch(socket, to: Flop.Phoenix.build_path(~p"/users", flop))}
+    path = IpdthWeb.Utils.page_size_to_path(~p"/users", socket.assigns.meta, size)
+    {:noreply, push_patch(socket, to: path)}
   end
 
   defp filter_field_config(false) do
@@ -140,5 +145,9 @@ defmodule IpdthWeb.UserLive.Index do
       ]
       # TODO: 2024-08-22 - Turn status into a proper field to enable filtering and sorting
     ]
+  end
+
+  defp build_path(socket_or_meta_or_flop_or_params, opts) do
+    IpdthWeb.Utils.build_path(~p"/users", socket_or_meta_or_flop_or_params, opts)
   end
 end

@@ -91,9 +91,7 @@ defmodule IpdthWeb.TournamentLive.Index do
 
   @impl true
   def handle_event("page-size", %{"size" => size}, socket) do
-    meta = socket.assigns.meta
-    flop = %Flop{meta.flop | first: size}
-    path = build_path(flop, backend: meta.backend, for: meta.schema)
+    path = IpdthWeb.Utils.page_size_to_path(~p"/tournaments", socket.assigns.meta, size)
     {:noreply, push_patch(socket, to: path)}
   end
 

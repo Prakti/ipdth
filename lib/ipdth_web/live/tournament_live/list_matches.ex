@@ -17,7 +17,12 @@ defmodule IpdthWeb.TournamentLive.ListMatches do
   @impl true
   def handle_params(%{"id" => id} = params, _url, socket) do
     current_user = socket.assigns.current_user
-    tournament = Tournaments.get_tournament!(id, current_user.id)
+
+    tournament =
+      case current_user do
+        nil -> Tournaments.get_tournament!(id)
+        _ -> Tournaments.get_tournament!(id, current_user.id)
+      end
 
     if tournament == nil do
       {:noreply,
@@ -27,6 +32,8 @@ defmodule IpdthWeb.TournamentLive.ListMatches do
     else
       case Matches.list_matches_by_tournament(tournament.id, Map.delete(params, "id")) do
         {:ok, {matches, meta}} ->
+          Logger.debug("Applied Filters: #{inspect(meta.flop.filters)}")
+
           {:noreply,
            socket
            |> assign(:page_title, "Showing Matches for Tournament")
@@ -35,6 +42,7 @@ defmodule IpdthWeb.TournamentLive.ListMatches do
            |> assign(:matches, matches)
            |> assign(:meta, meta)
            |> assign(:id, id)
+           |> assign(:empty_filters?, IpdthWeb.Utils.empty_filters?(meta.flop))
            |> assign(:empty_matches?, Enum.empty?(matches))}
 
         {:error, meta} ->
@@ -54,11 +62,15 @@ defmodule IpdthWeb.TournamentLive.ListMatches do
   @impl true
   def handle_event("filter", params, socket) do
     id = socket.assigns.tournament.id
+    meta = socket.assigns.meta
+    filters = Map.values(params["filters"])
+    maybe_flop = %Flop{meta.flop | filters: filters}
 
-    case Flop.validate(params) do
+    case Flop.validate(maybe_flop) do
       {:ok, flop} ->
-        {:noreply,
-         push_patch(socket, to: Flop.Phoenix.build_path(~p"/tournaments/#{id}/matches", flop))}
+        base_path = ~p"/tournaments/#{id}/matches"
+        path = IpdthWeb.Utils.build_path(base_path, flop, backend: meta.backend, for: meta.schema)
+        {:noreply, push_patch(socket, to: path)}
 
       {:error, meta} ->
         Logger.debug("Could not apply filters: #{inspect(meta)}")
@@ -68,11 +80,11 @@ defmodule IpdthWeb.TournamentLive.ListMatches do
 
   @impl true
   def handle_event("page-size", %{"size" => size}, socket) do
-    flop = %Flop{socket.assigns.meta.flop | first: size}
     id = socket.assigns.tournament.id
+    base_path = ~p"/tournaments/#{id}/matches"
+    path = IpdthWeb.Utils.page_size_to_path(base_path, socket.assigns.meta, size)
 
-    {:noreply,
-     push_patch(socket, to: Flop.Phoenix.build_path(~p"/tournaments/#{id}/matches", flop))}
+    {:noreply, push_patch(socket, to: path)}
   end
 
   defp filter_field_config() do

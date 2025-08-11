@@ -37,7 +37,7 @@
 
 <.header :if={@error == nil} class="mt-12">Match Rounds</.header>
 <.table_frame
-  :if={@error == nil and not @empty_rounds?}
+  :if={@error == nil and not (@empty_rounds? and @empty_filters?)}
   empty_message="No rounds found!"
   empty?={@empty_rounds?}
   meta={@meta}
